@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "planneragent-core",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-02",
+
+  "d1_databases": [
+    {
+      "binding": "POLICIES_DB",
+      "database_name": "planneragent-policies",
+      "id": "d1e320ef-93d7-4cce-ad69-7f7ecc0ec8f"
+    }
+  ]
+}

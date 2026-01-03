@@ -1,0 +1,11 @@
+{
+  "name": "planneragent-gateway",
+  "compatibility_date": "2026-01-02",
+  "main": "src/index.ts",
+  "services": [
+    {
+      "binding": "CORE",
+      "service": "planneragent-core"
+    }
+  ]
+}

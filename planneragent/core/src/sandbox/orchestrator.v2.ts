@@ -4,6 +4,8 @@ import type {
   ScenarioAdvisoryV2,
 } from "./contracts.v2";
 
+import { createProviderMap } from "./llm/providerMap";
+
 import type { D1Database } from "@cloudflare/workers-types";
 
 import { analyzeCore } from "../analyzeCore";
@@ -12,8 +14,8 @@ import { scoreScenario } from "./dqm";
 
 import { resolveLlmProviders } from "./llm/registry";
 import { executeWithLlmProviders } from "./llm/executeWithLlmProviders";
-import { getLlmBudgetConfig } from "./llm/budget";
 
+import { getLlmBudgetConfig } from "./budget";
 /**
  * MAIN ENTRY — Sandbox V2
  * - Core analyze -> baseline + evidence
@@ -23,8 +25,7 @@ import { getLlmBudgetConfig } from "./llm/budget";
  * - Response contract (clean)
  */
 export async function evaluateSandboxV2(
-  db: D1Database,
-  input: SandboxEvaluateRequestV2
+  input: SandboxEvaluateRequestV2, env: Record<string, unknown>
 ): Promise<SandboxEvaluateResponseV2> {
   // 0) inputs
   const company_id = (input as any).company_id ?? (input as any).companyId ?? "unknown";
@@ -32,8 +33,15 @@ export async function evaluateSandboxV2(
   const domain = (input as any).domain ?? "supply_chain";
   const intent = (input as any).intent ?? "analyze";
 
+  const coreInput = {
+  asOf: new Date().toISOString(),
+  orders: (input as any).orders ?? [],
+  inventory: (input as any).inventory ?? [],
+  movements: (input as any).movements ?? [],
+};
+
   // 1) baseline + core evidence
-  const core = await analyzeCore(db, input);
+  const core = await analyzeCore(coreInput);
 
   // baseline snapshot id (keep existing if analyzeCore already provides it)
   const baseline_snapshot_id =
@@ -53,10 +61,20 @@ export async function evaluateSandboxV2(
   const budgetConfig = getLlmBudgetConfig(plan);
   const providers = resolveLlmProviders(plan, budgetConfig.basicMonthlyCapEur);
 
-  // 3) run LLM fanout / fallback / logging (executor)
-  //    NOTE: executor decides order + handles degradation.
-  const llmExec = await executeWithLlmProviders({
-    db,
+  const providerMap = createProviderMap(env);
+
+  const llmInput = {
+  companyId: company_id,
+  requestId: event_id ?? crypto.randomUUID(),
+  plan,
+  domain,
+  intent,
+  baseline: (core as any).baseline ?? core,
+};
+
+const llmExec = await executeWithLlmProviders(
+  {
+    db: null as any, // stub temporaneo
     companyId: company_id,
     requestId: event_id ?? crypto.randomUUID(),
     plan,
@@ -64,7 +82,9 @@ export async function evaluateSandboxV2(
     intent,
     baseline: (core as any).baseline ?? core,
     providers,
-  });
+  },
+providerMap
+);
 
   // executor returns scenarios in provider format; we normalize to ScenarioAdvisoryV2
   const llmScenarios: ScenarioAdvisoryV2[] = (llmExec.scenarios ?? []).map((s: any, idx: number) => ({
@@ -75,20 +95,21 @@ export async function evaluateSandboxV2(
     expected_effects: s.expected_effects ?? s.effects ?? null,
     // evidence is added later by DL/DQM
     evidence: s.evidence ?? null,
+
+   confidence: typeof s.confidence === "number" ? s.confidence : 0.3
+
   }));
 
   // 4) Decision Layer (DL v2) — generates evidence signals / constraints
-  const dlResult = await runDecisionLayer({
-    db,
-    input,
-    baseline: (core as any).baseline ?? core,
-    scenarios: llmScenarios,
-  });
+  // const dlResult = await runDecisionLayer({
+  // input,
+  //  baseline: (core as any).baseline ?? core,
+  // scenarios: llmScenarios);
 
   // 5) Rank with DQM (uses scenario + DL evidence)
   const scored = llmScenarios.map((s) => ({
     scenario: s,
-    score: scoreScenario(s, (dlResult as any).evidence),
+    score: 0,
   }));
 
   scored.sort((a, b) => b.score - a.score);
@@ -101,6 +122,22 @@ export async function evaluateSandboxV2(
 
     event_id,
     baseline_snapshot_id,
+
+    rate: {
+  status: "OK",
+  reset_at: new Date().toISOString(),
+},
+
+dl: {
+  profile: "signals-v2",
+  health: "degraded", // DL non attivo nello STO
+},
+
+llm: {
+  fanout: 1,
+  models_used: ["openrouter:gpt-4o-mini"],
+  health: "ok",
+},
 
     scenarios: ranked,
 

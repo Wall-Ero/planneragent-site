@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "planneragent://governance/policy/v1",
+  "title": "PlannerAgent Governance Policy v1",
+  "type": "object",
+  "required": ["meta", "defaults", "legal_gates", "ord", "budget_guardrails", "rules"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["policy_id", "version", "created_at", "created_by", "change_note"],
+      "properties": {
+        "policy_id": { "type": "string" },
+        "version": { "type": "string", "enum": ["v1"] },
+        "created_at": { "type": "string" },
+        "created_by": { "type": "string", "enum": ["FOUNDER", "SYSTEM"] },
+        "change_note": { "type": "string" }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "required": ["per_layer_authority_state"],
+      "properties": {
+        "per_layer_authority_state": {
+          "type": "object",
+          "required": ["BASIC", "JUNIOR", "SENIOR", "SSC", "AGI"],
+          "additionalProperties": false,
+          "properties": {
+            "BASIC": { "$ref": "#/$defs/authority_state" },
+            "JUNIOR": { "$ref": "#/$defs/authority_state" },
+            "SENIOR": { "$ref": "#/$defs/authority_state" },
+            "SSC": { "$ref": "#/$defs/authority_state" },
+            "AGI": { "$ref": "#/$defs/authority_state" }
+          }
+        }
+      }
+    },
+    "legal_gates": {
+      "type": "object",
+      "required": ["pre_srl_hard_rule"],
+      "properties": {
+        "pre_srl_hard_rule": {
+          "type": "object",
+          "required": ["if_legal_entity_not", "then"],
+          "properties": {
+            "if_legal_entity_not": { "type": "string", "enum": ["SRL"] },
+            "then": {
+              "type": "object",
+              "required": ["SENIOR_enabled", "SSC_enabled", "AGI_enabled", "execution_blocked", "emit_event"],
+              "properties": {
+                "SENIOR_enabled": { "type": "boolean" },
+                "SSC_enabled": { "type": "boolean" },
+                "AGI_enabled": { "type": "boolean" },
+                "execution_blocked": { "type": "boolean" },
+                "emit_event": { "type": "string", "enum": ["LEGAL_EXECUTION_BLOCKED"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ord": {
+      "type": "object",
+      "required": ["enabled", "applies_to", "cost_caps", "rules"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "applies_to": {
+          "type": "object",
+          "required": ["paid_llm", "oss_llm", "deterministic_core"],
+          "properties": {
+            "paid_llm": { "type": "boolean" },
+            "oss_llm": { "type": "boolean" },
+            "deterministic_core": { "type": "boolean" }
+          }
+        },
+        "cost_caps": {
+          "type": "object",
+          "required": ["daily_usd", "monthly_usd"],
+          "properties": {
+            "daily_usd": { "type": "number", "minimum": 0 },
+            "monthly_usd": { "type": "number", "minimum": 0 }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "required": ["require_reason", "allow_exploration", "default_provider_fallback"],
+          "properties": {
+            "require_reason": { "type": "boolean" },
+            "allow_exploration": { "type": "boolean" },
+            "default_provider_fallback": { "type": "string", "enum": ["OSS", "NONE"] }
+          }
+        }
+      }
+    },
+    "budget_guardrails": {
+      "type": "object",
+      "required": ["enabled", "caps", "on_breach"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "caps": {
+          "type": "object",
+          "required": ["monthly_decision_budget"],
+          "properties": {
+            "monthly_decision_budget": { "type": "number", "minimum": 0 }
+          }
+        },
+        "on_breach": {
+          "type": "object",
+          "required": ["block_execution", "emit_event", "escalate_to", "degrade_to_layer"],
+          "properties": {
+            "block_execution": { "type": "boolean" },
+            "emit_event": { "type": "string", "enum": ["BUDGET_GUARDRAIL_TRIGGERED"] },
+            "escalate_to": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["FOUNDER", "CFO"] },
+              "minItems": 1
+            },
+            "degrade_to_layer": { "type": "string", "enum": ["SENIOR"] }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rule" }
+    }
+  },
+  "$defs": {
+    "authority_state": {
+      "type": "object",
+      "required": ["mode", "scope", "execution", "responsibility"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["OBSERVATION", "REVIEW", "ACTIVE", "LOCKED"] },
+        "scope": { "type": "string", "enum": ["READ_ONLY", "LIMITED", "BUDGETED", "NONE"] },
+        "execution": { "type": "string", "enum": ["DISABLED", "PENDING", "ENABLED", "BLOCKED"] },
+        "responsibility": { "type": "string", "enum": ["HUMAN"] }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["rule_id", "title", "severity", "when", "then"],
+      "properties": {
+        "rule_id": { "type": "string" },
+        "title": { "type": "string" },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "CRITICAL", "SYSTEM"] },
+        "when": {
+          "type": "object",
+          "properties": {
+            "legal_entity": { "type": "array", "items": { "type": "string", "enum": ["PERSON", "SRL"] } },
+            "layer": { "type": "array", "items": { "type": "string", "enum": ["BASIC", "JUNIOR", "SENIOR", "SSC", "AGI"] } },
+            "authority_mode": { "type": "array", "items": { "type": "string", "enum": ["OBSERVATION", "REVIEW", "ACTIVE", "LOCKED"] } },
+            "authority_scope": { "type": "array", "items": { "type": "string", "enum": ["READ_ONLY", "LIMITED", "BUDGETED", "NONE"] } },
+            "execution_state": { "type": "array", "items": { "type": "string", "enum": ["DISABLED", "PENDING", "ENABLED", "BLOCKED"] } },
+            "event_type": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "AUTHORITY_STATE_VIEWED",
+                  "ACTION_BLOCKED_BY_POLICY",
+                  "REQUEST_EXECUTION_SCOPE",
+                  "REQUEST_BUDGETED_AUTHORITY",
+                  "DECISION_PROPOSED",
+                  "DECISION_APPROVED",
+                  "DECISION_DELEGATED",
+                  "LEGAL_EXECUTION_BLOCKED",
+                  "LEGAL_ENTITY_SWITCHED",
+                  "ORD_GATE_EVALUATED",
+                  "BUDGET_GUARDRAIL_TRIGGERED",
+                  "SYSTEM_LOCKED",
+                  "SYSTEM_UNLOCKED",
+                  "AGI_DECISION_REQUESTED",
+                  "AGI_DECISION_BLOCKED"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "then": {
+          "type": "object",
+          "required": ["enforcement"],
+          "properties": {
+            "enforcement": { "type": "string", "enum": ["ALLOWED", "BLOCKED", "ESCALATED"] },
+            "set_authority_state": {
+              "type": "object",
+              "properties": {
+                "mode": { "type": "string", "enum": ["OBSERVATION", "REVIEW", "ACTIVE", "LOCKED"] },
+                "scope": { "type": "string", "enum": ["READ_ONLY", "LIMITED", "BUDGETED", "NONE"] },
+                "execution": { "type": "string", "enum": ["DISABLED", "PENDING", "ENABLED", "BLOCKED"] },
+                "responsibility": { "type": "string", "enum": ["HUMAN"] }
+              },
+              "additionalProperties": false
+            },
+            "emit_event_type": {
+              "type": "string",
+              "enum": [
+                "AUTHORITY_STATE_VIEWED",
+                "ACTION_BLOCKED_BY_POLICY",
+                "REQUEST_EXECUTION_SCOPE",
+                "REQUEST_BUDGETED_AUTHORITY",
+                "DECISION_PROPOSED",
+                "DECISION_APPROVED",
+                "DECISION_DELEGATED",
+                "LEGAL_EXECUTION_BLOCKED",
+                "LEGAL_ENTITY_SWITCHED",
+                "ORD_GATE_EVALUATED",
+                "BUDGET_GUARDRAIL_TRIGGERED",
+                "SYSTEM_LOCKED",
+                "SYSTEM_UNLOCKED",
+                "AGI_DECISION_REQUESTED",
+                "AGI_DECISION_BLOCKED"
+              ]
+            },
+            "escalate_to": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["FOUNDER", "CFO", "LEGAL", "SECURITY"] },
+              "minItems": 1
+            },
+            "ui_reason_key": {
+              "type": "string",
+              "enum": [
+                "ACTION_BLOCKED_BY_POLICY",
+                "AUTHORITY_SCOPE_EXCEEDED",
+                "BUDGET_GUARDRAIL_TRIGGERED",
+                "LEGAL_EXECUTION_LOCK_ACTIVE"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -3,6 +3,8 @@ import { LlmProvider } from "../types";
 
 export const MockProvider: LlmProvider = {
   id: "mock",
+isFree: false,
+  quality: "low",
 
   async generateScenarios() {
     return {

@@ -1,5 +1,3 @@
-// src/sandbox/apiBoundary.v2.ts
-
 import {
   SandboxEvaluateRequestV2,
   PlanTier,
@@ -31,7 +29,25 @@ function isPlanningDomain(x: any): x is PlanningDomain {
 }
 
 /* ===============================
- * Public API parser
+ * Helpers
+ * =============================== */
+
+function pickString(...values: any[]): string | undefined {
+  for (const v of values) {
+    if (typeof v === "string") return v;
+  }
+  return undefined;
+}
+
+function pickObject(...values: any[]): Record<string, any> | undefined {
+  for (const v of values) {
+    if (typeof v === "object" && v !== null) return v;
+  }
+  return undefined;
+}
+
+/* ===============================
+ * Public API parser (V2 Canonical)
  * =============================== */
 
 export function parseSandboxEvaluateRequestV2(
@@ -43,31 +59,59 @@ export function parseSandboxEvaluateRequestV2(
 
   const b = body as Record<string, any>;
 
-  // ---- identity / routing ----
-  if (typeof b.company_id !== "string") {
+  const identity = pickObject(b.identity, b);
+  const snapshot = pickObject(b.snapshot, b);
+
+  /* ===============================
+   * Identity / routing
+   * =============================== */
+
+  const company_id = pickString(
+    identity?.company_id,
+    identity?.companyId,
+    b.company_id,
+    b.companyId
+  );
+
+  if (!company_id) {
     throw new Error("company_id must be a string");
   }
 
-  if (!isPlanTier(b.plan)) {
-    throw new Error(`Invalid plan tier: ${b.plan}`);
+  const plan = pickString(identity?.plan, b.plan);
+
+  if (!isPlanTier(plan)) {
+    throw new Error(`Invalid plan tier: ${plan}`);
   }
 
-  // ---- snapshot ----
-  if (typeof b.baseline_snapshot_id !== "string") {
+  const domainRaw = pickString(identity?.domain, b.domain);
+
+  const domain: PlanningDomain = isPlanningDomain(domainRaw)
+    ? domainRaw
+    : "supply_chain";
+
+  /* ===============================
+   * Snapshot
+   * =============================== */
+
+  const baseline_snapshot_id = pickString(
+    snapshot?.baseline_snapshot_id,
+    snapshot?.baselineSnapshotId,
+    b.baseline_snapshot_id,
+    b.baselineSnapshotId
+  );
+
+  if (!baseline_snapshot_id) {
     throw new Error("baseline_snapshot_id must be a string");
   }
 
-
-  // ---- optional scenario input ----
-
-  const domain: PlanningDomain =
-  isPlanningDomain(b.domain) ? b.domain : "supply_chain";
-
+  /* ===============================
+   * Optional scenario input
+   * =============================== */
 
   const intent =
-  typeof b.intent === "string"
-    ? b.intent
-    : "scenario_exploration";
+    typeof b.intent === "string"
+      ? b.intent
+      : "scenario_exploration";
 
   const baseline_metrics =
     typeof b.baseline_metrics === "object" && b.baseline_metrics !== null
@@ -79,13 +123,19 @@ export function parseSandboxEvaluateRequestV2(
       ? b.scenario_metrics
       : {};
 
-  // ---- optional hints ----
+  /* ===============================
+   * Optional hints
+   * =============================== */
+
   const constraints_hint =
     typeof b.constraints_hint === "object" && b.constraints_hint !== null
       ? b.constraints_hint
       : {};
 
-  // ---- requested options ----
+  /* ===============================
+   * Requested options
+   * =============================== */
+
   const requested = {
     n_scenarios:
       typeof b.requested?.n_scenarios === "number"
@@ -102,11 +152,11 @@ export function parseSandboxEvaluateRequestV2(
    * =============================== */
 
   return {
-    company_id: b.company_id,
-    plan: b.plan,
-    domain: b.domain,
-    baseline_snapshot_id: b.baseline_snapshot_id,
-    intent: b.intent,
+    company_id,
+    plan,
+    domain,
+    baseline_snapshot_id,
+    intent,
 
     baseline_metrics,
     scenario_metrics,

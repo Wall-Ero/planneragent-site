@@ -1,15 +1,36 @@
 // src/sandbox/ratePolicy.v2.ts
 import type { PlanTier, SandboxRateInfo } from "./contracts.v2";
 
+// -----------------------------
+// Public return contract
+// -----------------------------
 export type RateDecision =
-  | { ok: true; rate: SandboxRateInfo }
-  | { ok: false; code: "QUOTA_EXCEEDED" | "RATE_BLOCKED"; message: string; rate: SandboxRateInfo };
+  | {
+      ok: true;
+      rate: SandboxRateInfo;
+      monthly_remaining: number;
+      burst_remaining: number;
+    }
+  | {
+      ok: false;
+      code: "QUOTA_EXCEEDED" | "RATE_BLOCKED";
+      message: string;
+      rate: SandboxRateInfo;
+      monthly_remaining: number;
+      burst_remaining: number;
+    };
 
+// -----------------------------
+// Environment
+// -----------------------------
 type Env = {
   DB: D1Database;
   RATE_POLICY_ENABLED?: string;
 };
 
+// -----------------------------
+// Helpers
+// -----------------------------
 function nowIso() {
   return new Date().toISOString();
 }
@@ -29,6 +50,9 @@ function defaults(plan: PlanTier) {
   return { monthly: 30, burst: 10 };
 }
 
+// -----------------------------
+// Rate Gate (Sandbox v2)
+// -----------------------------
 export async function rateGateV2(
   env: Env,
   companyId: string,
@@ -36,18 +60,28 @@ export async function rateGateV2(
   baselineSnapshotId: string,
   intent: string
 ): Promise<RateDecision> {
+  const resetAt = monthResetIsoUTC();
+
+  // Governance bypass (dev / ops mode)
   if (env.RATE_POLICY_ENABLED === "false") {
     return {
       ok: true,
-      rate: { status: "OK", reset_at: monthResetIsoUTC() }
+      rate: {
+        status: "OK",
+        reset_at: resetAt
+      },
+      monthly_remaining: Infinity,
+      burst_remaining: Infinity
     };
   }
 
-  const resetAt = monthResetIsoUTC();
-  const key = `${companyId}::${baselineSnapshotId}::${intent.trim().slice(0, 200)}`;
+  const key = `${companyId}::${baselineSnapshotId}::${intent
+    .trim()
+    .slice(0, 200)}`;
 
-  // 1) Debounce: block duplicates within TTL
-  // TTL = 90 seconds (hard gate anti-rumore)
+  // -----------------------------
+  // 1) Debounce gate
+  // -----------------------------
   const ttlMs = 90_000;
   const sinceIso = new Date(Date.now() - ttlMs).toISOString();
 
@@ -64,15 +98,24 @@ export async function rateGateV2(
       ok: false,
       code: "RATE_BLOCKED",
       message: "Debounce: same baseline+intent recently submitted",
-      rate: { status: "BLOCKED", reset_at: resetAt }
+      rate: {
+        status: "BLOCKED",
+        reset_at: resetAt,
+        reason: "DEBOUNCED"
+      },
+      monthly_remaining: 0,
+      burst_remaining: 0
     };
   }
 
+  // -----------------------------
   // 2) Ensure quota row exists
+  // -----------------------------
   const { monthly, burst } = defaults(plan);
 
   await env.DB.prepare(
-    `INSERT INTO sandbox_quotas_v2 (company_id, plan, monthly_quota, monthly_used, burst_remaining, reset_at)
+    `INSERT INTO sandbox_quotas_v2
+       (company_id, plan, monthly_quota, monthly_used, burst_remaining, reset_at)
      VALUES (?, ?, ?, 0, ?, ?)
      ON CONFLICT(company_id) DO UPDATE SET
        plan = excluded.plan,
@@ -82,24 +125,41 @@ export async function rateGateV2(
     .bind(companyId, plan, monthly, burst, resetAt)
     .run();
 
+  // -----------------------------
   // 3) Load quota
+  // -----------------------------
   const row = await env.DB.prepare(
     `SELECT monthly_quota, monthly_used, burst_remaining, reset_at
-     FROM sandbox_quotas_v2 WHERE company_id = ? LIMIT 1`
+     FROM sandbox_quotas_v2
+     WHERE company_id = ?
+     LIMIT 1`
   )
     .bind(companyId)
-    .first<{ monthly_quota: number; monthly_used: number; burst_remaining: number; reset_at: string }>();
+    .first<{
+      monthly_quota: number;
+      monthly_used: number;
+      burst_remaining: number;
+      reset_at: string;
+    }>();
 
   if (!row) {
     return {
       ok: false,
       code: "RATE_BLOCKED",
       message: "Quota row missing",
-      rate: { status: "BLOCKED", reset_at: resetAt }
+      rate: {
+        status: "BLOCKED",
+        reset_at: resetAt,
+        reason: "RATE_LIMITED"
+      },
+      monthly_remaining: 0,
+      burst_remaining: 0
     };
   }
 
-  // 4) Reset if passed
+  // -----------------------------
+  // 4) Reset window if passed
+  // -----------------------------
   const resetPassed = new Date(row.reset_at).getTime() <= Date.now();
   let monthlyUsed = row.monthly_used;
   let burstRemaining = row.burst_remaining;
@@ -107,68 +167,100 @@ export async function rateGateV2(
   if (resetPassed) {
     monthlyUsed = 0;
     burstRemaining = burst;
+
     await env.DB.prepare(
       `UPDATE sandbox_quotas_v2
-       SET monthly_used = 0, burst_remaining = ?, reset_at = ?
+       SET monthly_used = 0,
+           burst_remaining = ?,
+           reset_at = ?
        WHERE company_id = ?`
     )
       .bind(burst, resetAt, companyId)
       .run();
   }
 
-  const monthlyRemaining = Math.max(0, row.monthly_quota - monthlyUsed);
+  const monthlyRemaining = Math.max(
+    0,
+    row.monthly_quota - monthlyUsed
+  );
 
-  // 5) Enforce
+  // -----------------------------
+  // 5) Enforce monthly quota
+  // -----------------------------
   if (monthlyRemaining <= 0) {
     return {
       ok: false,
       code: "QUOTA_EXCEEDED",
       message: "Monthly quota exceeded",
-      rate: { status: "BLOCKED", reset_at: row.reset_at, monthly_remaining: 0, burst_remaining: burstRemaining }
+      rate: {
+        status: "BLOCKED",
+        reset_at: row.reset_at,
+        reason: "QUOTA_EXCEEDED"
+      },
+      monthly_remaining: 0,
+      burst_remaining: burstRemaining
     };
   }
 
-  // Burst semantics: first N calls in month can be “BURST”; after that still OK until quota ends.
-  // (keeps your stated meaning without overcomplicating)
+  // -----------------------------
+  // 6) Burst semantics
+  // -----------------------------
   let status: "OK" | "BURST" = "OK";
+
   if (burstRemaining > 0) {
     status = "BURST";
     burstRemaining -= 1;
   }
 
-  // consume 1 unit
+  // -----------------------------
+  // 7) Consume quota
+  // -----------------------------
   monthlyUsed += 1;
 
   await env.DB.prepare(
     `UPDATE sandbox_quotas_v2
-     SET monthly_used = ?, burst_remaining = ?
+     SET monthly_used = ?,
+         burst_remaining = ?
      WHERE company_id = ?`
   )
     .bind(monthlyUsed, burstRemaining, companyId)
     .run();
 
+  // -----------------------------
+  // 8) Return decision
+  // -----------------------------
   return {
     ok: true,
     rate: {
       status,
-      reset_at: row.reset_at,
-      monthly_remaining: Math.max(0, row.monthly_quota - monthlyUsed),
-      burst_remaining: burstRemaining
-    }
+      reset_at: row.reset_at
+    },
+    monthly_remaining: Math.max(
+      0,
+      row.monthly_quota - monthlyUsed
+    ),
+    burst_remaining: burstRemaining
   };
 }
 
-export async function writeSandboxEventV2(env: Env, event: {
-  event_id: string;
-  company_id: string;
-  baseline_snapshot_id: string;
-  created_at: string;
-  dedupe_key: string;
-  status: string;
-  confidence: number;
-}): Promise<void> {
+// -----------------------------
+// Event writer (governance log)
+// -----------------------------
+export async function writeSandboxEventV2(
+  env: Env,
+  event: {
+    event_id: string;
+    company_id: string;
+    baseline_snapshot_id: string;
+    created_at: string;
+    dedupe_key: string;
+    status: string;
+    confidence: number;
+  }
+): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO sandbox_events_v2 (event_id, company_id, baseline_snapshot_id, created_at, dedupe_key, status, confidence)
+    `INSERT INTO sandbox_events_v2
+       (event_id, company_id, baseline_snapshot_id, created_at, dedupe_key, status, confidence)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(

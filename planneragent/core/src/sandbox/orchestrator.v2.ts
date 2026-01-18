@@ -11,16 +11,25 @@ import type { D1Database } from "@cloudflare/workers-types";
 
 import { analyzeCore } from "../analyzeCore";
 import { scoreScenario } from "./dqm";
-// import { runDecisionLayer } from "./dl.v2";
 
 import { resolveLlmProviders } from "./llm/registry";
 import { executeWithLlmProviders } from "./llm/executeWithLlmProviders";
-
 import { getLlmBudgetConfig } from "./budget";
+
+// ==============================
+// GOVERNANCE / BOUNDARY
+// ==============================
+import {
+  enforceBoundary,
+  BoundaryResult,
+  BoundaryViolationError,
+} from "../governance/boundary.policy";
+import { resolveBoundaryResponse } from "../governance/boundary.responses";
 
 /**
  * MAIN ENTRY — Sandbox V2
  * - Core analyze -> baseline + evidence
+ * - Governance boundary enforcement
  * - LLM scenarios (budget-aware + fallback)
  * - Decision Layer (DL v2) -> evidence
  * - DQM ranking
@@ -91,7 +100,125 @@ export async function evaluateSandboxV2(
   const dbForLlm: D1Database = policiesDb as D1Database;
 
   /* ===============================
-   * 4) LLM EXECUTION
+   * 4) GOVERNANCE BOUNDARY ENFORCEMENT
+   * =============================== */
+
+  let boundary: BoundaryResult | undefined;
+
+  try {
+    boundary = enforceBoundary(
+  plan,
+  intent,
+  {
+    requestId: event_id,
+    userId: undefined,
+    companyId: company_id,
+
+    timestamp: new Date().toISOString(),
+    source: "system",
+
+    domain,
+    budgetCap: budgetConfig.basicMonthlyCapEur,
+    baseline: core,
+  }
+);
+
+    if (!boundary.allowed) {
+      const response = resolveBoundaryResponse(boundary);
+
+      return {
+        ok: false,
+        execution_allowed: false,
+
+        event_id,
+        baseline_snapshot_id,
+
+        rate: {
+          status: "OK",
+          reset_at: new Date().toISOString(),
+        },
+
+        dl: {
+          profile: "signals-v2",
+          health: "degraded",
+        },
+
+        llm: {
+          fanout: 0,
+          models_used: [],
+          health: "degraded",
+        },
+
+        scenarios: [],
+
+        ranking: {
+          method: "DQM",
+          top_ids: [],
+        },
+
+        summary: {
+  one_liner: boundary?.reason ?? "Governance boundary evaluation completed",
+  key_tradeoffs: [],
+  questions_for_scm: [],
+  signals_origin: "synthetic",
+},
+      };
+    }
+  } catch (err: unknown) {
+  if (err instanceof BoundaryViolationError) {
+    const response = resolveBoundaryResponse(err.boundary);
+
+    // Governance stays INTERNAL (log/audit), API stays OPERATIONAL
+    console.warn("[GOVERNANCE][BOUNDARY]", {
+      event_id,
+      boundary: err.boundary,
+      context: err.context,
+    });
+
+    return {
+      ok: false,
+      execution_allowed: false,
+
+      event_id,
+      baseline_snapshot_id,
+
+      rate: {
+        status: "OK",
+        reset_at: new Date().toISOString(),
+      },
+
+      dl: {
+        profile: "signals-v2",
+        health: "degraded",
+      },
+
+      llm: {
+        fanout: 0,
+        models_used: [],
+        health: "degraded",
+      },
+
+      scenarios: [],
+
+      ranking: {
+        method: "DQM",
+        top_ids: [],
+      },
+
+      summary: {
+        one_liner: response.message,
+        key_tradeoffs: [],
+        questions_for_scm: [],
+        signals_origin: "synthetic",
+      },
+    };
+  }
+
+  throw err;
+}
+
+  /* ===============================
+   * 5) LLM EXECUTION
    * =============================== */
 
   const llmExec = await executeWithLlmProviders(
@@ -112,7 +239,7 @@ export async function evaluateSandboxV2(
   );
 
   /* ===============================
-   * 5) NORMALIZE SCENARIOS
+   * 6) NORMALIZE SCENARIOS
    * =============================== */
 
   const llmScenarios: ScenarioAdvisoryV2[] = (
@@ -129,10 +256,9 @@ export async function evaluateSandboxV2(
   }));
 
   /* ===============================
-   * 6) DQM RANKING
+   * 7) DQM RANKING
    * =============================== */
 
-  // DL stub (finché DL v2 non è attivo)
   const dlStub = {
     signals: [],
     constraints: [],
@@ -150,51 +276,44 @@ export async function evaluateSandboxV2(
   const ranked = scored.map((x) => x.scenario);
 
   /* ===============================
-   * 7) RESPONSE CONTRACT
+   * 8) RESPONSE CONTRACT
    * =============================== */
 
   return {
-    ok: true,
-    execution_allowed: false,
+  ok: false,
+  execution_allowed: false,
 
-    event_id,
-    baseline_snapshot_id,
+  event_id,
+  baseline_snapshot_id,
 
-    rate: {
-      status: "OK",
-      reset_at: new Date().toISOString(),
-    },
+  rate: {
+    status: "OK",
+    reset_at: new Date().toISOString(),
+  },
 
-    dl: {
-      profile: "signals-v2",
-      health: "degraded", // DL non attivo nello STO
-    },
+  dl: {
+    profile: "signals-v2",
+    health: "degraded",
+  },
 
-    llm: {
-      fanout: providers.length,
-      models_used:
-        (llmExec as any).models_used ??
-        ["openrouter:unknown"],
-      health: "ok",
-    },
+  llm: {
+    fanout: 0,
+    models_used: [],
+    health: "degraded",
+  },
 
-    scenarios: ranked,
+  scenarios: [],
 
-    ranking: {
-      method: "DQM",
-      top_ids: ranked
-        .slice(0, 3)
-        .map((s) => s.scenario_id),
-    },
+  ranking: {
+    method: "DQM",
+    top_ids: [],
+  },
 
-    summary: {
-      one_liner:
-        ranked.length > 0
-          ? `Top scenario: ${ranked[0].label}`
-          : "No viable scenarios generated",
-      key_tradeoffs: [],
-      questions_for_scm: [],
-      signals_origin: "synthetic",
-    },
-  };
+  summary: {
+    one_liner: boundary.reason,
+    key_tradeoffs: [],
+    questions_for_scm: [],
+    signals_origin: "synthetic",
+  },
+};
 }

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "planneragent://datasets/dlci/v1",
+  "title": "Decision Load Concentration Index (DLCI) Dataset v1",
+  "type": "object",
+  "required": ["metricId", "windowDays", "layer", "computedAt", "totals", "companies"],
+  "properties": {
+    "metricId": { "type": "string" },
+    "windowDays": { "type": "integer", "minimum": 1, "maximum": 365 },
+    "layer": { "type": "string", "enum": ["BASIC", "JUNIOR", "SENIOR", "AGI"] },
+    "computedAt": { "type": "string" },
+    "totals": {
+      "type": "object",
+      "required": ["activeCompaniesInWindow", "decisionsTotalInWindow", "topCompanyId", "topCompanyLoadPct"],
+      "properties": {
+        "activeCompaniesInWindow": { "type": "integer", "minimum": 0 },
+        "decisionsTotalInWindow": { "type": "integer", "minimum": 0 },
+        "topCompanyId": { "type": ["string", "null"] },
+        "topCompanyLoadPct": { "type": ["number", "null"], "minimum": 0, "maximum": 100 }
+      }
+    },
+    "companies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "companyId",
+          "windowDays",
+          "decisionsTotalInWindow",
+          "decisionsCompanyInWindow",
+          "companyLoadPct",
+          "last7d",
+          "prev7d",
+          "wowGrowthPct",
+          "status",
+          "reasons",
+          "computedAt"
+        ],
+        "properties": {
+          "companyId": { "type": "string" },
+          "windowDays": { "type": "integer" },
+          "decisionsTotalInWindow": { "type": "integer" },
+          "decisionsCompanyInWindow": { "type": "integer" },
+          "companyLoadPct": { "type": "number", "minimum": 0, "maximum": 100 },
+          "last7d": { "type": "integer", "minimum": 0 },
+          "prev7d": { "type": "integer", "minimum": 0 },
+          "wowGrowthPct": { "type": ["number", "null"] },
+          "status": {
+            "type": "string",
+            "enum": ["NORMAL", "ATTENTION", "HIGH_CONCENTRATION", "STRUCTURAL_RISK"]
+          },
+          "reasons": { "type": "array", "items": { "type": "string" } },
+          "computedAt": { "type": "string" }
+        }
+      }
+    }
+  }
+}

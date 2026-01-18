@@ -1,0 +1,67 @@
+{
+  "fdc_id": "UUID",
+  "issued_at": "ISO-8601",
+
+  "authority_layer": "SSC | SENIOR | AGI",
+  "decision_ref": {
+    "decision_id": "UUID",
+    "decision_type": "procurement | transfer | payout | investment | conversion | refund",
+    "context_fingerprint": "hash_xyz"
+  },
+
+  "company_scope": {
+    "company_id": "UUID",
+    "legal_entity": "string",
+    "jurisdiction": "ISO-3166-2"
+  },
+
+  "financial_scope": {
+    "max_amount": 1000,
+    "currency": "EUR",
+    "vendor_scope": ["alibaba", "amazon", "logistics_partner"],
+    "geo_scope": ["CN", "EU"],
+    "category_scope": ["inventory", "logistics", "marketplace_fees"],
+    "risk_tolerance": "low | medium | high"
+  },
+
+  "action": {
+    "action_type": "PAY | TRANSFER | CONVERT | RESERVE",
+    "target": {
+      "type": "vendor | wallet | bank_account | marketplace",
+      "identifier": "string"
+    },
+    "amount": 500,
+    "currency": "EUR",
+    "reference": "PO-2026-001"
+  },
+
+  "operational_readiness": {
+    "ord_status": "OPERATIONAL",
+    "historical_success_rate": 0.98,
+    "last_correction_at": null
+  },
+
+  "policy_ref": {
+    "policy_id": "UUID",
+    "policy_version": "v1",
+    "delegation_scope": "FINANCE_AUTONOMOUS"
+  },
+
+  "risk_flags": [
+    "cross_border",
+    "currency_conversion"
+  ],
+
+  "audit": {
+    "issued_by": "planneragent-core",
+    "human_delegate": "CFO | Board | Founder",
+    "signature": "sha256:...",
+    "immutable": true
+  },
+
+  "execution": {
+    "execution_allowed": false,
+    "executed_at": null,
+    "fdg_reference": null
+  }
+}

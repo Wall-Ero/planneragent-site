@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PlannerAgent Boundary Response",
+  "description": "Canonical contract for boundary enforcement responses between BASIC and JUNIOR decision modes.",
+  "type": "object",
+  "required": [
+    "event_type",
+    "current_mode",
+    "required_mode",
+    "intent",
+    "reason_code",
+    "request_id",
+    "timestamp",
+    "audit_required"
+  ],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": ["MODE_REQUIRED", "BOUNDARY_PASS"],
+      "description": "Indicates whether the request was blocked or allowed to pass the boundary."
+    },
+    "current_mode": {
+      "type": "string",
+      "enum": ["BASIC", "JUNIOR", "SENIOR", "AGI"],
+      "description": "The active operational mode at the time of the request."
+    },
+    "required_mode": {
+      "type": "string",
+      "enum": ["BASIC", "JUNIOR", "SENIOR", "AGI"],
+      "description": "The minimum mode required to proceed with the requested intent."
+    },
+    "intent": {
+      "type": "string",
+      "description": "Normalized semantic intent detected by the boundary layer (e.g. PROPOSE, RANK, EXECUTE, SIMULATE)."
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "MODE_TOO_LOW",
+        "INTENT_BLOCKED",
+        "POLICY_RESTRICTED",
+        "AUDIT_ONLY",
+        "BOUNDARY_OK"
+      ],
+      "description": "Machine-readable explanation of why the boundary was enforced or passed."
+    },
+    "human_message": {
+      "type": "string",
+      "description": "Optional user-facing explanation. Must not imply execution or authority."
+    },
+    "audit_required": {
+      "type": "boolean",
+      "description": "If true, this boundary event must be written to the audit log."
+    },
+    "request_id": {
+      "type": "string",
+      "description": "Unique identifier for correlating this boundary event across logs and systems."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the boundary decision was made."
+    },
+    "policy_version": {
+      "type": "string",
+      "description": "Optional reference to the policy version that enforced this boundary."
+    }
+  },
+  "additionalProperties": false
+}

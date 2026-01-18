@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://planneragent.ai/contracts/finance/fdc.v1.json",
+  "title": "FinancialDecisionCommit",
+  "description": "Append-only ledger of all financially binding commitments authorized through the Financial Decision Gateway (FDG).",
+  "type": "object",
+  "required": [
+    "fdcId",
+    "generatedAt",
+    "companyId",
+    "decisionRef",
+    "financialIntent",
+    "budgetAuthority",
+    "amount",
+    "currency",
+    "status",
+    "scope",
+    "signatures"
+  ],
+  "properties": {
+    "fdcId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of this financial decision commit record."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when this commit was recorded."
+    },
+    "companyId": {
+      "type": "string",
+      "description": "Tenant / legal entity owning this financial commitment."
+    },
+
+    "decisionRef": {
+      "type": "object",
+      "required": ["decisionId", "decisionLayer"],
+      "properties": {
+        "decisionId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Reference to the originating decision."
+        },
+        "decisionLayer": {
+          "type": "string",
+          "enum": ["JUNIOR", "SENIOR", "SSC", "AGI"],
+          "description": "Decision layer that authorized the financial commitment."
+        }
+      }
+    },
+
+    "financialIntent": {
+      "type": "string",
+      "enum": [
+        "SPEND",
+        "RESERVE",
+        "INVEST",
+        "TRANSFER",
+        "COMMIT_CONTRACT",
+        "DELEGATE_BUDGET"
+      ],
+      "description": "Nature of the financial action authorized."
+    },
+
+    "budgetAuthority": {
+      "type": "object",
+      "required": ["owner", "limit", "approvalMode"],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "description": "Human role owning the budget (e.g. CFO, Founder, Board, Director)."
+        },
+        "limit": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum budget authorized under this authority."
+        },
+        "approvalMode": {
+          "type": "string",
+          "enum": ["EXPLICIT", "DELEGATED", "POLICY_DRIVEN"],
+          "description": "How this financial authority was granted."
+        }
+      }
+    },
+
+    "amount": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Financial amount committed."
+    },
+
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code (e.g. EUR, USD)."
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "PROPOSED",
+        "APPROVED",
+        "COMMITTED",
+        "EXECUTED",
+        "REVOKED",
+        "EXPIRED"
+      ],
+      "description": "Lifecycle state of this financial commitment."
+    },
+
+    "scope": {
+      "type": "object",
+      "required": ["purpose", "constraints"],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "description": "Business purpose of this financial commitment."
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Operational or legal constraints tied to this commitment."
+        }
+      }
+    },
+
+    "trace": {
+      "type": "object",
+      "required": ["ordStatus", "fdgPolicyVersion"],
+      "properties": {
+        "ordStatus": {
+          "type": "string",
+          "enum": ["BLOCKED", "PARTIAL", "OPERATIONAL"],
+          "description": "Operational readiness status at time of commit."
+        },
+        "fdgPolicyVersion": {
+          "type": "string",
+          "description": "Version of the Financial Decision Gateway policy applied."
+        },
+        "dlciVersion": {
+          "type": "string",
+          "description": "Canonical data intake contract version used."
+        }
+      }
+    },
+
+    "signatures": {
+      "type": "object",
+      "required": ["system", "human"],
+      "properties": {
+        "system": {
+          "type": "string",
+          "description": "Cryptographic signature of PlannerAgent system."
+        },
+        "human": {
+          "type": "string",
+          "description": "Human authorization signature or identifier."
+        }
+      }
+    },
+
+    "audit": {
+      "type": "object",
+      "properties": {
+        "previousFdcId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Link to previous FDC entry (ledger chaining)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional legal or compliance annotations."
+        }
+      }
+    }
+  }
+}

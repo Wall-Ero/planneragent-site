@@ -1,4 +1,4 @@
-import { LlmProviderCandidate, PlanTier } from "./llmcontracts";
+import { LlmProviderCandidate, PlanTier } from "../llmcontracts";
 
 export function resolveLlmProviders(
   plan: PlanTier,

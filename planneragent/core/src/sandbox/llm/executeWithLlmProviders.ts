@@ -1,12 +1,34 @@
-import { LlmProvider } from "./types";
+import type { D1Database } from "@cloudflare/workers-types";
+
+import { LlmProvider, LlmProviderResult } from "./types";
 import { LlmProviderCandidate } from "../llmcontracts";
-import { logLlmUsage } from "./logging";
+import { writeUsageLedger } from "./usageLedger";
 
 /**
- * Input contract for LLM executio
+ * Maps technical provider cost type → economic provider category
+ */
+function mapProviderType(
+  costType: "openrouter" | "mock" | "free" | "paid" | "oss"
+): "oss" | "free" | "paid" {
+  switch (costType) {
+    case "free":
+      return "free";
+    case "paid":
+      return "paid";
+    case "oss":
+      return "oss";
+    case "openrouter":
+    case "mock":
+    default:
+      return "oss";
+  }
+}
+
+/**
+ * Input contract for LLM execution
  */
 export interface ExecuteLlmInput {
-  db: D1Database;
+  db?: D1Database; // optional → no ledger in sandbox/dev
 
   companyId: string;
   requestId: string;
@@ -20,7 +42,7 @@ export interface ExecuteLlmInput {
 }
 
 /**
- * Executes LLM calls using ordered providers with fallback and logging.
+ * Executes LLM calls using ordered providers with fallback and usage ledger.
  * Stops at first successful provider.
  */
 export async function executeWithLlmProviders(
@@ -35,51 +57,90 @@ export async function executeWithLlmProviders(
     db,
     companyId,
     requestId,
+    plan,
     domain,
     intent,
     baseline,
     providers,
   } = input;
 
-  for (const candidate of providers) {
+  let usedFallback = false;
+
+  for (let i = 0; i < providers.length; i++) {
+    const candidate = providers[i];
     const provider = providerMap[candidate.id];
-    if (!provider) continue;
+
+    if (!provider) {
+      usedFallback = true;
+      continue;
+    }
 
     try {
-      const result = await provider.generateScenarios({
-        domain,
-        intent,
-        baseline,
-      });
+      const result: LlmProviderResult =
+        await provider.generateScenarios({
+          domain,
+          intent,
+          baseline,
+        });
 
-      await logLlmUsage(db, {
-        requestId,
-        companyId,
-        providerId: candidate.id,
-        costType: candidate.costType,
-        success: true,
-        estimatedCostEur: candidate.estimatedCostEur,
-        createdAt: new Date().toISOString(),
-      });
+      // ======================
+      // LEDGER — SUCCESS
+      // ======================
+      if (db) {
+        await writeUsageLedger(db, {
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString(),
+
+          company_id: companyId,
+          plan,
+
+          provider_id: candidate.id,
+          model: result.model ?? undefined,
+          provider_type: mapProviderType(candidate.costType),
+
+          prompt_tokens: result.usage?.prompt_tokens,
+          completion_tokens: result.usage?.completion_tokens,
+          total_tokens: result.usage?.total_tokens,
+
+          cost_eur: candidate.estimatedCostEur,
+          success: true,
+          fallback: usedFallback,
+
+          request_id: requestId,
+        });
+      }
 
       return {
         scenarios: result.scenarios,
         providerUsed: candidate.id,
-        degraded: false,
+        degraded: usedFallback,
       };
     } catch (err) {
-      await logLlmUsage(db, {
-        requestId,
-        companyId,
-        providerId: candidate.id,
-        costType: candidate.costType,
-        success: false,
-        error: (err as Error).message,
-        estimatedCostEur: candidate.estimatedCostEur,
-        createdAt: new Date().toISOString(),
-      });
+      usedFallback = true;
 
-      // try next provider
+      // ======================
+      // LEDGER — FAILURE
+      // ======================
+      if (db) {
+        await writeUsageLedger(db, {
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString(),
+
+          company_id: companyId,
+          plan,
+
+          provider_id: candidate.id,
+          provider_type: mapProviderType(candidate.costType),
+
+          cost_eur: candidate.estimatedCostEur,
+          success: false,
+          fallback: true,
+
+          request_id: requestId,
+        });
+      }
+
+      // fallback → try next provider
     }
   }
 

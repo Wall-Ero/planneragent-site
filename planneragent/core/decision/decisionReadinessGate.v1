@@ -1,0 +1,59 @@
+/**
+ * Decision Readiness Gate — v1
+ * Status: FREEZED · CANONICAL
+ *
+ * Purpose:
+ * Determine whether a situation is eligible to become
+ * a formal decision candidate.
+ *
+ * This gate:
+ * - does NOT decide
+ * - does NOT execute
+ * - does NOT spend
+ * - does NOT use ML / LLM
+ *
+ * It only validates readiness.
+ */
+
+import type { DecisionPressureResult } from "./pressure";
+import type { OrdConfidenceResult } from "../ord/ord.confidence.v1";
+
+export type DecisionReadinessResult = {
+  isReady: boolean;
+  readinessReason: string;
+  pressureLevel: DecisionPressureResult["pressureLevel"];
+  confidenceScore: number;
+};
+
+export function decisionReadinessGate(
+  pressure: DecisionPressureResult,
+  confidence: OrdConfidenceResult
+): DecisionReadinessResult {
+  // Rule 1 — No pressure, no decision
+  if (!pressure.shouldEnterDecisionFlow) {
+    return {
+      isReady: false,
+      readinessReason: "Decision pressure insufficient",
+      pressureLevel: pressure.pressureLevel,
+      confidenceScore: confidence.confidenceScore,
+    };
+  }
+
+  // Rule 2 — Pressure present but not operationally ready
+  if (!confidence.isOperationallyReady) {
+    return {
+      isReady: false,
+      readinessReason: "Operational confidence insufficient",
+      pressureLevel: pressure.pressureLevel,
+      confidenceScore: confidence.confidenceScore,
+    };
+  }
+
+  // Rule 3 — Both conditions satisfied
+  return {
+    isReady: true,
+    readinessReason: "Pressure and operational confidence satisfied",
+    pressureLevel: pressure.pressureLevel,
+    confidenceScore: confidence.confidenceScore,
+  };
+}

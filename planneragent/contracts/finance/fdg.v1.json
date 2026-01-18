@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://planneragent.ai/contracts/finance/fdg.v1.json",
+  "title": "Financial Decision Gateway (FDG) — v1",
+  "description": "Canonical governance contract for financial commitment, budget delegation, and human responsibility in PlannerAgent.",
+  "type": "object",
+  "version": "v1",
+  "status": "canonical",
+
+  "principles": {
+    "no_funds_ownership": true,
+    "no_direct_execution": true,
+    "human_legal_responsibility": true,
+    "delegation_is_explicit": true,
+    "audit_is_mandatory": true
+  },
+
+  "financial_roles": {
+    "founder": {
+      "can_define_limits": true,
+      "can_assign_budget": true,
+      "can_override": true,
+      "legal_responsibility": true
+    },
+    "cfo": {
+      "can_define_limits": true,
+      "can_assign_budget": true,
+      "can_override": true,
+      "legal_responsibility": true
+    },
+    "scm": {
+      "can_request_budget": true,
+      "can_approve_within_limits": true,
+      "legal_responsibility": false
+    },
+    "planneragent": {
+      "can_propose": true,
+      "can_commit_logically": true,
+      "can_execute_financial_transaction": false,
+      "legal_responsibility": false
+    }
+  },
+
+  "budget_model": {
+    "types": {
+      "soft_budget": {
+        "description": "Advisory-only budget. PlannerAgent may recommend actions but cannot lock or reserve funds.",
+        "allows_commit": false,
+        "allows_reservation": false
+      },
+      "hard_budget": {
+        "description": "Delegated budget. PlannerAgent may logically reserve and commit funds within explicit limits.",
+        "allows_commit": true,
+        "allows_reservation": true
+      }
+    },
+    "default_type": "soft_budget"
+  },
+
+  "commitment_levels": {
+    "none": {
+      "description": "No financial impact. Informational only.",
+      "requires_human": false
+    },
+    "proposal": {
+      "description": "Financially relevant suggestion.",
+      "requires_human": true
+    },
+    "logical_commit": {
+      "description": "System-level commitment of delegated budget. No real-world transaction.",
+      "requires_human": false
+    },
+    "real_execution": {
+      "description": "Actual money movement.",
+      "requires_human": true,
+      "allowed_for_planneragent": false
+    }
+  },
+
+  "delegation_policy": {
+    "delegation_required_for_commit": true,
+    "delegation_must_define": [
+      "max_budget_total",
+      "max_budget_per_action",
+      "allowed_domains",
+      "allowed_action_types",
+      "time_window",
+      "revocation_policy"
+    ]
+  },
+
+  "gating_rules": {
+    "rule_1": {
+      "name": "Human Responsibility Gate",
+      "condition": "commitment_level == real_execution",
+      "enforcement": "reject",
+      "reason": "PlannerAgent is forbidden from executing real financial transactions."
+    },
+    "rule_2": {
+      "name": "Budget Scope Gate",
+      "condition": "requested_amount > delegated.max_budget_per_action",
+      "enforcement": "require_human_approval",
+      "reason": "Exceeds per-action delegation limit."
+    },
+    "rule_3": {
+      "name": "Domain Gate",
+      "condition": "action_domain NOT IN delegated.allowed_domains",
+      "enforcement": "reject",
+      "reason": "Domain not covered by financial delegation."
+    },
+    "rule_4": {
+      "name": "Time Window Gate",
+      "condition": "current_time NOT IN delegated.time_window",
+      "enforcement": "reject",
+      "reason": "Delegation expired or not yet active."
+    }
+  },
+
+  "audit_requirements": {
+    "log_fields": [
+      "timestamp",
+      "actor",
+      "decision_id",
+      "budget_type",
+      "commitment_level",
+      "requested_amount",
+      "approved_amount",
+      "delegation_id",
+      "policy_version",
+      "ord_status"
+    ],
+    "append_only": true,
+    "human_readable": true
+  },
+
+  "integration_points": {
+    "ord_dependency": true,
+    "voice_dependency": true,
+    "executor_dependency": false,
+    "decision_memory_dependency": true
+  },
+
+  "safety_clauses": {
+    "planneragent_must_never_hold_credentials": true,
+    "planneragent_must_never_initiate_bank_calls": true,
+    "all_real_transactions_must_be_external": true
+  },
+
+  "closing_statement": "Financial authority is never transferred to PlannerAgent. Only financial intent and budget scope may be delegated. Legal and economic responsibility remains human at all times."
+}

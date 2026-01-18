@@ -1,0 +1,142 @@
+📣 Founder Notification Policy v1
+PlannerAgent — Founder Alerts & Escalation
+Status: ACTIVE · NON-VIOLABLE
+Scope: Founder safety · Legal escalation · Cost escalation · Critical ops
+Layer: Core (event emission) + Notifier (delivery)
+Audience: Founder · Product · Ops
+1️⃣ SCOPO
+Questa policy definisce:
+quali eventi devono notificare il Founder
+quando notificare (immediato vs digest)
+canali (WhatsApp/email) e fallback
+anti-spam (dedupe, rate limit)
+contenuto dei messaggi (neutro, decisionale, non legale)
+👉 La notifica serve a prevenire escalation silenziose.
+Non serve a “gestire clienti”.
+2️⃣ PRINCIPIO FONDAMENTALE
+PlannerAgent never escalates responsibility, cost, or execution risk silently.
+Ogni evento che:
+abilita delega
+richiede SRL
+rischia costi inattesi
+rischia scritture in ERP deve generare un alert fondatore.
+3️⃣ CLASSI DI NOTIFICA (SEVERITY)
+Copia codice
+Text
+FounderAlertSeverity
+├─ INFO      (digest)
+├─ WARNING   (near real-time)
+└─ CRITICAL  (immediate)
+4️⃣ EVENTI NOTIFICABILI (CANONICI)
+🔴 CRITICAL — invio immediato (entro 60s)
+Trigger (basta 1):
+LEGAL_SRL_REQUIRED
+(da Legal Readiness Monitor / SRL Trigger Policy)
+SENIOR_ACTIVATION_REQUESTED
+DELEGATION_SCOPE_REQUESTED
+EXECUTION_CAPABILITY_REQUESTED
+AGI_DECISION_LAYER_REQUESTED
+EXECUTION_BLOCKED_BY_POLICY
+(qualcuno ha tentato di eseguire pre-SRL o fuori scope)
+CONNECTOR_WRITE_ATTEMPT
+(tentativo di scrittura ERP / document creation)
+👉 Obiettivo: Founder informato prima di qualsiasi escalation.
+🟡 WARNING — near real-time (entro 15 min)
+Trigger:
+LEGAL_SRL_RECOMMENDED
+ORD_BUDGET_LOW (budget paid LLM sotto soglia)
+ORD_SPEND_SPIKE_DETECTED (anomalia spesa LLM)
+CUSTOMER_REQUESTS_ENTERPRISE_CONTRACT
+SECURITY_ANOMALY (es. token anomali / auth failure ripetuti)
+🟢 INFO — digest giornaliero/settimanale
+Trigger:
+NEW_JUNIOR_CUSTOMER_ACTIVE
+MONTHLY_DECISION_VOLUME_MILESTONE
+ORD_SAVINGS_REPORT_READY
+SYSTEM_HEALTH_SUMMARY_READY
+5️⃣ CANALI DI CONSEGNA (PRIORITÀ)
+Canali supportati (ordine)
+WhatsApp (primario per CRITICAL/WARNING)
+Email (fallback + sempre per CRITICAL)
+(opzionale futuro) push/Slack
+Regole:
+CRITICAL → WhatsApp + Email
+WARNING → WhatsApp o Email (in base a disponibilità)
+INFO → Email digest
+6️⃣ ANTI-SPAM / DEDUPE (NON CONFIGURABILE)
+Dedupe key
+Ogni alert genera una chiave dedupe:
+Copia codice
+Text
+dedupe_key = <event_type>:<tenant_id>:<scope_hash>:<day_bucket>
+Rate limit
+CRITICAL: max 3 per ora per tenant
+WARNING: max 5 per ora
+INFO: solo digest
+Se superi limiti:
+si registra audit
+si invia un solo “suppression notice” nel digest
+7️⃣ CONTENUTO MESSAGGI (FORMATO STANDARD)
+Regole:
+neutro, non legale
+azione suggerita: “review / confirm / switch required”
+includere: tenant, evento, motivo, “no action taken yet” se applicabile
+Template CRITICAL (WhatsApp)
+Titolo: PlannerAgent Alert
+Body:
+evento
+motivo
+stato corrente (PERSONAL/SRL)
+next step suggerito
+conferma che non è stata eseguita alcuna azione (se vero)
+Esempio:
+PlannerAgent Alert
+Event: SRL_REQUIRED
+Reason: Delegation/execution capability has been requested.
+Current legal entity: PERSONAL
+Next step: Review SRL switch readiness.
+No action has been executed.
+Template WARNING
+PlannerAgent Notice
+Event: LEGAL_SRL_RECOMMENDED
+Reason: Growing responsibility exposure detected.
+Suggested: Plan SRL setup before enabling delegation.
+Template INFO (digest)
+Elenco sintetico con contatori e link interni (se esistono).
+8️⃣ RESPONSABILITÀ E LIMITI
+Il Notifier non decide nulla.
+Il Notifier non abilita feature.
+Il Notifier non contatta clienti.
+Il Notifier non contiene dati sensibili (no CSV, no PII).
+Solo:
+segnali
+motivi
+next action interna
+9️⃣ HARD RULE (ENFORCEMENT)
+Copia codice
+Text
+If severity == CRITICAL
+then notifyFounder must be true
+and delivery must attempt WhatsApp + Email
+and alert must be audit-logged
+Questa regola è:
+non configurabile
+verificabile runtime
+🔟 FRASE DI CONTROLLO (DA CONGELARE)
+The founder is notified before responsibility becomes real.
+Never after.
+Oppure:
+No silent escalation. Ever.
+✅ OUTPUT IMPLEMENTATIVO (come evento)
+Ogni alert deve poter essere rappresentato così:
+Copia codice
+Json
+{
+  "event_type": "LEGAL_SRL_REQUIRED",
+  "severity": "CRITICAL",
+  "tenant_id": "…",
+  "reason": "…",
+  "legal_entity_state": "PERSONAL",
+  "dedupe_key": "…",
+  "timestamp": "…"
+}

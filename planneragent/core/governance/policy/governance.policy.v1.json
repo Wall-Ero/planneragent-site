@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "policy_id": "governance-policy",
+    "version": "v1",
+    "created_at": "2026-01-16T00:00:00.000Z",
+    "created_by": "FOUNDER",
+    "change_note": "Initial governance policy: boundaries-first, pre-SRL hard lock, ORD for paid LLM only."
+  },
+  "defaults": {
+    "per_layer_authority_state": {
+      "BASIC": { "mode": "OBSERVATION", "scope": "READ_ONLY", "execution": "DISABLED", "responsibility": "HUMAN" },
+      "JUNIOR": { "mode": "REVIEW", "scope": "LIMITED", "execution": "PENDING", "responsibility": "HUMAN" },
+      "SENIOR": { "mode": "ACTIVE", "scope": "LIMITED", "execution": "BLOCKED", "responsibility": "HUMAN" },
+      "SSC": { "mode": "ACTIVE", "scope": "BUDGETED", "execution": "BLOCKED", "responsibility": "HUMAN" },
+      "AGI": { "mode": "LOCKED", "scope": "NONE", "execution": "BLOCKED", "responsibility": "HUMAN" }
+    }
+  },
+  "legal_gates": {
+    "pre_srl_hard_rule": {
+      "if_legal_entity_not": "SRL",
+      "then": {
+        "SENIOR_enabled": false,
+        "SSC_enabled": false,
+        "AGI_enabled": false,
+        "execution_blocked": true,
+        "emit_event": "LEGAL_EXECUTION_BLOCKED"
+      }
+    }
+  },
+  "ord": {
+    "enabled": true,
+    "applies_to": {
+      "paid_llm": true,
+      "oss_llm": false,
+      "deterministic_core": false
+    },
+    "cost_caps": {
+      "daily_usd": 5,
+      "monthly_usd": 50
+    },
+    "rules": {
+      "require_reason": true,
+      "allow_exploration": true,
+      "default_provider_fallback": "OSS"
+    }
+  },
+  "budget_guardrails": {
+    "enabled": true,
+    "caps": {
+      "monthly_decision_budget": 100000
+    },
+    "on_breach": {
+      "block_execution": true,
+      "emit_event": "BUDGET_GUARDRAIL_TRIGGERED",
+      "escalate_to": ["FOUNDER", "CFO"],
+      "degrade_to_layer": "SENIOR"
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "R-001",
+      "title": "Pre-SRL execution hard lock",
+      "severity": "CRITICAL",
+      "when": {
+        "legal_entity": ["PERSON"],
+        "event_type": ["DECISION_DELEGATED", "REQUEST_EXECUTION_SCOPE", "REQUEST_BUDGETED_AUTHORITY"],
+        "execution_state": ["ENABLED", "PENDING"]
+      },
+      "then": {
+        "enforcement": "BLOCKED",
+        "emit_event_type": "LEGAL_EXECUTION_BLOCKED",
+        "escalate_to": ["FOUNDER", "LEGAL"],
+        "ui_reason_key": "LEGAL_EXECUTION_LOCK_ACTIVE"
+      }
+    },
+    {
+      "rule_id": "R-002",
+      "title": "BASIC is always read-only",
+      "severity": "SYSTEM",
+      "when": {
+        "layer": ["BASIC"],
+        "event_type": ["DECISION_DELEGATED", "REQUEST_EXECUTION_SCOPE"]
+      },
+      "then": {
+        "enforcement": "BLOCKED",
+        "emit_event_type": "ACTION_BLOCKED_BY_POLICY",
+        "ui_reason_key": "ACTION_BLOCKED_BY_POLICY"
+      }
+    },
+    {
+      "rule_id": "R-003",
+      "title": "ORD applies only to paid LLM usage",
+      "severity": "WARNING",
+      "when": {
+        "event_type": ["ORD_GATE_EVALUATED"]
+      },
+      "then": {
+        "enforcement": "ALLOWED",
+        "ui_reason_key": "ACTION_BLOCKED_BY_POLICY"
+      }
+    },
+    {
+      "rule_id": "R-004",
+      "title": "Budget guardrail breach blocks execution and escalates",
+      "severity": "CRITICAL",
+      "when": {
+        "event_type": ["BUDGET_GUARDRAIL_TRIGGERED"]
+      },
+      "then": {
+        "enforcement": "ESCALATED",
+        "emit_event_type": "BUDGET_GUARDRAIL_TRIGGERED",
+        "escalate_to": ["FOUNDER", "CFO"],
+        "ui_reason_key": "BUDGET_GUARDRAIL_TRIGGERED"
+      }
+    }
+  ]
+}

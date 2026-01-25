@@ -187,14 +187,16 @@ export async function evaluateSandboxV2(
         },
 
         summary: {
-          one_liner:
-            response.message ??
-            boundary.reason ??
-            "Boundary blocked",
-          key_tradeoffs: [],
-          questions_for_scm: [],
-          signals_origin: "synthetic",
-        },
+  one_liner:
+    authorityLevel === "VISION"
+      ? "I am observing system signals and governance state. No advice or actions are being prepared."
+      : response.message ??
+        boundary.reason ??
+        "Boundary blocked",
+  key_tradeoffs: [],
+  questions_for_scm: [],
+  signals_origin: "synthetic",
+},
       };
     }
   } catch (err: unknown) {
@@ -239,11 +241,16 @@ export async function evaluateSandboxV2(
         },
 
         summary: {
-          one_liner: response.message,
-          key_tradeoffs: [],
-          questions_for_scm: [],
-          signals_origin: "synthetic",
-        },
+  one_liner:
+    authorityLevel === "VISION"
+      ? "I am observing system signals and governance state. No advice or actions are being prepared."
+      : response.message ??
+        err.boundary.reason ??
+        "Boundary blocked",
+  key_tradeoffs: [],
+  questions_for_scm: [],
+  signals_origin: "synthetic",
+},
       };
     }
 
@@ -389,10 +396,10 @@ export async function evaluateSandboxV2(
       : "degraded";
 
   const oneLiner =
-    (llmExec as any)?.summary?.one_liner ??
-    (plan === "BASIC"
-      ? "Operational reality structured (VISION). No advice generated."
-      : "Advisory scenarios generated under governance.");
+  plan === "BASIC"
+    ? "I am observing system signals and governance state. No advice or actions are being prepared."
+    : (llmExec as any)?.summary?.one_liner ??
+      "Advisory scenarios generated under governance.";
 
   const questions_for_scm: string[] =
     (llmExec as any)?.summary

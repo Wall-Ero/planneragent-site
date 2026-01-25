@@ -1,7 +1,19 @@
+// src/sandbox/apiBoundary.v2.ts
+// ==========================================
+// Sandbox API Boundary v2 — Canonical
+// - Validates public API input
+// - Normalizes plan tiers
+// - Enforces intent authority matrix
+// - Requires snapshot
+// - Produces governance-safe request for Core
+// ==========================================
+
 import {
   SandboxEvaluateRequestV2,
   PlanTier,
   PlanningDomain,
+  Intent,
+  PLAN_INTENT_MATRIX,
 } from "./contracts.v2";
 
 /* ===============================
@@ -16,6 +28,19 @@ const PLANNING_DOMAINS: PlanningDomain[] = [
   "logistics",
 ];
 
+const INTENTS: Intent[] = ["INFORM", "SENSE", "ADVISE", "EXECUTE"];
+
+/* ===============================
+ * Runtime alias (governance bridge)
+ * =============================== */
+// External clients may still speak "VISION"/"GRADUATE"
+// Internally we normalize to PlanTier
+
+const PLAN_ALIAS: Record<string, PlanTier> = {
+  VISION: "BASIC",
+  GRADUATE: "JUNIOR",
+};
+
 /* ===============================
  * Type guards
  * =============================== */
@@ -26,6 +51,10 @@ function isPlanTier(x: any): x is PlanTier {
 
 function isPlanningDomain(x: any): x is PlanningDomain {
   return PLANNING_DOMAINS.includes(x);
+}
+
+function isIntent(x: any): x is Intent {
+  return INTENTS.includes(x);
 }
 
 /* ===============================
@@ -44,6 +73,48 @@ function pickObject(...values: any[]): Record<string, any> | undefined {
     if (typeof v === "object" && v !== null) return v;
   }
   return undefined;
+}
+
+/* ===============================
+ * Governance helpers
+ * =============================== */
+
+function normalizePlan(raw?: string): PlanTier {
+  if (!raw) throw new Error("plan is required");
+
+  const normalized = PLAN_ALIAS[raw] ?? raw;
+
+  if (!isPlanTier(normalized)) {
+    throw new Error(`Invalid plan tier: ${raw}`);
+  }
+
+  return normalized;
+}
+
+function normalizeIntent(raw?: string): Intent {
+  if (!raw) throw new Error("intent is required");
+
+  const upper = raw.toUpperCase();
+
+  if (!isIntent(upper)) {
+    throw new Error(`Invalid intent: ${raw}`);
+  }
+
+  return upper as Intent;
+}
+
+function enforceAuthorityMatrix(
+  plan: PlanTier,
+  intent: Intent
+) {
+  const allowed = PLAN_INTENT_MATRIX[plan];
+
+  if (!allowed.includes(intent)) {
+    throw new Error(
+      `Intent "${intent}" is not permitted for plan "${plan}". ` +
+      `Allowed: ${allowed.join(", ")}`
+    );
+  }
 }
 
 /* ===============================
@@ -77,20 +148,16 @@ export function parseSandboxEvaluateRequestV2(
     throw new Error("company_id must be a string");
   }
 
-  const plan = pickString(identity?.plan, b.plan);
-
-  if (!isPlanTier(plan)) {
-    throw new Error(`Invalid plan tier: ${plan}`);
-  }
+  const rawPlan = pickString(identity?.plan, b.plan);
+  const plan = normalizePlan(rawPlan);
 
   const domainRaw = pickString(identity?.domain, b.domain);
-
   const domain: PlanningDomain = isPlanningDomain(domainRaw)
     ? domainRaw
     : "supply_chain";
 
   /* ===============================
-   * Snapshot
+   * Snapshot (MANDATORY)
    * =============================== */
 
   const baseline_snapshot_id = pickString(
@@ -101,17 +168,26 @@ export function parseSandboxEvaluateRequestV2(
   );
 
   if (!baseline_snapshot_id) {
-    throw new Error("baseline_snapshot_id must be a string");
+    throw new Error("baseline_snapshot_id must be provided (snapshot required)");
   }
 
   /* ===============================
-   * Optional scenario input
+   * Intent (MANDATORY + GOVERNED)
    * =============================== */
 
-  const intent =
-    typeof b.intent === "string"
-      ? b.intent
-      : "scenario_exploration";
+  const rawIntent = pickString(
+    b.intent,
+    identity?.intent
+  );
+
+  const intent = normalizeIntent(rawIntent);
+
+  // Enforce authority matrix (board-readable rule)
+  enforceAuthorityMatrix(plan, intent);
+
+  /* ===============================
+   * Scenario input
+   * =============================== */
 
   const baseline_metrics =
     typeof b.baseline_metrics === "object" && b.baseline_metrics !== null
@@ -141,6 +217,7 @@ export function parseSandboxEvaluateRequestV2(
       typeof b.requested?.n_scenarios === "number"
         ? b.requested.n_scenarios
         : 3,
+
     horizon_days:
       typeof b.requested?.horizon_days === "number"
         ? b.requested.horizon_days

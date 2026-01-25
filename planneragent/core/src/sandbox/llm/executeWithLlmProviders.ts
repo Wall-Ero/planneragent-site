@@ -1,8 +1,33 @@
 import type { D1Database } from "@cloudflare/workers-types";
 
-import { LlmProvider, LlmProviderResult } from "./types";
+import { LlmProvider, LlmProviderResult, LlmUsage } from "./types";
 import { LlmProviderCandidate } from "../llmcontracts";
 import { writeUsageLedger } from "./usageLedger";
+
+import type { LlmResultV2,LlmUsageV2 } from "../llm.v2";
+
+function mapUsageToV2(
+  usage?: LlmUsage
+): LlmUsageV2 | undefined {
+  if (!usage) return undefined;
+
+  return {
+    tokens_in: usage.prompt_tokens,
+    tokens_out: usage.completion_tokens,
+  };
+}
+
+/* ============================================================
+ * Types
+ * ============================================================
+ */
+
+export type LlmExecutionResultV2 = {
+  scenarios: any[];
+  providerUsed: string;
+  degraded: boolean;
+  llmResults: LlmResultV2[];
+};
 
 /**
  * Maps technical provider cost type → economic provider category
@@ -27,12 +52,19 @@ function mapProviderType(
 /**
  * Input contract for LLM execution
  */
+export type DecisionMode = "sense" | "advise";
+
+/**
+ * Input contract for LLM execution
+ * LLM never sees authority level, only cognitive mode
+ */
 export interface ExecuteLlmInput {
   db?: D1Database; // optional → no ledger in sandbox/dev
 
   companyId: string;
   requestId: string;
-  plan: "BASIC" | "JUNIOR" | "SENIOR";
+
+  mode: DecisionMode; // 👈 NOT plan
 
   domain: string;
   intent: string;
@@ -41,6 +73,11 @@ export interface ExecuteLlmInput {
   providers: LlmProviderCandidate[];
 }
 
+/* ============================================================
+ * Main
+ * ============================================================
+ */
+
 /**
  * Executes LLM calls using ordered providers with fallback and usage ledger.
  * Stops at first successful provider.
@@ -48,16 +85,12 @@ export interface ExecuteLlmInput {
 export async function executeWithLlmProviders(
   input: ExecuteLlmInput,
   providerMap: Record<string, LlmProvider>
-): Promise<{
-  scenarios: any[];
-  providerUsed: string;
-  degraded: boolean;
-}> {
+): Promise<LlmExecutionResultV2> {
   const {
     db,
     companyId,
     requestId,
-    plan,
+    mode,
     domain,
     intent,
     baseline,
@@ -83,6 +116,17 @@ export async function executeWithLlmProviders(
           baseline,
         });
 
+const llmResults: LlmResultV2[] = [
+  {
+    ok: true,
+    call_id: requestId,
+    provider: "worker-ai", // oppure candidate.id se vuoi tracciarlo come provider tecnico
+    model: result.model ?? "unknown",
+    text: "scenario fanout",
+    usage: mapUsageToV2(result.usage), // ✅ QUI
+  },
+];
+
       // ======================
       // LEDGER — SUCCESS
       // ======================
@@ -92,15 +136,27 @@ export async function executeWithLlmProviders(
           created_at: new Date().toISOString(),
 
           company_id: companyId,
-          plan,
+          mode: mode,
 
           provider_id: candidate.id,
-          model: result.model ?? undefined,
+          model: llmResults[0]?.model,
           provider_type: mapProviderType(candidate.costType),
 
-          prompt_tokens: result.usage?.prompt_tokens,
-          completion_tokens: result.usage?.completion_tokens,
-          total_tokens: result.usage?.total_tokens,
+          prompt_tokens: llmResults.reduce(
+            (sum, r) => sum + (r.usage?.tokens_in ?? 0),
+            0
+          ),
+          completion_tokens: llmResults.reduce(
+            (sum, r) => sum + (r.usage?.tokens_out ?? 0),
+            0
+          ),
+          total_tokens: llmResults.reduce(
+            (sum, r) =>
+              sum +
+              (r.usage?.tokens_in ?? 0) +
+              (r.usage?.tokens_out ?? 0),
+            0
+          ),
 
           cost_eur: candidate.estimatedCostEur,
           success: true,
@@ -114,6 +170,7 @@ export async function executeWithLlmProviders(
         scenarios: result.scenarios,
         providerUsed: candidate.id,
         degraded: usedFallback,
+        llmResults,
       };
     } catch (err) {
       usedFallback = true;
@@ -127,7 +184,7 @@ export async function executeWithLlmProviders(
           created_at: new Date().toISOString(),
 
           company_id: companyId,
-          plan,
+          mode: mode,
 
           provider_id: candidate.id,
           provider_type: mapProviderType(candidate.costType),

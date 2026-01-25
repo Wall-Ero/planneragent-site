@@ -1,29 +1,54 @@
 // src/sandbox/contracts.v2.ts
 // ==========================================
-// Sandbox Contracts v2 (governance-safe)
-// - advisory only (no execution)
-// - DL evidence required (may be degraded)
-// - rate policy always on
+// Sandbox Contracts v2 — Canonical
+// Governance-first, audit-safe, enterprise-grade
+//
+// Principles:
+// - BASIC = VISION (observe + sense, never advise, never execute)
+// - JUNIOR = ADVISE (human approval required)
+// - SENIOR = EXECUTE (delegated authority)
+// - Snapshot is mandatory
+// - LLMs are tools, never authorities
 // ==========================================
 
-export interface NormalizedLlmAdvice {
-  label: string;
-  assumptions: string[];
-  proposed_actions: {
-    action_type: string;
-    target: string;
-    quantity?: number;
-  }[];
-  expected_effects: Record<string, number>;
-  confidence: number;
-}
+/* ===============================
+ * Core Enums
+ * =============================== */
 
 export type Health = "ok" | "degraded" | "failed";
 
 export type PlanTier = "BASIC" | "JUNIOR" | "SENIOR";
-export type PlanningDomain = "supply_chain" | "production" | "logistics";
 
-// ---------- Rate policy ----------
+export type PlanningDomain =
+  | "supply_chain"
+  | "production"
+  | "logistics";
+
+/* ===============================
+ * Cognitive Intent (Closed Set)
+ * =============================== */
+// If it's not here, it does not exist in the system.
+
+export type Intent =
+  | "INFORM"   // display / explain / report
+  | "SENSE"    // AI-assisted signal extraction (non-advisory)
+  | "ADVISE"   // structured recommendation (human approval required)
+  | "EXECUTE"; // delegated execution (SENIOR+ only)
+
+/* ===============================
+ * Authority Matrix (Documented Governance)
+ * =============================== */
+// This is governance-visible code. Auditors and boards can read this.
+
+export const PLAN_INTENT_MATRIX: Record<PlanTier, Intent[]> = {
+  BASIC: ["INFORM", "SENSE"],              // VISION
+  JUNIOR: ["INFORM", "SENSE", "ADVISE"],  // Advisor
+  SENIOR: ["INFORM", "SENSE", "ADVISE", "EXECUTE"], // Delegated operator
+};
+
+/* ===============================
+ * Rate Policy
+ * =============================== */
 
 export type RateStatus = "OK" | "BURST" | "BLOCKED";
 
@@ -32,10 +57,17 @@ export type SandboxRateInfo = {
   /** ISO timestamp when the quota window resets (or next retry window) */
   reset_at: string;
   /** optional details for debugging / UI */
-  reason?: "QUOTA_EXCEEDED" | "BURST_EXCEEDED" | "DEBOUNCED" | "RATE_LIMITED" | "LOW_QUALITY";
+  reason?:
+    | "QUOTA_EXCEEDED"
+    | "BURST_EXCEEDED"
+    | "DEBOUNCED"
+    | "RATE_LIMITED"
+    | "LOW_QUALITY";
 };
 
-// ---------- Request/Response (public surface via Gateway, executed in Core) ----------
+/* ===============================
+ * Request — Public API Surface
+ * =============================== */
 
 export type SandboxEvaluateRequestV2 = {
   /* ---- identity / routing ---- */
@@ -43,11 +75,11 @@ export type SandboxEvaluateRequestV2 = {
   plan: PlanTier;
   domain: PlanningDomain;
 
-  /* ---- snapshot ---- */
+  /* ---- snapshot (MANDATORY) ---- */
   baseline_snapshot_id: string;
 
-  /* ---- advisory intent (MANDATORY) ---- */
-  intent: string;
+  /* ---- cognitive intent (MANDATORY) ---- */
+  intent: Intent;
 
   /* ---- scenario input (MANDATORY for sandbox) ---- */
   baseline_metrics: Record<string, number>;
@@ -62,6 +94,9 @@ export type SandboxEvaluateRequestV2 = {
   };
 };
 
+/* ===============================
+ * Response — Public Contract
+ * =============================== */
 
 export type SandboxEvaluateResponseV2 = {
   ok: boolean;
@@ -79,12 +114,14 @@ export type SandboxEvaluateResponseV2 = {
   };
 
   llm: {
-    fanout: number; // logical fanout count
-    models_used: string[]; // aliases (slotA/slotB/slotC or mapped names)
+    fanout: number;        // logical fanout count
+    models_used: string[]; // slotA / slotB / slotC or mapped names
     health: Health;
+    mode: "sense" | "advise"; // audit trail
   };
 
   scenarios: ScenarioAdvisoryV2[];
+
   ranking: {
     method: "DQM";
     top_ids: string[];
@@ -98,7 +135,9 @@ export type SandboxEvaluateResponseV2 = {
   };
 };
 
-// ---------- Scenario pack ----------
+/* ===============================
+ * Scenario Pack
+ * =============================== */
 
 export type ScenarioActionV2 = {
   action_type: string;
@@ -108,19 +147,23 @@ export type ScenarioActionV2 = {
 };
 
 export type DlEvidenceV2 = {
-  source: "syntethic" | "learned";
+  source: "synthetic" | "learned";
+
   demand_forecast?: {
     horizon_days: number;
     p50: number;
     p90: number;
     unit?: string;
   };
+
   lead_time_pred?: Record<string, number>;
+
   risk_score?: {
-    stockout_risk?: number; // 0..1
+    stockout_risk?: number;        // 0..1
     supplier_dependency?: number; // 0..1
     [k: string]: number | undefined;
   };
+
   anomaly_signals?: string[];
   meta?: Record<string, unknown>;
 };
@@ -139,7 +182,7 @@ export type ScenarioAdvisoryV2 = {
   assumptions: string[];
   proposed_actions: ScenarioActionV2[];
 
-  /** In v2 every scenario SHOULD include dl_evidence. If DL fails, it can be present but partial + marked degraded. */
+  /** DL evidence — REQUIRED in v2 (may be degraded but never missing silently) */
   dl_evidence?: DlEvidenceV2;
 
   /** Advisory only. Core/DQM may override any expectations. */
@@ -148,11 +191,13 @@ export type ScenarioAdvisoryV2 = {
   /** 0..1 confidence (advisory) */
   confidence: number;
 
-  /** flags for failure modes */
+  /** failure flags */
   evidence_missing?: boolean;
 };
 
-// ---------- Optional: canonical pack wrapper (handy for storage) ----------
+/* ===============================
+ * Optional — Canonical Storage Wrapper
+ * =============================== */
 
 export type ScenarioAdvisoryPackV2 = {
   submission_meta: {
@@ -162,10 +207,12 @@ export type ScenarioAdvisoryPackV2 = {
     llm_profile: "sandbox-explorer-v2";
     dl_profile: "signals-v2";
   };
+
   context_reference: {
     plan_id: string;
     baseline_snapshot_id: string;
     planning_domain: PlanningDomain;
   };
+
   scenarios: ScenarioAdvisoryV2[];
 };

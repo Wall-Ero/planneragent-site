@@ -5,7 +5,7 @@ export type LlmUsageLedgerEntry = {
   created_at: string;
 
   company_id: string;
-  plan: "BASIC" | "JUNIOR" | "SENIOR";
+  mode: "sense" | "advise";
 
   provider_id: string;      // openai | openrouter | oss | mock
   model?: string;          // gpt-4o-mini, mistral-7b, etc
@@ -33,7 +33,7 @@ export async function writeUsageLedger(
         created_at,
 
         company_id,
-        plan,
+        mode,
 
         provider_id,
         model,
@@ -55,7 +55,7 @@ export async function writeUsageLedger(
       entry.created_at,
 
       entry.company_id,
-      entry.plan,
+      entry.mode,
 
       entry.provider_id,
       entry.model ?? null,

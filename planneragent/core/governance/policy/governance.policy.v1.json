@@ -1,117 +1,165 @@
 {
+  "policy_id": "governance.policy.v1",
+  "version": "v1",
+  "status": "CANONICAL",
+  "description": "PlannerAgent Constitutional Governance Policy — Authority, Delegation, and Cognitive Boundary Framework",
+
   "meta": {
-    "policy_id": "governance-policy",
-    "version": "v1",
-    "created_at": "2026-01-16T00:00:00.000Z",
-    "created_by": "FOUNDER",
-    "change_note": "Initial governance policy: boundaries-first, pre-SRL hard lock, ORD for paid LLM only."
+    "signed_by": "HUMAN_BOARD",
+    "immutable": true,
+    "effective_from": "2026-01-25T00:00:00Z",
+    "scope": "GLOBAL",
+    "tenant_isolated": true
   },
-  "defaults": {
-    "per_layer_authority_state": {
-      "BASIC": { "mode": "OBSERVATION", "scope": "READ_ONLY", "execution": "DISABLED", "responsibility": "HUMAN" },
-      "JUNIOR": { "mode": "REVIEW", "scope": "LIMITED", "execution": "PENDING", "responsibility": "HUMAN" },
-      "SENIOR": { "mode": "ACTIVE", "scope": "LIMITED", "execution": "BLOCKED", "responsibility": "HUMAN" },
-      "SSC": { "mode": "ACTIVE", "scope": "BUDGETED", "execution": "BLOCKED", "responsibility": "HUMAN" },
-      "AGI": { "mode": "LOCKED", "scope": "NONE", "execution": "BLOCKED", "responsibility": "HUMAN" }
-    }
-  },
-  "legal_gates": {
-    "pre_srl_hard_rule": {
-      "if_legal_entity_not": "SRL",
-      "then": {
-        "SENIOR_enabled": false,
-        "SSC_enabled": false,
-        "AGI_enabled": false,
-        "execution_blocked": true,
-        "emit_event": "LEGAL_EXECUTION_BLOCKED"
-      }
-    }
-  },
-  "ord": {
-    "enabled": true,
-    "applies_to": {
-      "paid_llm": true,
-      "oss_llm": false,
-      "deterministic_core": false
-    },
-    "cost_caps": {
-      "daily_usd": 5,
-      "monthly_usd": 50
-    },
-    "rules": {
-      "require_reason": true,
-      "allow_exploration": true,
-      "default_provider_fallback": "OSS"
-    }
-  },
-  "budget_guardrails": {
-    "enabled": true,
-    "caps": {
-      "monthly_decision_budget": 100000
-    },
-    "on_breach": {
-      "block_execution": true,
-      "emit_event": "BUDGET_GUARDRAIL_TRIGGERED",
-      "escalate_to": ["FOUNDER", "CFO"],
-      "degrade_to_layer": "SENIOR"
-    }
-  },
-  "rules": [
+
+  "principles": [
     {
-      "rule_id": "R-001",
-      "title": "Pre-SRL execution hard lock",
-      "severity": "CRITICAL",
-      "when": {
-        "legal_entity": ["PERSON"],
-        "event_type": ["DECISION_DELEGATED", "REQUEST_EXECUTION_SCOPE", "REQUEST_BUDGETED_AUTHORITY"],
-        "execution_state": ["ENABLED", "PENDING"]
-      },
-      "then": {
-        "enforcement": "BLOCKED",
-        "emit_event_type": "LEGAL_EXECUTION_BLOCKED",
-        "escalate_to": ["FOUNDER", "LEGAL"],
-        "ui_reason_key": "LEGAL_EXECUTION_LOCK_ACTIVE"
-      }
+      "key": "HUMAN_AUTHORITY_SUPREMACY",
+      "statement": "All authority, goals, budgets, and responsibility originate from humans and organizations. PlannerAgent never owns objectives, legal responsibility, or organizational power."
     },
     {
-      "rule_id": "R-002",
-      "title": "BASIC is always read-only",
-      "severity": "SYSTEM",
-      "when": {
-        "layer": ["BASIC"],
-        "event_type": ["DECISION_DELEGATED", "REQUEST_EXECUTION_SCOPE"]
-      },
-      "then": {
-        "enforcement": "BLOCKED",
-        "emit_event_type": "ACTION_BLOCKED_BY_POLICY",
-        "ui_reason_key": "ACTION_BLOCKED_BY_POLICY"
-      }
+      "key": "BOUNDARY_FIRST",
+      "statement": "No action, execution, or delegation may occur outside an explicitly defined and auditable authority boundary."
     },
     {
-      "rule_id": "R-003",
-      "title": "ORD applies only to paid LLM usage",
-      "severity": "WARNING",
-      "when": {
-        "event_type": ["ORD_GATE_EVALUATED"]
-      },
-      "then": {
-        "enforcement": "ALLOWED",
-        "ui_reason_key": "ACTION_BLOCKED_BY_POLICY"
-      }
+      "key": "NO_AUTONOMOUS_DECISION_OWNERSHIP",
+      "statement": "No cognitive system may define objectives, policy, or allocate resources without explicit, board-approved charter."
     },
     {
-      "rule_id": "R-004",
-      "title": "Budget guardrail breach blocks execution and escalates",
-      "severity": "CRITICAL",
-      "when": {
-        "event_type": ["BUDGET_GUARDRAIL_TRIGGERED"]
-      },
-      "then": {
-        "enforcement": "ESCALATED",
-        "emit_event_type": "BUDGET_GUARDRAIL_TRIGGERED",
-        "escalate_to": ["FOUNDER", "CFO"],
-        "ui_reason_key": "BUDGET_GUARDRAIL_TRIGGERED"
-      }
+      "key": "TRACEABILITY_BY_DESIGN",
+      "statement": "Every approval, delegation, execution, and AI tool usage must be attributable to a human or organizational authority."
     }
-  ]
+  ],
+
+  "layers": {
+    "VISION": {
+      "label": "Observation & Governance",
+      "authority_model": "OBSERVATION_ONLY",
+      "can_execute": false,
+      "requires_human_approval": false,
+      "requires_delegation_scope": false,
+      "delegation_constraints": [],
+      "responsibility_owner": "HUMAN",
+      "description": "Observes operational reality, simulates scenarios, and exposes misalignment. Never advises, approves, or executes."
+    },
+
+    "GRADUATE": {
+      "label": "Certified Human AI Tool User",
+      "authority_model": "CERTIFIED_TOOL_USE",
+      "can_execute": false,
+      "requires_human_approval": true,
+      "requires_delegation_scope": false,
+      "delegation_constraints": [],
+      "responsibility_owner": "HUMAN",
+      "description": "Human operates AI tools inside certified, auditable, and policy-bound scope. PlannerAgent certifies and logs usage."
+    },
+
+    "JUNIOR": {
+      "label": "Advisor & Approved Executor",
+      "authority_model": "DECISION_WITH_HUMAN_APPROVAL",
+      "can_execute": true,
+      "requires_human_approval": true,
+      "requires_delegation_scope": false,
+      "delegation_constraints": [
+        "SCOPED",
+        "REVOCABLE"
+      ],
+      "responsibility_owner": "HUMAN",
+      "description": "Provides structured recommendations and may execute actions only after explicit human approval."
+    },
+
+    "SENIOR": {
+      "label": "Delegated Process Operator",
+      "authority_model": "DELEGATED_EXECUTION",
+      "can_execute": true,
+      "requires_human_approval": false,
+      "requires_delegation_scope": true,
+      "delegation_constraints": [
+        "SCOPED",
+        "TIME_BOUND",
+        "REVOCABLE"
+      ],
+      "responsibility_owner": "HUMAN",
+      "description": "Executes interconnected processes under formally delegated, limited, and revocable authority."
+    },
+
+    "PRINCIPAL": {
+      "label": "Budget & Improvement Authority",
+      "authority_model": "DECISION_WITH_HUMAN_BUDGET",
+      "can_execute": true,
+      "requires_human_approval": false,
+      "requires_delegation_scope": true,
+      "delegation_constraints": [
+        "SCOPED",
+        "TIME_BOUND",
+        "REVOCABLE",
+        "BUDGET_LIMITED"
+      ],
+      "responsibility_owner": "HUMAN",
+      "description": "Allocates entrusted budget and intelligence to improve system performance. Never alters human roles or organizational structure without explicit approval."
+    },
+
+    "CHARTER": {
+      "label": "Cognitive Authority Boundary",
+      "authority_model": "BOARD_GOVERNED_ONLY",
+      "can_execute": false,
+      "requires_human_approval": true,
+      "requires_delegation_scope": true,
+      "delegation_constraints": [
+        "BOARD_APPROVED",
+        "LEGALLY_OWNED",
+        "REVOCABLE"
+      ],
+      "responsibility_owner": "BOARD",
+      "description": "Defines whether any cognitive system is allowed to hold decision authority at all. Enforces constitutional, legal, and regulatory oversight."
+    },
+
+    "AGI": {
+      "label": "Systemic Decision Boundary",
+      "authority_model": "SYSTEMIC_GOVERNANCE_ONLY",
+      "can_execute": false,
+      "requires_human_approval": true,
+      "requires_delegation_scope": true,
+      "delegation_constraints": [
+        "BOARD_APPROVED",
+        "CONSTITUTIONAL_LIMITED",
+        "LEGALLY_OWNED",
+        "REVOCABLE"
+      ],
+      "responsibility_owner": "BOARD",
+      "description": "Governs whether decisions may exist under autonomous or highly cognitive systems. Never executes. Never allocates. Never defines objectives."
+    }
+  },
+
+  "enforcement": {
+    "default_action": "BLOCK",
+    "violation_levels": {
+      "INFO": "LOG_ONLY",
+      "WARNING": "ALLOW_WITH_ESCALATION",
+      "CRITICAL": "BLOCK_AND_ALERT",
+      "SYSTEM": "HARD_BLOCK"
+    }
+  },
+
+  "non_violables": [
+    {
+      "key": "NO_HUMAN_REPLACEMENT",
+      "statement": "PlannerAgent must never assume human legal, financial, or organizational responsibility."
+    },
+    {
+      "key": "NO_SCOPE_EXPANSION",
+      "statement": "PlannerAgent must never expand its authority, budget, or execution scope beyond what is explicitly delegated."
+    },
+    {
+      "key": "NO_SELF_CHARTERING",
+      "statement": "No cognitive system may define or modify its own authority layer or governance policy."
+    }
+  ],
+
+  "audit": {
+    "log_all_events": true,
+    "retain_days": 3650,
+    "tamper_evident": true,
+    "human_readable": true
+  }
 }

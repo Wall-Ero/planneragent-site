@@ -16,7 +16,25 @@
 //
 // It only enforces mode capability at runtime.
 
-export type DecisionMode = "BASIC" | "JUNIOR" | "SENIOR";
+export type AuthorityLevel =
+  | "VISION"
+  | "GRADUATE"
+  | "JUNIOR"
+  | "SENIOR"
+  | "PRINCIPAL";
+
+  export const BLOCKED_INTENTS_VISION = [
+  "DECIDE",
+  "EXECUTE",
+  "ALLOCATE",
+  "APPROVE"
+] as const;
+
+export const BLOCKED_INTENTS_GRADUATE = [
+  "EXECUTE",
+  "ALLOCATE",
+  "APPROVE"
+] as const;
 
 export type SemanticIntent =
   | "INFORM"          // explain, describe, clarify, simulate
@@ -53,9 +71,9 @@ export interface BoundaryContext {
 export interface BoundaryResult {
   result: BoundaryResultType;
   allowed: boolean;
-  requiredMode?: DecisionMode;
+  requiredMode?: AuthorityLevel;
   intent: SemanticIntent;
-  currentMode: DecisionMode;
+  currentMode: AuthorityLevel;
   reason: string;
   audit: {
     log: boolean;
@@ -64,24 +82,47 @@ export interface BoundaryResult {
 }
 
 /**
- * Canonical blocked intents for BASIC
+ * Canonical blocked intents by DecisionMode
  * NON-NEGOTIABLE — governance, not UX
  */
-export const BLOCKED_INTENTS_BASIC: readonly SemanticIntent[] = [
-  "PROPOSE",
-  "RECOMMEND",
-  "RANK",
-  "WEIGH",
-  "SELECT_BEST",
-  "PACKAGE_DECISION",
-] as const;
+export const BLOCKED_INTENTS: Record<AuthorityLevel, readonly SemanticIntent[]> = {
+  VISION: [
+    "PROPOSE",
+    "RECOMMEND",
+    "RANK",
+    "WEIGH",
+    "SELECT_BEST"
+  ],
+
+  GRADUATE: [
+    "RANK",
+    "SELECT_BEST"
+  ],
+
+  JUNIOR: [],
+
+  SENIOR: [],
+
+  PRINCIPAL: []
+} as const;
 
 /**
  * Mode capability matrix
  * This is the system's "constitution"
  */
-const MODE_CAPABILITIES: Record<DecisionMode, SemanticIntent[]> = {
-  BASIC: ["INFORM", "WARN"],
+const MODE_CAPABILITIES: Record<AuthorityLevel, readonly SemanticIntent[]> = {
+  VISION: [
+    "INFORM",
+    "WARN"
+  ],
+
+  GRADUATE: [
+    "INFORM",
+    "WARN",
+    "PROPOSE",
+    "RECOMMEND"
+  ],
+
   JUNIOR: [
     "INFORM",
     "WARN",
@@ -90,8 +131,9 @@ const MODE_CAPABILITIES: Record<DecisionMode, SemanticIntent[]> = {
     "RANK",
     "WEIGH",
     "SELECT_BEST",
-    "PACKAGE_DECISION",
+    "PACKAGE_DECISION"
   ],
+
   SENIOR: [
     "INFORM",
     "WARN",
@@ -100,31 +142,42 @@ const MODE_CAPABILITIES: Record<DecisionMode, SemanticIntent[]> = {
     "RANK",
     "WEIGH",
     "SELECT_BEST",
-    "PACKAGE_DECISION",
+    "PACKAGE_DECISION"
   ],
-};
+
+  PRINCIPAL: [
+    "INFORM",
+    "WARN",
+    "PROPOSE",
+    "RECOMMEND",
+    "RANK",
+    "WEIGH",
+    "SELECT_BEST",
+    "PACKAGE_DECISION"
+  ]
+} as const;
 
 /**
  * Enforce boundary between observation and decision advisory
  */
 export function enforceBoundary(
-  mode: DecisionMode,
+  authority: AuthorityLevel,
   intent: SemanticIntent,
   context: BoundaryContext
 ): BoundaryResult {
-  const allowedIntents = MODE_CAPABILITIES[mode] || [];
+  const allowedIntents = MODE_CAPABILITIES[authority] || [];
 
   const isAllowed = allowedIntents.includes(intent);
 
-  // BASIC attempting decision authority
-  if (!isAllowed && mode === "BASIC") {
+  // VISION attempting decision authority
+  if (!isAllowed && authority === "VISION") {
     return {
       result: "MODE_REQUIRED",
       allowed: false,
       requiredMode: "JUNIOR",
       intent,
-      currentMode: mode,
-      reason: "Decision advisory requested in OBSERVATION mode (BASIC)",
+      currentMode: authority,
+      reason: "Decision advisory requested in OBSERVATION mode (VISION)",
       audit: {
         log: true,
         eventType: "MODE_ESCALATION_REQUIRED",
@@ -139,7 +192,7 @@ export function enforceBoundary(
       allowed: false,
       requiredMode: "JUNIOR",
       intent,
-      currentMode: mode,
+      currentMode: authority,
       reason: "Intent not permitted in current mode",
       audit: {
         log: true,
@@ -153,7 +206,7 @@ export function enforceBoundary(
     result: "OK",
     allowed: true,
     intent,
-    currentMode: mode,
+    currentMode: authority,
     reason: "Intent permitted by mode capability",
     audit: {
       log: true,
@@ -167,17 +220,17 @@ export function enforceBoundary(
  * Call this before ANY decision_id is generated
  */
 export function assertDecisionObjectAllowed(
-  mode: DecisionMode,
+  mode: AuthorityLevel,
   context: BoundaryContext
 ): void {
-  if (mode === "BASIC") {
+  if (mode === "VISION") {
     const violation: BoundaryResult = {
       result: "MODE_REQUIRED",
       allowed: false,
       requiredMode: "JUNIOR",
       intent: "PACKAGE_DECISION",
       currentMode: mode,
-      reason: "Decision objects cannot be created in BASIC mode",
+      reason: "Decision objects cannot be created in VISION mode",
       audit: {
         log: true,
         eventType: "MODE_ESCALATION_REQUIRED",

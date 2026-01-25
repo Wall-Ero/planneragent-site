@@ -36,7 +36,12 @@ import type {
                                                             company_id: body.company_id ?? "demo",
                                                                 plan: normalizedPlan,
                                                                     domain: (body.domain ?? "supply_chain") as PlanningDomain,
-                                                                        intent: "INFORM",
+                                                                       intent:
+  normalizedPlan === "BASIC"
+    ? "INFORM"
+    : normalizedPlan === "JUNIOR"
+    ? "ADVISE"
+    : "EXECUTE",
 
                                                                             baseline_snapshot_id: body.baseline_snapshot_id ?? "preview",
                                                                                 baseline_metrics: coerceNumberMap(body.baseline_metrics),

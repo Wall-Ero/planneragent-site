@@ -60,8 +60,9 @@ export type NonViolableRuleKey =
  */
 export type PolicyScope = {
   applies_to_layers: readonly Layer[];
-  applies_to_domains: readonly string[]; // e.g. ["operations", "supply_chain", "finance"]
-  tenant_isolated: true;
+  applies_to_domains: readonly string[];
+  applies_to_signals?: readonly string[];
+  tenant_isolated: boolean;
 };
 
 export type PolicyReference = {
@@ -144,12 +145,17 @@ export const POLICY_LEADER_V1: PolicyLeaderV1 = {
   "SENIOR",
   "PRINCIPAL",
   "CHARTER",
-  "SSC",
-  "AGI",
 ] as const,
     applies_to_domains: ["operations", "supply_chain", "governance"] as const,
     tenant_isolated: true,
+  
+  applies_to_signals: [
+  "ssc"
+] as const,
+
   },
+
+ 
 
   non_violables: [
     {
@@ -216,7 +222,7 @@ export const POLICY_LEADER_V1: PolicyLeaderV1 = {
 
   execution_authority: [
     {
-      layer: "BASIC",
+      layer: "VISION",
       authority_model: "OBSERVE_ONLY",
       can_execute: false,
       requires_human_approval: false,

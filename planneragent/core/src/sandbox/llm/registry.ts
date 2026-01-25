@@ -31,5 +31,12 @@ export function resolveLlmProviders(
 
   return providers
     .filter(p => p.allowedFor.includes(plan))
+    .filter(p => {
+      // OSS = sovereign fallback → always allowed
+      if (p.costType === "oss") return true;
+
+      // Paid providers require budget
+      return budgetLeftEur >= (p.estimatedCostEur ?? 0);
+    })
     .sort((a, b) => a.priority - b.priority);
 }

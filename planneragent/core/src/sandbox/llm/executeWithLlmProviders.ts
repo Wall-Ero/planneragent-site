@@ -97,6 +97,11 @@ export async function executeWithLlmProviders(
     providers,
   } = input;
 
+  console.log("[LLM EXEC] called", {
+  mode: input.mode,
+  providers: input.providers?.map(p => p.id)
+});
+
   let usedFallback = false;
 
   for (let i = 0; i < providers.length; i++) {

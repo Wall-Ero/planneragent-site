@@ -6,7 +6,11 @@ import type {
   ScenarioAdvisoryV2,
 } from "./contracts.v2";
 
-import type { AuthorityLevel, SemanticIntent } from "../governance/boundary.policy";
+import type {
+  AuthorityLevel,
+  SemanticIntent,
+} from "../governance/boundary.policy";
+
 import type { D1Database } from "@cloudflare/workers-types";
 
 import { analyzeCore } from "../analyzeCore";
@@ -30,14 +34,33 @@ import {
 
 import { resolveBoundaryResponse } from "../governance/boundary.responses";
 
+/* ============================================================
+ * Helpers
+ * ============================================================ */
+
 /**
- * MAIN ENTRY — Sandbox V2
- *
- * GOVERNANCE GOAL (canonical):
- * - BASIC (VISION): LLM is allowed ONLY for sense-making (summary/questions), NOT for creating scenarios.
- * - Scenarios in BASIC come from deterministic Core/DL only.
- * - JUNIOR/SENIOR: LLM may generate advisory scenarios (budget-aware), still governed by boundary + logs.
+ * PLAN → Semantic Intent ladder
+ * Authority defines how far cognition is allowed to go.
  */
+function deriveIntentFromPlan(
+  plan: "BASIC" | "JUNIOR" | "SENIOR"
+): SemanticIntent {
+  switch (plan) {
+    case "BASIC":
+      return "INFORM"; // observe / explain / clarify
+    case "JUNIOR":
+      return "PROPOSE"; // structured options
+    case "SENIOR":
+      return "PACKAGE_DECISION"; // decision object
+    default:
+      return "INFORM";
+  }
+}
+
+/* ============================================================
+ * MAIN ENTRY — Sandbox V2
+ * ============================================================ */
+
 export async function evaluateSandboxV2(
   input: SandboxEvaluateRequestV2,
   env: Record<string, unknown>
@@ -59,11 +82,13 @@ export async function evaluateSandboxV2(
   const domain = ((input as any).domain ?? "supply_chain") as any;
 
   const intent: SemanticIntent =
-    ((input as any).intent ?? "SENSE") as SemanticIntent;
+    ((input as any).intent as SemanticIntent) ??
+    deriveIntentFromPlan(plan);
 
-  // ==============================
-  // AUTHORITY (Governance Plane)
-  // ==============================
+  /* ==============================
+   * AUTHORITY (Governance Plane)
+   * ============================== */
+
   const authorityLevel: AuthorityLevel =
     plan === "BASIC"
       ? "VISION"
@@ -71,9 +96,10 @@ export async function evaluateSandboxV2(
       ? "JUNIOR"
       : "SENIOR";
 
-  // ==============================
-  // MODE (LLM Language Plane)
-  // ==============================
+  /* ==============================
+   * MODE (LLM Language Plane)
+   * ============================== */
+
   const mode: "sense" | "advise" =
     plan === "BASIC" ? "sense" : "advise";
 
@@ -152,7 +178,11 @@ export async function evaluateSandboxV2(
       baseline: core,
     });
 
-    if (!boundary.allowed) {
+    // VISION is always allowed to INFORM (sense)
+    const allowSense =
+      authorityLevel === "VISION" && intent === "INFORM";
+
+    if (!boundary.allowed && !allowSense) {
       const response = resolveBoundaryResponse(boundary);
 
       return {
@@ -187,16 +217,16 @@ export async function evaluateSandboxV2(
         },
 
         summary: {
-  one_liner:
-    authorityLevel === "VISION"
-      ? "I am observing system signals and governance state. No advice or actions are being prepared."
-      : response.message ??
-        boundary.reason ??
-        "Boundary blocked",
-  key_tradeoffs: [],
-  questions_for_scm: [],
-  signals_origin: "synthetic",
-},
+          one_liner:
+            authorityLevel === "VISION"
+              ? "I am observing system signals and governance state. No advice or actions are being prepared."
+              : response.message ??
+                boundary.reason ??
+                "Boundary blocked",
+          key_tradeoffs: [],
+          questions_for_scm: [],
+          signals_origin: "synthetic",
+        },
       };
     }
   } catch (err: unknown) {
@@ -241,16 +271,16 @@ export async function evaluateSandboxV2(
         },
 
         summary: {
-  one_liner:
-    authorityLevel === "VISION"
-      ? "I am observing system signals and governance state. No advice or actions are being prepared."
-      : response.message ??
-        err.boundary.reason ??
-        "Boundary blocked",
-  key_tradeoffs: [],
-  questions_for_scm: [],
-  signals_origin: "synthetic",
-},
+          one_liner:
+            authorityLevel === "VISION"
+              ? "I am observing system signals and governance state. No advice or actions are being prepared."
+              : response.message ??
+                err.boundary.reason ??
+                "Boundary blocked",
+          key_tradeoffs: [],
+          questions_for_scm: [],
+          signals_origin: "synthetic",
+        },
       };
     }
 
@@ -344,6 +374,7 @@ export async function evaluateSandboxV2(
         plan,
         domain,
         intent,
+        mode: "sense"
       },
       llmResults
     );
@@ -396,14 +427,13 @@ export async function evaluateSandboxV2(
       : "degraded";
 
   const oneLiner =
-  plan === "BASIC"
-    ? "I am observing system signals and governance state. No advice or actions are being prepared."
-    : (llmExec as any)?.summary?.one_liner ??
-      "Advisory scenarios generated under governance.";
+    plan === "BASIC"
+      ? "I am observing system signals and governance state. No advice or actions are being prepared."
+      : (llmExec as any)?.summary?.one_liner ??
+        "Advisory scenarios generated under governance.";
 
   const questions_for_scm: string[] =
-    (llmExec as any)?.summary
-      ?.questions_for_scm ??
+    (llmExec as any)?.summary?.questions_for_scm ??
     (plan === "BASIC"
       ? [
           "What changed vs last snapshot?",
@@ -412,8 +442,7 @@ export async function evaluateSandboxV2(
       : []);
 
   const key_tradeoffs: string[] =
-    (llmExec as any)?.summary
-      ?.key_tradeoffs ?? [];
+    (llmExec as any)?.summary?.key_tradeoffs ?? [];
 
   return {
     ok: true,

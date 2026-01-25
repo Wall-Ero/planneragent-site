@@ -51,7 +51,7 @@ anomalies.push(`stockout_risk=${round3(stockoutRisk)}`);
 anomalies.push(`supplier_dependency=${round3(supplierDependency)}`);
 
   const evidence: DlEvidenceV2 = {
-    source: "syntethic",
+    source: "synthetic" as const,
     demand_forecast: { horizon_days: h, p50: demandP50, p90: demandP90 },
     lead_time_pred: {
       supplier_B_p50_days: ltP50,

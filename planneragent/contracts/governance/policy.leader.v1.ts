@@ -20,12 +20,15 @@ export type PolicyId = string; // e.g. "policy.leader.v1"
 export type IsoDateTime = string; // ISO-8601
 export type Sha256Hex = string; // hex string
 
-export type DecisionLayer =
-  | "BASIC"
+export type Layer =
+  | "VISION"
+  | "GRADUATE"
   | "JUNIOR"
   | "SENIOR"
+  | "PRINCIPAL"
+  | "CHARTER"
   | "SSC"
-  | "AGI_DECISION_LAYER";
+  | "AGI";
 
 export type AuthorityModel =
   | "OBSERVE_ONLY" // BASIC
@@ -56,7 +59,7 @@ export type NonViolableRuleKey =
  * We include future layers to keep the constitution stable when you unlock them.
  */
 export type PolicyScope = {
-  applies_to_layers: readonly DecisionLayer[];
+  applies_to_layers: readonly Layer[];
   applies_to_domains: readonly string[]; // e.g. ["operations", "supply_chain", "finance"]
   tenant_isolated: true;
 };
@@ -69,7 +72,7 @@ export type PolicyReference = {
 };
 
 export type ExecutionAuthorityRule = {
-  layer: DecisionLayer;
+  layer: Layer;
   authority_model: AuthorityModel;
 
   // canonical constraints (enforced elsewhere, declared here)
@@ -135,12 +138,15 @@ export const POLICY_LEADER_V1: PolicyLeaderV1 = {
     // Applies across layers because it freezes boundaries and authority semantics.
     // Even if BASIC doesn't execute, it MUST be governed by the same constitution.
     applies_to_layers: [
-      "BASIC",
-      "JUNIOR",
-      "SENIOR",
-      "SSC",
-      "AGI_DECISION_LAYER",
-    ] as const,
+  "VISION",
+  "GRADUATE",
+  "JUNIOR",
+  "SENIOR",
+  "PRINCIPAL",
+  "CHARTER",
+  "SSC",
+  "AGI",
+] as const,
     applies_to_domains: ["operations", "supply_chain", "governance"] as const,
     tenant_isolated: true,
   },
@@ -254,7 +260,7 @@ export const POLICY_LEADER_V1: PolicyLeaderV1 = {
         "SSC is SENIOR extended: limited decision delegation with explicit human budget. Responsibility remains human (CFO/Direction).",
     },
     {
-      layer: "AGI_DECISION_LAYER",
+      layer: "AGI",
       authority_model: "SYSTEMIC_GOVERNANCE_ONLY",
       can_execute: false,
       requires_human_approval: false,

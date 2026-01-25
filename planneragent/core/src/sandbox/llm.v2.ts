@@ -2,19 +2,24 @@
 // LLM Adapter v2 — Worker AI logical provider
 // Fan-out multi-slot + JSON-safe normalized output
 
+
 /* ============================================================
  * Types
  * ============================================================
  */
 
-export type LlmProviderV2 = "worker-ai";
+
+export type LlmProviderV2 = "worker-ai" | "openai" | "openrouter" | "mistral";
+
 
 export type LlmSlot = "slotA" | "slotB" | "slotC";
+
 
 export type LlmMessage = {
   role: "system" | "user";
   content: string;
 };
+
 
 export type LlmCallV2 = {
   call_id: string;
@@ -24,10 +29,12 @@ export type LlmCallV2 = {
   maxTokens?: number;
 };
 
+
 export type LlmUsageV2 = {
   tokens_in?: number;
   tokens_out?: number;
 };
+
 
 export type LlmResultV2 = {
   ok: boolean;
@@ -40,16 +47,19 @@ export type LlmResultV2 = {
   error?: string;
 };
 
+
 /* ============================================================
  * Internal mock Worker AI call
  * (governance-safe, deterministic shape)
  * ============================================================
  */
 
+
 async function callWorkerAi(
   call: LlmCallV2
 ): Promise<LlmResultV2> {
   const started = Date.now();
+
 
   try {
     // MOCK intenzionale: struttura reale, contenuto sintetico
@@ -58,6 +68,7 @@ async function callWorkerAi(
       `Focus: risks, trade-offs, assumptions`,
       `No execution or decision suggested`
     ].join(". ");
+
 
     return {
       ok: true,
@@ -84,10 +95,12 @@ async function callWorkerAi(
   }
 }
 
+
 /* ============================================================
  * Public API — fan-out parallel calls
  * ============================================================
  */
+
 
 export async function callManyLlmsV2(
   calls: LlmCallV2[]
@@ -97,7 +110,9 @@ export async function callManyLlmsV2(
   );
 }
 
+
 // INTERNAL API
+
 
 export async function runLlmFanoutV2 (
   calls: LlmCallV2[]
@@ -105,11 +120,13 @@ export async function runLlmFanoutV2 (
 return callManyLlmsV2(calls);
 }
 
+
 /* ============================================================
  * Convenience helper (optional)
  * Single prompt → 3-slot fanout
  * ============================================================
  */
+
 
 export async function fanoutAdvisoryV2(params: {
   baseCallId: string;
@@ -129,5 +146,7 @@ export async function fanoutAdvisoryV2(params: {
     })
   );
 
+
   return callManyLlmsV2(calls);
 }
+

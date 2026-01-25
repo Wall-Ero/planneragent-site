@@ -1,0 +1,2 @@
+ALTER TABLE llm_usage ADD COLUMN domain TEXT;
+ALTER TABLE llm_usage ADD COLUMN intent TEXT;

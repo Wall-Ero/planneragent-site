@@ -17,12 +17,12 @@
 // Logic lives in boundary.policy.ts
 // This file only translates BoundaryResult -> message.
 
-import { BoundaryResult, DecisionMode } from "./boundary.policy";
+import { BoundaryResult, AuthorityLevel } from "./boundary.policy";
 
 export type BoundaryResponse = {
   code: "OK" | "MODE_REQUIRED";
   message: string;
-  requiredMode?: DecisionMode;
+  requiredMode?: AuthorityLevel;
 };
 
 /**

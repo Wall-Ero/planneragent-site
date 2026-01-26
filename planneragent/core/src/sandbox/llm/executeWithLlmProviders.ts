@@ -1,26 +1,49 @@
-import type { D1Database } from "@cloudflare/workers-types";
+// src/sandbox/llm/executeWithLlmProviders.ts
 
+import type { D1Database } from "@cloudflare/workers-types";
 import { LlmProvider, LlmProviderResult, LlmUsage } from "./types";
 import { LlmProviderCandidate } from "../llmcontracts";
-import { writeUsageLedger } from "./usageLedger";
+import { logLlmUsage } from "./usageLedger";
+import type { LlmResultV2, LlmUsageV2 } from "../llm.v2";
 
-import type { LlmResultV2,LlmUsageV2 } from "../llm.v2";
+/* ============================================================
+ * Helpers
+ * ============================================================ */
 
 function mapUsageToV2(
   usage?: LlmUsage
 ): LlmUsageV2 | undefined {
   if (!usage) return undefined;
-
   return {
     tokens_in: usage.prompt_tokens,
-    tokens_out: usage.completion_tokens,
+    tokens_out: usage.completion_tokens
   };
+}
+
+/**
+ * Maps technical provider cost type → economic provider category
+ */
+function mapProviderType(
+  costType: "openrouter" | "mock" | "free" | "paid" | "oss"
+): "paid" | "free" | "oss" {
+  switch (costType) {
+    case "paid":
+      return "paid";
+    case "free":
+      return "free";
+    case "oss":
+      return "oss";
+    case "openrouter":
+      return "free";
+    case "mock":
+    default:
+      return "oss";
+  }
 }
 
 /* ============================================================
  * Types
- * ============================================================
- */
+ * ============================================================ */
 
 export type LlmExecutionResultV2 = {
   scenarios: any[];
@@ -30,53 +53,27 @@ export type LlmExecutionResultV2 = {
 };
 
 /**
- * Maps technical provider cost type → economic provider category
- */
-function mapProviderType(
-  costType: "openrouter" | "mock" | "free" | "paid" | "oss"
-): "oss" | "free" | "paid" {
-  switch (costType) {
-    case "free":
-      return "free";
-    case "paid":
-      return "paid";
-    case "oss":
-      return "oss";
-    case "openrouter":
-    case "mock":
-    default:
-      return "oss";
-  }
-}
-
-/**
- * Input contract for LLM execution
+ * Cognitive mode only — LLM never sees authority
  */
 export type DecisionMode = "sense" | "advise";
 
 /**
  * Input contract for LLM execution
- * LLM never sees authority level, only cognitive mode
  */
 export interface ExecuteLlmInput {
-  db?: D1Database; // optional → no ledger in sandbox/dev
-
+  db?: D1Database;
   companyId: string;
   requestId: string;
-
-  mode: DecisionMode; // 👈 NOT plan
-
+  mode: DecisionMode;
   domain: string;
   intent: string;
   baseline: unknown;
-
   providers: LlmProviderCandidate[];
 }
 
 /* ============================================================
  * Main
- * ============================================================
- */
+ * ============================================================ */
 
 /**
  * Executes LLM calls using ordered providers with fallback and usage ledger.
@@ -84,7 +81,10 @@ export interface ExecuteLlmInput {
  */
 export async function executeWithLlmProviders(
   input: ExecuteLlmInput,
-  providerMap: Record<string, LlmProvider>
+  providerMap: Record<string, LlmProvider>,
+  governance?: {
+    plan: "BASIC" | "JUNIOR" | "SENIOR";
+  }
 ): Promise<LlmExecutionResultV2> {
   const {
     db,
@@ -94,14 +94,10 @@ export async function executeWithLlmProviders(
     domain,
     intent,
     baseline,
-    providers,
+    providers
   } = input;
 
-  console.log("[LLM EXEC] called", {
-  mode: input.mode,
-  providers: input.providers?.map(p => p.id)
-});
-
+  const plan = governance?.plan ?? "BASIC";
   let usedFallback = false;
 
   for (let i = 0; i < providers.length; i++) {
@@ -118,56 +114,49 @@ export async function executeWithLlmProviders(
         await provider.generateScenarios({
           domain,
           intent,
-          baseline,
+          baseline
         });
 
-const llmResults: LlmResultV2[] = [
-  {
-    ok: true,
-    call_id: requestId,
-    provider: "worker-ai", // oppure candidate.id se vuoi tracciarlo come provider tecnico
-    model: result.model ?? "unknown",
-    text: "scenario fanout",
-    usage: mapUsageToV2(result.usage), // ✅ QUI
-  },
-];
+      const llmResults: LlmResultV2[] = [
+        {
+          ok: true,
+          call_id: requestId,
+          provider: "worker-ai",
+          model: result.model ?? "unknown",
+          text: "scenario fanout",
+          usage: mapUsageToV2(result.usage)
+        }
+      ];
 
       // ======================
       // LEDGER — SUCCESS
       // ======================
       if (db) {
-        await writeUsageLedger(db, {
+        const promptTokens = llmResults.reduce(
+          (sum, r) => sum + (r.usage?.tokens_in ?? 0),
+          0
+        );
+
+        const completionTokens = llmResults.reduce(
+          (sum, r) => sum + (r.usage?.tokens_out ?? 0),
+          0
+        );
+
+        await logLlmUsage(db, {
           id: crypto.randomUUID(),
-          created_at: new Date().toISOString(),
-
-          company_id: companyId,
-          mode: mode,
-
-          provider_id: candidate.id,
+          createdAt: new Date().toISOString(),
+          companyId,
+          requestId,
+          plan,
+          providerId: candidate.id,
+          providerType: mapProviderType(candidate.costType),
           model: llmResults[0]?.model,
-          provider_type: mapProviderType(candidate.costType),
-
-          prompt_tokens: llmResults.reduce(
-            (sum, r) => sum + (r.usage?.tokens_in ?? 0),
-            0
-          ),
-          completion_tokens: llmResults.reduce(
-            (sum, r) => sum + (r.usage?.tokens_out ?? 0),
-            0
-          ),
-          total_tokens: llmResults.reduce(
-            (sum, r) =>
-              sum +
-              (r.usage?.tokens_in ?? 0) +
-              (r.usage?.tokens_out ?? 0),
-            0
-          ),
-
-          cost_eur: candidate.estimatedCostEur,
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+          costEur: candidate.estimatedCostEur,
           success: true,
-          fallback: usedFallback,
-
-          request_id: requestId,
+          fallback: usedFallback
         });
       }
 
@@ -175,7 +164,7 @@ const llmResults: LlmResultV2[] = [
         scenarios: result.scenarios,
         providerUsed: candidate.id,
         degraded: usedFallback,
-        llmResults,
+        llmResults
       };
     } catch (err) {
       usedFallback = true;
@@ -184,21 +173,21 @@ const llmResults: LlmResultV2[] = [
       // LEDGER — FAILURE
       // ======================
       if (db) {
-        await writeUsageLedger(db, {
+        await logLlmUsage(db, {
           id: crypto.randomUUID(),
-          created_at: new Date().toISOString(),
-
-          company_id: companyId,
-          mode: mode,
-
-          provider_id: candidate.id,
-          provider_type: mapProviderType(candidate.costType),
-
-          cost_eur: candidate.estimatedCostEur,
+          createdAt: new Date().toISOString(),
+          companyId,
+          requestId,
+          plan,
+          providerId: candidate.id,
+          providerType: mapProviderType(candidate.costType),
+          model: undefined,
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+          costEur: candidate.estimatedCostEur,
           success: false,
-          fallback: true,
-
-          request_id: requestId,
+          fallback: true
         });
       }
 

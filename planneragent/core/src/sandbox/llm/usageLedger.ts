@@ -1,75 +1,97 @@
-import type { D1Database } from "@cloudflare/workers-types";
+// src/sandbox/llm/usageLedger.ts
 
-export type LlmUsageLedgerEntry = {
+
+import { D1Database } from "@cloudflare/workers-types";
+
+/**
+ * Canonical LLM Usage Log Entry
+ * Board-readable, audit-safe, governance-grade
+ */
+export interface LlmUsageLog {
+  /** primary key */
   id: string;
-  created_at: string;
 
-  company_id: string;
-  mode: "sense" | "advise";
+  /** correlation id (sandbox event / decision id) */
+  requestId: string;
 
-  provider_id: string;      // openai | openrouter | oss | mock
-  model?: string;          // gpt-4o-mini, mistral-7b, etc
-  provider_type: "paid" | "free" | "oss";
+  /** tenant / company */
+  companyId: string;
 
-  prompt_tokens?: number;
-  completion_tokens?: number;
-  total_tokens?: number;
+  /** BASIC | JUNIOR | SENIOR */
+  plan: "BASIC" | "JUNIOR" | "SENIOR";
 
-  cost_eur: number;
+  /** openai | openrouter | oss | mock */
+  providerId: string;
+
+  /** paid | free | oss */
+  providerType: "paid" | "free" | "oss";
+
+  /** model name if available */
+  model?: string;
+
+  /** token usage */
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+
+  /** estimated or real EUR cost */
+  costEur: number;
+
+  /** success flag */
   success: boolean;
+
+  /** fallback provider used */
   fallback: boolean;
 
-  request_id?: string;
-};
+  /** ISO timestamp */
+  createdAt: string;
+}
 
-export async function writeUsageLedger(
+/**
+ * Persist LLM usage into D1
+ * This is WRITE-ONLY and GOVERNANCE-CRITICAL
+ */
+export async function logLlmUsage(
   db: D1Database,
-  entry: LlmUsageLedgerEntry
-) {
+  log: LlmUsageLog
+): Promise<void> {
   await db
-    .prepare(`
+    .prepare(
+      `
       INSERT INTO llm_usage (
         id,
         created_at,
-
         company_id,
-        mode,
-
+        plan,
         provider_id,
         model,
         provider_type,
-
         prompt_tokens,
         completion_tokens,
         total_tokens,
-
         cost_eur,
         success,
         fallback,
-
         request_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `
+    )
     .bind(
-      entry.id,
-      entry.created_at,
-
-      entry.company_id,
-      entry.mode,
-
-      entry.provider_id,
-      entry.model ?? null,
-      entry.provider_type,
-
-      entry.prompt_tokens ?? null,
-      entry.completion_tokens ?? null,
-      entry.total_tokens ?? null,
-
-      entry.cost_eur,
-      entry.success ? 1 : 0,
-      entry.fallback ? 1 : 0,
-
-      entry.request_id ?? null
+      log.id,
+      log.createdAt,
+      log.companyId,
+      log.plan,
+      log.providerId,
+      log.model ?? null,
+      log.providerType,
+      log.promptTokens ?? null,
+      log.completionTokens ?? null,
+      log.totalTokens ?? null,
+      log.costEur,
+      log.success ? 1 : 0,
+      log.fallback ? 1 : 0,
+      log.requestId
     )
     .run();
 }

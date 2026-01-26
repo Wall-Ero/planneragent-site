@@ -36,7 +36,7 @@ export const BOUNDARY_RESPONSE_TABLE: readonly BoundaryResponse[] = [
     requiredMode: "JUNIOR",
     message:
       "This request requires Decision Advisory Mode (JUNIOR). " +
-      "In BASIC, I can explain the situation or simulate outcomes, " +
+      "In VISION, I can explain the situation or simulate outcomes, " +
       "but I cannot recommend or prepare actions for approval."
   },
   {

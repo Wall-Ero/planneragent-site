@@ -5,22 +5,21 @@ import type {
   SandboxEvaluateResponseV2,
   ScenarioAdvisoryV2,
 } from "./contracts.v2";
-
 import type {
   AuthorityLevel,
   SemanticIntent,
 } from "../governance/boundary.policy";
-
 import type { D1Database } from "@cloudflare/workers-types";
 
 import { analyzeCore } from "../analyzeCore";
 import { scoreScenario } from "./dqm";
-
 import { createProviderMap } from "./llm/providerMap";
 import { resolveLlmProviders } from "./llm/registry";
-import { executeWithLlmProviders } from "./llm/executeWithLlmProviders";
+import {
+  executeWithLlmProviders,
+  LlmExecutionResultV2,
+} from "./llm/executeWithLlmProviders";
 import { getLlmBudgetConfig } from "./budget";
-
 import { logLlmFanoutV2 } from "./LogLlmUsage";
 
 // ==============================
@@ -31,13 +30,11 @@ import {
   BoundaryResult,
   BoundaryViolationError,
 } from "../governance/boundary.policy";
-
 import { resolveBoundaryResponse } from "../governance/boundary.responses";
 
 /* ============================================================
  * Helpers
  * ============================================================ */
-
 /**
  * PLAN → Semantic Intent ladder
  * Authority defines how far cognition is allowed to go.
@@ -57,10 +54,26 @@ function deriveIntentFromPlan(
   }
 }
 
+
+import type { Intent as PublicIntent } from "./contracts.v2";
+
+function mapPublicIntentToSemantic(intent: PublicIntent): SemanticIntent {
+  switch (intent) {
+    case "INFORM":
+    case "SENSE":
+      return "INFORM";
+    case "ADVISE":
+      return "PROPOSE";
+    case "EXECUTE":
+      return "PACKAGE_DECISION";
+    default:
+      return "INFORM";
+  }
+}
+
 /* ============================================================
  * MAIN ENTRY — Sandbox V2
  * ============================================================ */
-
 export async function evaluateSandboxV2(
   input: SandboxEvaluateRequestV2,
   env: Record<string, unknown>
@@ -68,7 +81,6 @@ export async function evaluateSandboxV2(
   /* ===============================
    * 0) INPUTS (normalized)
    * =============================== */
-
   const company_id =
     (input as any).company_id ??
     (input as any).companyId ??
@@ -81,14 +93,15 @@ export async function evaluateSandboxV2(
 
   const domain = ((input as any).domain ?? "supply_chain") as any;
 
-  const intent: SemanticIntent =
-    ((input as any).intent as SemanticIntent) ??
-    deriveIntentFromPlan(plan);
+  const publicIntent: PublicIntent =
+  ((input as any).intent as PublicIntent) ??
+  (plan === "BASIC" ? "INFORM" : plan === "JUNIOR" ? "ADVISE" : "EXECUTE");
+
+const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
 
   /* ==============================
    * AUTHORITY (Governance Plane)
    * ============================== */
-
   const authorityLevel: AuthorityLevel =
     plan === "BASIC"
       ? "VISION"
@@ -99,7 +112,6 @@ export async function evaluateSandboxV2(
   /* ==============================
    * MODE (LLM Language Plane)
    * ============================== */
-
   const mode: "sense" | "advise" =
     plan === "BASIC" ? "sense" : "advise";
 
@@ -120,7 +132,6 @@ export async function evaluateSandboxV2(
   /* ===============================
    * 1) BASELINE + CORE EVIDENCE
    * =============================== */
-
   const core = await analyzeCore(coreInput);
 
   const baseline_snapshot_id: string =
@@ -138,41 +149,32 @@ export async function evaluateSandboxV2(
   /* ===============================
    * 2) LLM PROVIDER REGISTRY
    * =============================== */
-
   const budgetConfig = getLlmBudgetConfig(plan);
-
   const providers = resolveLlmProviders(
     plan,
     budgetConfig.basicMonthlyCapEur
   );
-
   const providerMap = createProviderMap(env);
 
   /* ===============================
    * 3) GOVERNANCE / D1 BINDING
    * =============================== */
-
   const policiesDb = (env as any)?.POLICIES_DB as
     | D1Database
     | undefined;
-
   const dbForLlm: D1Database | undefined = policiesDb;
 
   /* ===============================
    * 4) GOVERNANCE BOUNDARY
    * =============================== */
-
   let boundary: BoundaryResult | undefined;
-
   try {
     boundary = enforceBoundary(authorityLevel, intent, {
       requestId: event_id,
       userId: undefined,
       companyId: company_id,
-
       timestamp: new Date().toISOString(),
       source: "system",
-
       domain,
       budgetCap: budgetConfig.basicMonthlyCapEur,
       baseline: core,
@@ -184,38 +186,30 @@ export async function evaluateSandboxV2(
 
     if (!boundary.allowed && !allowSense) {
       const response = resolveBoundaryResponse(boundary);
-
       return {
         ok: false,
         execution_allowed: false,
-
         event_id,
         baseline_snapshot_id,
-
         rate: {
           status: "OK",
           reset_at: new Date().toISOString(),
         },
-
         dl: {
           profile: "signals-v2",
           health: "degraded",
         },
-
         llm: {
           mode,
           fanout: 0,
           models_used: [],
           health: "degraded",
         },
-
         scenarios: [],
-
         ranking: {
           method: "DQM",
           top_ids: [],
         },
-
         summary: {
           one_liner:
             authorityLevel === "VISION"
@@ -232,44 +226,35 @@ export async function evaluateSandboxV2(
   } catch (err: unknown) {
     if (err instanceof BoundaryViolationError) {
       const response = resolveBoundaryResponse(err.boundary);
-
       console.warn("[GOVERNANCE][BOUNDARY]", {
         event_id,
         boundary: err.boundary,
         context: err.context,
       });
-
       return {
         ok: false,
         execution_allowed: false,
-
         event_id,
         baseline_snapshot_id,
-
         rate: {
           status: "OK",
           reset_at: new Date().toISOString(),
         },
-
         dl: {
           profile: "signals-v2",
           health: "degraded",
         },
-
         llm: {
           mode,
           fanout: 0,
           models_used: [],
           health: "degraded",
         },
-
         scenarios: [],
-
         ranking: {
           method: "DQM",
           top_ids: [],
         },
-
         summary: {
           one_liner:
             authorityLevel === "VISION"
@@ -283,14 +268,12 @@ export async function evaluateSandboxV2(
         },
       };
     }
-
     throw err;
   }
 
   /* ===============================
    * 5) CORE SCENARIOS (Deterministic)
    * =============================== */
-
   const coreScenariosRaw: any[] =
     (core as any)?.scenarios ?? [];
 
@@ -313,59 +296,55 @@ export async function evaluateSandboxV2(
     }));
 
   /* ===============================
-   * 6) LLM EXECUTION
+   * 6) LLM GOVERNED EXECUTION
    * =============================== */
+  const allowLlmForSense = plan === "BASIC";     // VISION: explain, clarify, ask
+  const allowLlmForAdvise = plan !== "BASIC";   // JUNIOR/SENIOR: scenarios + advisory
 
+  let llmExec: LlmExecutionResultV2 | null = null;
   let llmResults: any[] = [];
   let llmScenarios: ScenarioAdvisoryV2[] = [];
 
-  const allowLlmScenarioGen = plan !== "BASIC";
+  if (allowLlmForSense || allowLlmForAdvise) {
+ llmExec = await executeWithLlmProviders(
+  {
+    db: dbForLlm,
+    companyId: company_id,
+    requestId: event_id,
+    mode: allowLlmForAdvise ? "advise" : "sense",
+    domain,
+    intent,
+    baseline: (core as any).baseline ?? core,
+    providers,
+  },
+  providerMap
+);
 
-  const llmExec = await executeWithLlmProviders(
-    {
-      db: dbForLlm,
+    llmResults = llmExec?.llmResults ?? [];
 
-      companyId: company_id,
-      requestId: event_id,
-
-      mode,
-      domain,
-      intent,
-
-      baseline: (core as any).baseline ?? core,
-      providers,
-    },
-    providerMap
-  );
-
-  llmResults = llmExec?.llmResults ?? [];
-
-  if (allowLlmScenarioGen) {
-    llmScenarios = (llmExec?.scenarios ?? []).map(
-      (s: any, idx: number) => ({
-        scenario_id:
-          s.scenario_id ?? s.id ?? `llm_${idx}`,
-        label: s.label ?? `Scenario ${idx + 1}`,
-        assumptions: s.assumptions ?? [],
-        proposed_actions:
-          s.proposed_actions ?? s.actions ?? [],
-        dl_evidence:
-          s.dl_evidence ?? s.evidence ?? undefined,
-        expected_effects:
-          s.expected_effects ?? s.effects ?? undefined,
-        confidence:
-          typeof s.confidence === "number"
-            ? s.confidence
-            : 0.3,
-        evidence_missing: !!s.evidence_missing,
-      })
-    );
+    // ONLY JUNIOR/SENIOR may receive LLM-generated scenarios
+    if (allowLlmForAdvise) {
+      llmScenarios = (llmExec?.scenarios ?? []).map(
+        (s: any, idx: number) => ({
+          scenario_id: s.scenario_id ?? s.id ?? `llm_${idx}`,
+          label: s.label ?? `Scenario ${idx + 1}`,
+          assumptions: s.assumptions ?? [],
+          proposed_actions: s.proposed_actions ?? s.actions ?? [],
+          dl_evidence: s.dl_evidence ?? s.evidence ?? undefined,
+          expected_effects: s.expected_effects ?? s.effects ?? undefined,
+          confidence:
+            typeof s.confidence === "number"
+              ? s.confidence
+              : 0.3,
+          evidence_missing: !!s.evidence_missing,
+        })
+      );
+    }
   }
 
   /* ===============================
    * 6.1) LLM USAGE LOG
    * =============================== */
-
   if (dbForLlm && llmResults.length > 0) {
     await logLlmFanoutV2(
       dbForLlm,
@@ -374,7 +353,7 @@ export async function evaluateSandboxV2(
         plan,
         domain,
         intent,
-        mode: "sense"
+        mode,
       },
       llmResults
     );
@@ -383,7 +362,6 @@ export async function evaluateSandboxV2(
   /* ===============================
    * 7) SCENARIO SOURCE RULE
    * =============================== */
-
   const scenariosToRank: ScenarioAdvisoryV2[] =
     plan === "BASIC"
       ? coreScenarios
@@ -392,7 +370,6 @@ export async function evaluateSandboxV2(
   /* ===============================
    * 8) DQM RANKING
    * =============================== */
-
   const dlStub = {
     signals: [],
     constraints: [],
@@ -416,7 +393,6 @@ export async function evaluateSandboxV2(
   /* ===============================
    * 9) RESPONSE
    * =============================== */
-
   const models_used = llmResults
     .map((r: any) => r?.model)
     .filter((m: any) => typeof m === "string");
@@ -424,11 +400,14 @@ export async function evaluateSandboxV2(
   const llmHealth: "ok" | "degraded" | "failed" =
     llmResults.length > 0
       ? "ok"
-      : "degraded";
+      : allowLlmForSense || allowLlmForAdvise
+      ? "degraded"
+      : "failed";
 
   const oneLiner =
     plan === "BASIC"
-      ? "I am observing system signals and governance state. No advice or actions are being prepared."
+      ? llmResults?.[0]?.text ??
+        "I am observing system signals and governance state. No advice or actions are being prepared."
       : (llmExec as any)?.summary?.one_liner ??
         "Advisory scenarios generated under governance.";
 
@@ -438,6 +417,7 @@ export async function evaluateSandboxV2(
       ? [
           "What changed vs last snapshot?",
           "Where is the next operational risk?",
+          "Which signals look unstable or incomplete?",
         ]
       : []);
 
@@ -447,34 +427,27 @@ export async function evaluateSandboxV2(
   return {
     ok: true,
     execution_allowed: false,
-
     event_id,
     baseline_snapshot_id,
-
     rate: {
       status: "OK",
       reset_at: new Date().toISOString(),
     },
-
     dl: {
       profile: "signals-v2",
       health: "degraded",
     },
-
     llm: {
       mode,
       fanout: llmResults.length,
       models_used,
       health: llmHealth,
     },
-
     scenarios: ranked,
-
     ranking: {
       method: "DQM",
       top_ids,
     },
-
     summary: {
       one_liner: oneLiner,
       key_tradeoffs,

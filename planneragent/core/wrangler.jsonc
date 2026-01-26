@@ -4,11 +4,18 @@
   "main": "src/worker.ts",
   "compatibility_date": "2026-01-02",
 
-"d1_databases": [
-  {
-    "binding": "POLICIES_DB",
-    "database_name": "planneragent-policies",
-    "database_id": "d1e3200f-93d7-4cc0-ad69-7f76ecc0ec8f"
-  }
-]
+  // ======================
+  // ENV VARS (LLM LAYER)
+  // ======================
+  "vars": {
+    "OPENROUTER_API_KEY": "sk-or-XXXXXXXXXXXX"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "POLICIES_DB",
+      "database_name": "planneragent-policies",
+      "database_id": "d1e3200f-93d7-4cc0-ad69-7f76ecc0ec8f"
+    }
+  ]
 }

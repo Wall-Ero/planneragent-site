@@ -1,9 +1,13 @@
-import type { ScenarioAdvisoryV2 } from "./sandbox/contracts.v2";
+// src/analyzeCore.ts
+// ======================================================
+// Deterministic core analyzer (placeholder)
+// NOTE: this module is pure-deterministic and does not
+// import sandbox advisory types.
+// ======================================================
 
 type InventoryItem = any;
 type Order = any;
 type Movement = any;
-
 
 export interface AnalyzeResult {
   asOf: string;
@@ -29,8 +33,8 @@ export function analyzeCore(input: {
   inventory: InventoryItem[];
   movements: Movement[];
 }): AnalyzeResult {
-  // 👇 QUI CI VA ESATTAMENTE IL CODICE
-  // che ora hai inline in /analyze
+  // Deterministic allocation engine will live here.
+  // Output must be stable + audit-friendly.
 
   return {
     asOf: input.asOf,

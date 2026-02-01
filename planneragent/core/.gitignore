@@ -166,3 +166,6 @@ dist
 !.env.example
 .wrangler/
 node_modules/
+node_modules/
+*.tar.gz
+ui/

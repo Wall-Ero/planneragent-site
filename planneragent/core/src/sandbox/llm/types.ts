@@ -1,3 +1,6 @@
+//core/src/sandbox/llm/types.ts
+
+
 /**
  * LLM Types — Canonical v1
  *
@@ -63,5 +66,6 @@ export interface LlmProvider {
     domain: string;
     intent: string;
     baseline: unknown;
+    model?: string;
   }): Promise<LlmProviderResult>;
 }

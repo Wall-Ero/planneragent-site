@@ -19,8 +19,9 @@ import {
   executeWithLlmProviders,
   LlmExecutionResultV2,
 } from "./llm/executeWithLlmProviders";
-import { getLlmBudgetConfig } from "./budget";
+import { getLlmBudgetConfig, getBasicBudgetRemainingEur } from "./budget";
 import { logLlmFanoutV2 } from "./LogLlmUsage";
+import { resolveSovereigntyPolicyV1 } from "./llm/sovereignty";
 
 // ==============================
 // GOVERNANCE / BOUNDARY
@@ -37,27 +38,27 @@ import { resolveBoundaryResponse } from "../governance/boundary.responses";
  * ============================================================ */
 /**
  * PLAN → Semantic Intent ladder
- * Authority defines how far cognition is allowed to go.
  */
 function deriveIntentFromPlan(
   plan: "BASIC" | "JUNIOR" | "SENIOR"
 ): SemanticIntent {
   switch (plan) {
     case "BASIC":
-      return "INFORM"; // observe / explain / clarify
+      return "INFORM";
     case "JUNIOR":
-      return "PROPOSE"; // structured options
+      return "PROPOSE";
     case "SENIOR":
-      return "PACKAGE_DECISION"; // decision object
+      return "PACKAGE_DECISION";
     default:
       return "INFORM";
   }
 }
 
-
 import type { Intent as PublicIntent } from "./contracts.v2";
 
-function mapPublicIntentToSemantic(intent: PublicIntent): SemanticIntent {
+function mapPublicIntentToSemantic(
+  intent: PublicIntent
+): SemanticIntent {
   switch (intent) {
     case "INFORM":
     case "SENSE":
@@ -94,10 +95,15 @@ export async function evaluateSandboxV2(
   const domain = ((input as any).domain ?? "supply_chain") as any;
 
   const publicIntent: PublicIntent =
-  ((input as any).intent as PublicIntent) ??
-  (plan === "BASIC" ? "INFORM" : plan === "JUNIOR" ? "ADVISE" : "EXECUTE");
+    ((input as any).intent as PublicIntent) ??
+    (plan === "BASIC"
+      ? "INFORM"
+      : plan === "JUNIOR"
+      ? "ADVISE"
+      : "EXECUTE");
 
-const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
+  const intent: SemanticIntent =
+    mapPublicIntentToSemantic(publicIntent);
 
   /* ==============================
    * AUTHORITY (Governance Plane)
@@ -125,8 +131,10 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     orders: (input as any).orders ?? [],
     inventory: (input as any).inventory ?? [],
     movements: (input as any).movements ?? [],
-    baseline_metrics: (input as any).baseline_metrics ?? {},
-    scenario_metrics: (input as any).scenario_metrics ?? {},
+    baseline_metrics:
+      (input as any).baseline_metrics ?? {},
+    scenario_metrics:
+      (input as any).scenario_metrics ?? {},
   };
 
   /* ===============================
@@ -147,45 +155,84 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     crypto.randomUUID();
 
   /* ===============================
-   * 2) LLM PROVIDER REGISTRY
+   * 2) LLM PROVIDER REGISTRY + SOVEREIGNTY
    * =============================== */
   const budgetConfig = getLlmBudgetConfig(plan);
-  const providers = resolveLlmProviders(
-    plan,
-    budgetConfig.basicMonthlyCapEur
-  );
-  const providerMap = createProviderMap(env);
 
-  /* ===============================
-   * 3) GOVERNANCE / D1 BINDING
-   * =============================== */
   const policiesDb = (env as any)?.POLICIES_DB as
     | D1Database
     | undefined;
+
   const dbForLlm: D1Database | undefined = policiesDb;
 
+  // Remaining budget logic (BASIC only)
+  let budgetRemainingEur = Number.POSITIVE_INFINITY;
+
+  if (plan === "BASIC" && dbForLlm) {
+    budgetRemainingEur =
+      await getBasicBudgetRemainingEur(
+        dbForLlm,
+        budgetConfig
+      );
+  } else if (plan === "BASIC" && !dbForLlm) {
+    // No DB = cannot prove remaining budget → safest = force free/oss
+    budgetRemainingEur = 0;
+  }
+
+  const sovereignty = resolveSovereigntyPolicyV1({
+    plan,
+    budgetRemainingEur: Number.isFinite(
+      budgetRemainingEur
+    )
+      ? budgetRemainingEur
+      : 999999,
+  });
+
+  const providers = resolveLlmProviders(
+    plan,
+    Number.isFinite(budgetRemainingEur)
+      ? budgetRemainingEur
+      : 999999,
+    sovereignty
+  );
+
+  const providerMap = createProviderMap(env);
+
+  // Model injection (v1 rule)
+  const injectedModel =
+    sovereignty.preferred === "paid"
+      ? "openai/gpt-4o-mini"
+      : undefined;
+
   /* ===============================
-   * 4) GOVERNANCE BOUNDARY
+   * 3) GOVERNANCE BOUNDARY
    * =============================== */
   let boundary: BoundaryResult | undefined;
   try {
-    boundary = enforceBoundary(authorityLevel, intent, {
-      requestId: event_id,
-      userId: undefined,
-      companyId: company_id,
-      timestamp: new Date().toISOString(),
-      source: "system",
-      domain,
-      budgetCap: budgetConfig.basicMonthlyCapEur,
-      baseline: core,
-    });
+    boundary = enforceBoundary(
+      authorityLevel,
+      intent,
+      {
+        requestId: event_id,
+        userId: undefined,
+        companyId: company_id,
+        timestamp: new Date().toISOString(),
+        source: "system",
+        domain,
+        budgetCap:
+          budgetConfig.basicMonthlyCapEur,
+        baseline: core,
+      }
+    );
 
-    // VISION is always allowed to INFORM (sense)
     const allowSense =
-      authorityLevel === "VISION" && intent === "INFORM";
+      authorityLevel === "VISION" &&
+      intent === "INFORM";
 
     if (!boundary.allowed && !allowSense) {
-      const response = resolveBoundaryResponse(boundary);
+      const response =
+        resolveBoundaryResponse(boundary);
+
       return {
         ok: false,
         execution_allowed: false,
@@ -225,12 +272,18 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     }
   } catch (err: unknown) {
     if (err instanceof BoundaryViolationError) {
-      const response = resolveBoundaryResponse(err.boundary);
-      console.warn("[GOVERNANCE][BOUNDARY]", {
-        event_id,
-        boundary: err.boundary,
-        context: err.context,
-      });
+      const response =
+        resolveBoundaryResponse(err.boundary);
+
+      console.warn(
+        "[GOVERNANCE][BOUNDARY]",
+        {
+          event_id,
+          boundary: err.boundary,
+          context: err.context,
+        }
+      );
+
       return {
         ok: false,
         execution_allowed: false,
@@ -272,80 +325,130 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
   }
 
   /* ===============================
-   * 5) CORE SCENARIOS (Deterministic)
+   * 4) CORE SCENARIOS (Deterministic)
    * =============================== */
   const coreScenariosRaw: any[] =
     (core as any)?.scenarios ?? [];
 
   const coreScenarios: ScenarioAdvisoryV2[] =
-    coreScenariosRaw.map((s: any, idx: number) => ({
-      scenario_id: s.scenario_id ?? s.id ?? `core_${idx}`,
-      label: s.label ?? `Core scenario ${idx + 1}`,
-      assumptions: s.assumptions ?? [],
-      proposed_actions:
-        s.proposed_actions ?? s.actions ?? [],
-      dl_evidence:
-        s.dl_evidence ?? s.evidence ?? undefined,
-      expected_effects:
-        s.expected_effects ?? s.effects ?? undefined,
-      confidence:
-        typeof s.confidence === "number"
-          ? s.confidence
-          : 0.6,
-      evidence_missing: !!s.evidence_missing,
-    }));
+    coreScenariosRaw.map(
+      (s: any, idx: number) => ({
+        scenario_id:
+          s.scenario_id ??
+          s.id ??
+          `core_${idx}`,
+        label:
+          s.label ??
+          `Core scenario ${idx + 1}`,
+        assumptions: s.assumptions ?? [],
+        proposed_actions:
+          s.proposed_actions ??
+          s.actions ??
+          [],
+        dl_evidence:
+          s.dl_evidence ??
+          s.evidence ??
+          undefined,
+        expected_effects:
+          s.expected_effects ??
+          s.effects ??
+          undefined,
+        confidence:
+          typeof s.confidence === "number"
+            ? s.confidence
+            : 0.6,
+        evidence_missing:
+          !!s.evidence_missing,
+      })
+    );
 
   /* ===============================
-   * 6) LLM GOVERNED EXECUTION
+   * 5) LLM GOVERNED EXECUTION
    * =============================== */
-  const allowLlmForSense = plan === "BASIC";     // VISION: explain, clarify, ask
-  const allowLlmForAdvise = plan !== "BASIC";   // JUNIOR/SENIOR: scenarios + advisory
+  const allowLlmForSense =
+    plan === "BASIC";
+  const allowLlmForAdvise =
+    plan !== "BASIC";
 
-  let llmExec: LlmExecutionResultV2 | null = null;
+  let llmExec: LlmExecutionResultV2 | null =
+    null;
   let llmResults: any[] = [];
-  let llmScenarios: ScenarioAdvisoryV2[] = [];
+  let llmScenarios: ScenarioAdvisoryV2[] =
+    [];
 
-  if (allowLlmForSense || allowLlmForAdvise) {
- llmExec = await executeWithLlmProviders(
-  {
-    db: dbForLlm,
-    companyId: company_id,
-    requestId: event_id,
-    mode: allowLlmForAdvise ? "advise" : "sense",
-    domain,
-    intent,
-    baseline: (core as any).baseline ?? core,
-    providers,
-  },
-  providerMap
-);
+  if (
+    allowLlmForSense ||
+    allowLlmForAdvise
+  ) {
+    llmExec =
+      await executeWithLlmProviders(
+        {
+          db: dbForLlm,
+          companyId: company_id,
+          requestId: event_id,
+          mode: allowLlmForAdvise
+            ? "advise"
+            : "sense",
+          domain,
+          intent,
+          baseline:
+            (core as any).baseline ??
+            core,
+          providers,
+          model: injectedModel,
+        },
+        providerMap,
+        { plan }
+      );
 
-    llmResults = llmExec?.llmResults ?? [];
+    llmResults =
+      llmExec?.llmResults ?? [];
 
-    // ONLY JUNIOR/SENIOR may receive LLM-generated scenarios
     if (allowLlmForAdvise) {
-      llmScenarios = (llmExec?.scenarios ?? []).map(
+      llmScenarios = (
+        llmExec?.scenarios ?? []
+      ).map(
         (s: any, idx: number) => ({
-          scenario_id: s.scenario_id ?? s.id ?? `llm_${idx}`,
-          label: s.label ?? `Scenario ${idx + 1}`,
-          assumptions: s.assumptions ?? [],
-          proposed_actions: s.proposed_actions ?? s.actions ?? [],
-          dl_evidence: s.dl_evidence ?? s.evidence ?? undefined,
-          expected_effects: s.expected_effects ?? s.effects ?? undefined,
+          scenario_id:
+            s.scenario_id ??
+            s.id ??
+            `llm_${idx}`,
+          label:
+            s.label ??
+            `Scenario ${idx + 1}`,
+          assumptions:
+            s.assumptions ?? [],
+          proposed_actions:
+            s.proposed_actions ??
+            s.actions ??
+            [],
+          dl_evidence:
+            s.dl_evidence ??
+            s.evidence ??
+            undefined,
+          expected_effects:
+            s.expected_effects ??
+            s.effects ??
+            undefined,
           confidence:
-            typeof s.confidence === "number"
+            typeof s.confidence ===
+            "number"
               ? s.confidence
               : 0.3,
-          evidence_missing: !!s.evidence_missing,
+          evidence_missing:
+            !!s.evidence_missing,
         })
       );
     }
   }
 
   /* ===============================
-   * 6.1) LLM USAGE LOG
+   * 6) LLM USAGE LOG
    * =============================== */
-  if (dbForLlm && llmResults.length > 0) {
+  if (
+    dbForLlm &&
+    llmResults.length > 0
+  ) {
     await logLlmFanoutV2(
       dbForLlm,
       {
@@ -362,7 +465,8 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
   /* ===============================
    * 7) SCENARIO SOURCE RULE
    * =============================== */
-  const scenariosToRank: ScenarioAdvisoryV2[] =
+  const scenariosToRank:
+    ScenarioAdvisoryV2[] =
     plan === "BASIC"
       ? coreScenarios
       : llmScenarios;
@@ -376,16 +480,22 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     health: "stub",
   };
 
-  const scored = scenariosToRank.map((s) => ({
-    scenario: s,
-    score: scoreScenario
-      ? scoreScenario(s, dlStub)
-      : 0,
-  }));
+  const scored = scenariosToRank.map(
+    (s) => ({
+      scenario: s,
+      score: scoreScenario
+        ? scoreScenario(s, dlStub)
+        : 0,
+    })
+  );
 
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort(
+    (a, b) => b.score - a.score
+  );
 
-  const ranked = scored.map((x) => x.scenario);
+  const ranked = scored.map(
+    (x) => x.scenario
+  );
   const top_ids = ranked.map(
     (s) => s.scenario_id
   );
@@ -395,12 +505,19 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
    * =============================== */
   const models_used = llmResults
     .map((r: any) => r?.model)
-    .filter((m: any) => typeof m === "string");
+    .filter(
+      (m: any) =>
+        typeof m === "string"
+    );
 
-  const llmHealth: "ok" | "degraded" | "failed" =
+  const llmHealth:
+    | "ok"
+    | "degraded"
+    | "failed" =
     llmResults.length > 0
       ? "ok"
-      : allowLlmForSense || allowLlmForAdvise
+      : allowLlmForSense ||
+        allowLlmForAdvise
       ? "degraded"
       : "failed";
 
@@ -408,11 +525,13 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     plan === "BASIC"
       ? llmResults?.[0]?.text ??
         "I am observing system signals and governance state. No advice or actions are being prepared."
-      : (llmExec as any)?.summary?.one_liner ??
+      : (llmExec as any)
+          ?.summary?.one_liner ??
         "Advisory scenarios generated under governance.";
 
   const questions_for_scm: string[] =
-    (llmExec as any)?.summary?.questions_for_scm ??
+    (llmExec as any)
+      ?.summary?.questions_for_scm ??
     (plan === "BASIC"
       ? [
           "What changed vs last snapshot?",
@@ -422,7 +541,9 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
       : []);
 
   const key_tradeoffs: string[] =
-    (llmExec as any)?.summary?.key_tradeoffs ?? [];
+    (llmExec as any)
+      ?.summary?.key_tradeoffs ??
+    [];
 
   return {
     ok: true,
@@ -431,7 +552,8 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     baseline_snapshot_id,
     rate: {
       status: "OK",
-      reset_at: new Date().toISOString(),
+      reset_at:
+        new Date().toISOString(),
     },
     dl: {
       profile: "signals-v2",
@@ -439,7 +561,8 @@ const intent: SemanticIntent = mapPublicIntentToSemantic(publicIntent);
     },
     llm: {
       mode,
-      fanout: llmResults.length,
+      fanout:
+        llmResults.length,
       models_used,
       health: llmHealth,
     },

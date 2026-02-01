@@ -1,3 +1,6 @@
+//core/src/sandbox/llm/sql/001_llm_usage.sql
+
+
 CREATE TABLE IF NOT EXISTS llm_usage (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,

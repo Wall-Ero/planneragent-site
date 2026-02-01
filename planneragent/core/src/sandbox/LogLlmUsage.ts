@@ -1,4 +1,4 @@
-//core/src/sandbox/Log-llmUsage.ts
+//core/src/sandbox/LogLlmUsage.ts
 
 import type { D1Database } from "@cloudflare/workers-types";
 import type { LlmResultV2 } from "./llm.v2";

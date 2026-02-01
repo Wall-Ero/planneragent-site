@@ -1,4 +1,5 @@
-// src/sandbox/ratePolicy.v2.ts
+// src/sandbox/policy.v2.ts
+
 import type { PlanTier, SandboxRateInfo } from "./contracts.v2";
 
 // -----------------------------

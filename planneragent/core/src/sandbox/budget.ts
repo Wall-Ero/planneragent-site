@@ -1,5 +1,8 @@
 // sandbox/llm/budget.ts
 
+
+import type { D1Database } from "@cloudflare/workers-types";
+
 export type PlanTier = "BASIC" | "JUNIOR" | "SENIOR";
 
 export interface LlmBudgetConfig {
@@ -230,4 +233,33 @@ export async function recordRedistribution(
     )
     .bind(contribution, new Date().toISOString(), month)
     .run();
+}
+
+// ----------------------------
+// Remaining budget (BASIC global pool)
+// ----------------------------
+export async function getBasicBudgetRemainingEur(
+  db: D1Database,
+  config: LlmBudgetConfig = DEFAULT_LLM_BUDGET
+): Promise<number> {
+  await ensureGlobalBudget(db, config);
+
+  const month = currentMonth();
+
+  const row = await db
+    .prepare(
+      `SELECT total_budget_eur, used_budget_eur
+       FROM llm_global_budget
+       WHERE month = ?`
+    )
+    .bind(month)
+    .first<any>();
+
+  if (!row) return 0;
+
+  const total = Number(row.total_budget_eur ?? 0);
+  const used = Number(row.used_budget_eur ?? 0);
+
+  const remaining = total - used;
+  return remaining > 0 ? remaining : 0;
 }

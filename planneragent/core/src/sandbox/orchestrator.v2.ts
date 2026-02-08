@@ -1,16 +1,13 @@
 // src/sandbox/orchestrator.v2.ts
+
 // ======================================================
-// SANDBOX ORCHESTRATOR — V2
-// Constitutional Core Worker
+// SANDBOX ORCHESTRATOR — V2 (P3 Authority Bound)
+// Canonical Source of Truth
 //
 // Responsibilities:
-// - Enforce PLAN + INTENT governance
+// - Enforce Authority via Signed Snapshot (P3)
 // - Run deterministic DL layer (truth)
-// - Allow LLM fanout only where allowed
-// - Separate:
-//     * Evidence (DL)
-//     * Understanding (VISION Interpreter)
-//     * Scenarios (LLM / Hypotheses)
+// - Allow LLM fanout only where governance allows
 // ======================================================
 
 import type {
@@ -23,6 +20,7 @@ import type {
 } from "./contracts.v2";
 
 import { computeDlEvidenceV2 } from "./dl.v2";
+import { authoritySandboxGuard } from "./authority/authoritySandbox.guard";
 
 // -----------------------------
 // INTERNAL TYPES
@@ -32,20 +30,15 @@ type Env = {
 };
 
 // -----------------------------
-// GOVERNANCE MATRIX
+// GOVERNANCE HELPERS
 // -----------------------------
 function executionAllowed(plan: string, intent: string): boolean {
   if (intent !== "EXECUTE") return false;
 
   switch (plan) {
     case "JUNIOR":
-      // Execution only after explicit human approval (not enforced here)
-      return true;
     case "SENIOR":
-      // Execution by delegation
-      return true;
     case "PRINCIPAL":
-      // Execution within budget authority
       return true;
     default:
       return false;
@@ -53,105 +46,103 @@ function executionAllowed(plan: string, intent: string): boolean {
 }
 
 function llmAllowed(plan: string): boolean {
-  // LLM is NOT allowed to imagine reality in VISION
-  // It is allowed to narrate / explain only
+  // CHARTER never calls LLM
   return plan !== "CHARTER";
 }
 
 // -----------------------------
-// VISION INTERPRETER (LLM-FREE)
+// VISION INTERPRETER (Deterministic explain)
 // -----------------------------
 function buildVisionAdvisory(
   dl: DlEvidenceV2,
   health: Health
 ): ScenarioAdvisoryV2 {
+
   const labels: string[] = [];
   const keySignals: string[] = [];
 
-  const { risk_score, demand_forecast, lead_time_pred, anomaly_signals } = dl;
-
-  if (risk_score.stockout_risk > 0.6) {
+  if (dl.risk_score.stockout_risk > 0.6) {
     labels.push("STOCKOUT_RISK");
-    keySignals.push(
-      `Stockout risk is elevated (${risk_score.stockout_risk})`
-    );
+    keySignals.push(`Stockout risk elevated (${dl.risk_score.stockout_risk})`);
   }
 
-  if (risk_score.supplier_dependency > 0.7) {
+  if (dl.risk_score.supplier_dependency > 0.7) {
     labels.push("SUPPLIER_DEPENDENCY");
-    keySignals.push(
-      `High dependency on supplier B (${risk_score.supplier_dependency})`
-    );
-  }
-
-  const questions: ScenarioAdvisoryV2["questions"] = [];
-
-  if (!lead_time_pred.supplier_B_p50_days) {
-    questions.push({
-      id: "missing_lt_b",
-      question: "Lead time for supplier B is missing. Can you confirm p50 days?",
-      missing_field: "supplier_B_leadtime_p50_days"
-    });
-  }
-
-  if (!demand_forecast.p50) {
-    questions.push({
-      id: "missing_demand",
-      question: "Baseline demand forecast is missing. Can you confirm p50?",
-      missing_field: "demand_p50"
-    });
+    keySignals.push(`Supplier dependency high (${dl.risk_score.supplier_dependency})`);
   }
 
   const one_liner =
     health !== "ok"
-      ? "Deterministic layer is degraded — interpretation may be incomplete."
+      ? "Deterministic layer degraded."
       : labels.includes("STOCKOUT_RISK")
-      ? "Demand is projected to exceed available stock, indicating a potential stockout risk."
+      ? "Demand may exceed stock → stockout risk."
       : labels.includes("SUPPLIER_DEPENDENCY")
-      ? "System shows elevated dependency on a single supplier, increasing lead-time sensitivity."
-      : "Operational signals are within expected ranges with no dominant risk detected.";
+      ? "High dependency on single supplier."
+      : "System stable — no dominant risk detected.";
 
   return {
     one_liner,
-    key_signals: keySignals.length ? keySignals : anomaly_signals,
+    key_signals: keySignals.length ? keySignals : dl.anomaly_signals,
     labels,
-    questions
+    questions: []
   };
 }
 
 // -----------------------------
-// LLM FANOUT (PLACEHOLDER)
+// LLM FANOUT PLACEHOLDER
 // -----------------------------
-// This is intentionally dumb.
-// Governance decides WHEN this may be called.
-// Providers / budget / audit live elsewhere.
 async function runLlmFanout(
   _req: SandboxEvaluateRequestV2,
   dl: DlEvidenceV2
 ): Promise<ScenarioV2[]> {
+
   return [
     {
       id: "llm-1",
       title: "Demand vs Stock Imbalance",
-      summary: `Observed demand p50=${dl.demand_forecast.p50} exceeds stock with stockout risk=${dl.risk_score.stockout_risk}.`,
+      summary: `Demand p50=${dl.demand_forecast.p50} stockoutRisk=${dl.risk_score.stockout_risk}`,
       confidence: Math.min(1, Math.max(0.3, dl.risk_score.stockout_risk + 0.2))
     }
   ];
 }
 
-// -----------------------------
+// ======================================================
 // MAIN ENTRY
-// -----------------------------
+// ======================================================
 export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2
 ): Promise<SandboxEvaluateResponseV2> {
+
   const env: Env = {
     DL_ENABLED: "true"
   };
 
-  // -----------------------------
-  // 1. Deterministic Layer (Truth)
-  // -----------------------------
+  // ======================================================
+  // P3 — AUTHORITY GUARD (Snapshot Based)
+  // ======================================================
+
+  if (!req.snapshot) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "SNAPSHOT_REQUIRED"
+    };
+  }
+
+  const auth = authoritySandboxGuard(req.snapshot);
+
+  if (!auth.ok) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: auth.reason
+    };
+  }
+
+  // ======================================================
+  // 1️⃣ Deterministic Layer (Truth)
+  // ======================================================
+
   const dlResult = await computeDlEvidenceV2(env, {
     horizonDays: 30,
     baselineMetrics: req.baseline_metrics,
@@ -168,16 +159,19 @@ export async function evaluateSandboxV2(
 
   const dlEvidence = dlResult.evidence;
 
-  // -----------------------------
-  // 2. Governance
-  // -----------------------------
+  // ======================================================
+  // 2️⃣ Governance Decision
+  // ======================================================
+
   const execAllowed = executionAllowed(req.plan, req.intent);
   const allowLlm = llmAllowed(req.plan);
 
-  // -----------------------------
-  // 3. VISION MODE
-  // -----------------------------
+  // ======================================================
+  // 3️⃣ VISION MODE (Observation Only)
+  // ======================================================
+
   if (req.plan === "VISION") {
+
     const advisory = buildVisionAdvisory(dlEvidence, dlResult.health);
 
     return {
@@ -188,7 +182,7 @@ export async function evaluateSandboxV2(
       intent: req.intent,
       domain: req.domain,
 
-      scenarios: [], // VISION never produces scenarios
+      scenarios: [],
       advisory,
 
       governance: {
@@ -200,9 +194,10 @@ export async function evaluateSandboxV2(
     };
   }
 
-  // -----------------------------
-  // 4. NON-VISION (JUNIOR+)
-  // -----------------------------
+  // ======================================================
+  // 4️⃣ JUNIOR / SENIOR / PRINCIPAL
+  // ======================================================
+
   let scenarios: ScenarioV2[] = [];
 
   if (allowLlm) {

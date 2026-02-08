@@ -1,3 +1,7 @@
+
+//core/src/decision/ord/ord.evaluate.ts
+
+
 import { evaluateDecisionPressure } from "../pressure";
 import { ordGateV1, OrdGateInput, OrdGateResult } from "./ordGate.v1";
 

@@ -1,17 +1,20 @@
 // src/worker.ts
-// EDGE WORKER — Constitutional Gateway v2
-// --------------------------------------
-// The client never sends a snapshot.
-// The EDGE validates authority, builds and signs it.
-// The CORE executes only with signed constitutional authority.
+// ============================================
+// EDGE WORKER — Constitutional Gateway v3
+// Canonical Snapshot · Source of Truth
+// ============================================
 
 import { parseEdgeRequestV2 } from "./sandbox/apiBoundary.v2";
 import { evaluateSandboxV2 } from "./sandbox/orchestrator.v2";
 import { validateOagAndBuildProof } from "./governance/oag/validateOag";
 import { signSnapshotV1, verifySnapshotV1 } from "./governance/snapshot/snapshot";
 
+import { healthRoute } from "./system/health.route";
+
 export interface Env {
   SNAPSHOT_HMAC_SECRET: string;
+  ENVIRONMENT?: string;
+  VERSION?: string;
 }
 
 function json(body: any, status = 200): Response {
@@ -24,18 +27,29 @@ function json(body: any, status = 200): Response {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     try {
+      const url = new URL(req.url);
+
+      // ==========================================
+      // SYSTEM ROUTES (NO GOVERNANCE REQUIRED)
+      // ==========================================
+      if (req.method === "GET" && url.pathname === "/system/health") {
+        return healthRoute(req, env);
+      }
+
+      // ==========================================
+      // SANDBOX GATEWAY (POST ONLY)
+      // ==========================================
       if (req.method !== "POST") {
         return json({ ok: false, reason: "METHOD_NOT_ALLOWED" }, 405);
       }
 
       // --------------------------------------
-      // 1. Read raw client request
+      // 1. Raw client request
       // --------------------------------------
       const raw = await req.json();
 
       // --------------------------------------
-      // 2. Parse EDGE-level contract
-      // (NO SNAPSHOT FROM CLIENT)
+      // 2. Parse EDGE contract
       // --------------------------------------
       const parsed = parseEdgeRequestV2(raw);
 
@@ -82,7 +96,7 @@ export default {
       };
 
       // --------------------------------------
-      // 5. Sign snapshot (constitutional seal)
+      // 5. Sign snapshot
       // --------------------------------------
       const snapshot = await signSnapshotV1(
         env.SNAPSHOT_HMAC_SECRET,
@@ -90,7 +104,7 @@ export default {
       );
 
       // --------------------------------------
-      // 6. Verify snapshot integrity (self-check)
+      // 6. Verify snapshot integrity
       // --------------------------------------
       const valid = await verifySnapshotV1(
         env.SNAPSHOT_HMAC_SECRET,
@@ -98,7 +112,10 @@ export default {
       );
 
       if (!valid) {
-        return json({ ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" }, 401);
+        return json(
+          { ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" },
+          401
+        );
       }
 
       // --------------------------------------
@@ -110,6 +127,7 @@ export default {
       });
 
       return json(response);
+
     } catch (err: any) {
       return json(
         {

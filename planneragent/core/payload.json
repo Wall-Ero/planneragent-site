@@ -1,0 +1,42 @@
+{
+  "company_id": "demo-pre-srl",
+  "request_id": "hmac-check-001",
+
+  "plan": "VISION",
+  "intent": "INFORM",
+  "domain": "supply_chain",
+  "actor_id": "scm-operator-01",
+
+  "baseline_snapshot_id": "snap-hmac-check",
+  "baseline_metrics": {
+    "demand": 10,
+    "stock": 10,
+    "supplier_dependency": 0.1,
+    "supplier_B_leadtime_p50_days": 1
+  },
+
+  "snapshot": {
+    "v": 1,
+    "company_id": "demo-pre-srl",
+    "request_id": "hmac-check-001",
+    "plan": "VISION",
+    "intent": "INFORM",
+    "domain": "supply_chain",
+    "actor_id": "scm-operator-01",
+
+    "oag_proof": {
+      "company_id": "demo-pre-srl",
+      "actor_id": "scm-operator-01",
+      "plan": "VISION",
+      "domain": "supply_chain",
+      "intent": "INFORM",
+      "issued_at": "2026-02-01T20:00:00.000Z",
+      "authority": "human"
+    },
+
+    "budget": {
+      "budget_remaining_eur": 5,
+      "reset_at": "2026-03-01T00:00:00.000Z"
+    }
+  }
+}

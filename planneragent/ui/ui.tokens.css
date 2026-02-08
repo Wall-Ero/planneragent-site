@@ -1,0 +1,41 @@
+:root {
+  /* Spacing */
+  --pa-1: 6px;
+  --pa-2: 10px;
+  --pa-3: 14px;
+  --pa-4: 18px;
+  --pa-5: 24px;
+
+  /* Radius */
+  --pa-r1: 10px;
+  --pa-r2: 14px;
+  --pa-r3: 18px;
+
+  /* Borders */
+  --pa-bw: 1px;
+
+  /* Typography */
+  --pa-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  --pa-size-sm: 12px;
+  --pa-size-md: 14px;
+  --pa-size-lg: 16px;
+  --pa-weight: 500;
+
+  /* Colors (neutral, no “marketing glow” yet) */
+  --pa-bg: #0b0f14;
+  --pa-panel: #0f1620;
+  --pa-card: #0d131b;
+  --pa-text: #e7eef7;
+  --pa-muted: rgba(231, 238, 247, 0.68);
+  --pa-faint: rgba(231, 238, 247, 0.38);
+  --pa-border: rgba(231, 238, 247, 0.10);
+
+  /* Input */
+  --pa-input-bg: rgba(255, 255, 255, 0.06);
+  --pa-input-border: rgba(255, 255, 255, 0.10);
+
+  /* “Pressure” accents (kept subtle) */
+  --pa-ok: rgba(120, 200, 140, 0.9);
+  --pa-warn: rgba(240, 190, 80, 0.95);
+  --pa-hot: rgba(240, 95, 95, 0.95);
+}

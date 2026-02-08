@@ -1,0 +1,98 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "planneragent.decisionMemorySnapshot.v1",
+  "title": "Decision Memory Snapshot Payload",
+  "type": "object",
+  "required": [
+    "snapshot_id",
+    "decision_id",
+    "tenant_id",
+    "created_at",
+    "plan",
+    "intent",
+    "domain",
+    "baseline_snapshot_id",
+    "baseline_metrics",
+    "evidence"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "type": "string"
+    },
+
+    "decision_id": {
+      "type": "string"
+    },
+
+    "tenant_id": {
+      "type": "string"
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "plan": {
+      "type": "string",
+      "enum": [
+        "VISION",
+        "GRADUATE",
+        "JUNIOR",
+        "SENIOR",
+        "PRINCIPAL",
+        "CHARTER"
+      ]
+    },
+
+    "intent": {
+      "type": "string",
+      "enum": [
+        "SENSE",
+        "ADVISE",
+        "EXECUTE",
+        "GOVERN"
+      ]
+    },
+
+    "domain": {
+      "type": "string"
+    },
+
+    "baseline_snapshot_id": {
+      "type": "string"
+    },
+
+    "baseline_metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+
+    "scenario_metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "dl_signals": { "type": "object" },
+        "deterministic_signals": { "type": "object" },
+        "ord": { "type": "object" }
+      }
+    },
+
+    "governance": {
+      "type": "object",
+      "properties": {
+        "oag_proof_hash": { "type": "string" },
+        "snapshot_signature": { "type": "string" }
+      }
+    }
+  }
+}

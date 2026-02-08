@@ -1,0 +1,86 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "planneragent.decisionMemory.v1",
+  "title": "Decision Memory Record",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "tenant_id",
+    "created_at",
+    "snapshot_hash",
+    "snapshot_version",
+    "plan",
+    "intent",
+    "domain",
+    "source"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "description": "Globally unique decision identifier (UUID or ULID)"
+    },
+
+    "tenant_id": {
+      "type": "string",
+      "description": "Company / tenant owning the decision"
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "snapshot_hash": {
+      "type": "string",
+      "description": "Hash of decision snapshot payload (SHA-256 hex)"
+    },
+
+    "snapshot_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+
+    "plan": {
+      "type": "string",
+      "enum": [
+        "VISION",
+        "GRADUATE",
+        "JUNIOR",
+        "SENIOR",
+        "PRINCIPAL",
+        "CHARTER"
+      ]
+    },
+
+    "intent": {
+      "type": "string",
+      "enum": [
+        "SENSE",
+        "ADVISE",
+        "EXECUTE",
+        "GOVERN"
+      ]
+    },
+
+    "domain": {
+      "type": "string",
+      "description": "Planning domain (supply_chain, finance, hr, etc)"
+    },
+
+    "source": {
+      "type": "string",
+      "enum": [
+        "EDGE",
+        "CORE",
+        "IMPORT",
+        "REPLAY"
+      ]
+    },
+
+    "previous_snapshot_hash": {
+      "type": ["string", "null"],
+      "description": "Hash chain link (append-only ledger continuity)"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "project": "PlannerAgent",
+  "philosophy": "PlannerAgent is a governance and authority layer, not an AI platform. AI never owns decisions. Humans remain principals.",
+  "source_of_truth": "This file defines what is canonical. Chat systems must treat this as constitutional law.",
+  "layers": {
+    "EDGE": "Authority & Governance Worker (Cloudflare Edge)",
+    "CORE": "Deterministic + LLM Execution Worker"
+  },
+  "authority_model": [
+    "VISION — Observation & governance only (no advice, no execution)",
+    "GRADUATE — Certifies and audits human AI tool usage",
+    "JUNIOR — Advises, executes only with explicit approval",
+    "SENIOR — Delegated operator within scoped authority",
+    "PRINCIPAL — Budget & improvement authority",
+    "CHARTER — Constitutional boundary & kill-switch"
+  ],
+  "golden_rules": [
+    "AI never commits resources",
+    "Edge governs, Core executes, Ledger remembers",
+    "All execution flows must be auditable",
+    "Signed snapshot is the only contract between Edge and Core"
+  ],
+  "canonical_files": {
+    "edge_worker": "src/worker.ts",
+    "api_boundary": "src/sandbox/apiBoundary.v2.ts",
+    "orchestrator": "src/sandbox/orchestrator.v2.ts",
+    "llm_registry": "src/sandbox/llm/registry.ts",
+    "llm_budget": "src/sandbox/llm/budget.ts",
+    "llm_executor": "src/sandbox/llm/executeWithLlmProviders.ts",
+    "dl_layer": "src/sandbox/dl.v2.ts",
+    "dqm": "src/sandbox/dqm.ts",
+    "ledger": "src/sandbox/LogLlmUsage.ts",
+    "sql": [
+      "src/sandbox/llm/sql/001_llm_usage.sql",
+      "src/sandbox/llm/sql/002_llm_global_budget.sql",
+      "src/sandbox/llm/sql/003_sandbox_events_v2.sql"
+    ]
+  }
+}

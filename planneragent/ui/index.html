@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PlannerAgent UI Skeleton</title>
+
+    <link rel="stylesheet" href="./ui.tokens.css" />
+    <link rel="stylesheet" href="./ui.layout.css" />
+    <link rel="stylesheet" href="./ui.css" />
+  </head>
+
+  <body>
+    <main class="pa-app" data-state="IDLE" aria-label="PlannerAgent UI">
+      <!-- HERO / FACE PANEL -->
+      <section class="pa-panel" aria-label="PlannerAgent Control Panel">
+        <!-- Awareness / Forehead -->
+        <div class="pa-forehead" aria-label="Awareness Bar">
+          <div class="pa-forehead__label">
+            <span class="pa-kicker">Awareness</span>
+            <span class="pa-forehead__value" aria-live="polite">Level 1 — Planning</span>
+          </div>
+
+          <div class="pa-progress" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1">
+            <div class="pa-progress__fill" style="width: 33.333%;"></div>
+          </div>
+
+          <div class="pa-forehead__hint">
+            Plans only. No execution signals. No BOM required.
+          </div>
+        </div>
+
+        <!-- Eyes -->
+        <div class="pa-eyes" aria-label="Signals">
+          <section class="pa-eye" aria-label="Planning Consistency">
+            <header class="pa-eye__header">
+              <span class="pa-eye__title">Planning Consistency</span>
+              <span class="pa-chip pa-chip--neutral" aria-label="Status">Neutral</span>
+            </header>
+
+            <div class="pa-eye__meter" aria-hidden="true"></div>
+
+            <p class="pa-eye__desc">
+              Alignment inside the plan (MPS, priorities, dates, internal logic).
+            </p>
+          </section>
+
+          <section class="pa-eye" aria-label="Reality Signals">
+            <header class="pa-eye__header">
+              <span class="pa-eye__title">Reality Signals</span>
+              <span class="pa-chip pa-chip--neutral" aria-label="Status">Neutral</span>
+            </header>
+
+            <div class="pa-eye__meter" aria-hidden="true"></div>
+
+            <p class="pa-eye__desc">
+              What execution signals imply (inventory movements, deltas, anomalies).
+            </p>
+          </section>
+        </div>
+
+        <!-- Nose / Decision Pressure -->
+        <section class="pa-nose" aria-label="Decision Pressure">
+          <div class="pa-nose__header">
+            <span class="pa-nose__title">Decision Pressure</span>
+            <span class="pa-chip pa-chip--neutral">None</span>
+          </div>
+
+          <div class="pa-nose__bars" aria-label="Pressure Indicator (3 steps)">
+            <span class="pa-nose__bar" aria-hidden="true"></span>
+            <span class="pa-nose__bar" aria-hidden="true"></span>
+            <span class="pa-nose__bar" aria-hidden="true"></span>
+          </div>
+
+          <p class="pa-nose__desc">
+            Pressure reflects impact, urgency, irreversibility, and responsibility — not “advice.”
+          </p>
+        </section>
+
+        <!-- Mid-space between nose and mouth: Responses -->
+        <section class="pa-chat" aria-label="PlannerAgent Chat">
+          <div class="pa-chat__thread" role="log" aria-live="polite" aria-relevant="additions">
+            <article class="pa-msg pa-msg--agent">
+              <div class="pa-msg__bubble">
+                <p class="pa-msg__text">
+                  No operational data source is connected.<br />
+                  You may explore PlannerAgent’s governance model and capabilities, or connect a data source to begin observation.
+                </p>
+              </div>
+            </article>
+
+            <!-- Example user message -->
+            <article class="pa-msg pa-msg--user">
+              <div class="pa-msg__bubble">
+                <p class="pa-msg__text">What happens if only one eye sees?</p>
+              </div>
+            </article>
+
+            <!-- Example agent message -->
+            <article class="pa-msg pa-msg--agent">
+              <div class="pa-msg__bubble">
+                <p class="pa-msg__text">
+                  If only Planning Consistency is available, I can verify the internal logic of plans and simulate scenarios.
+                  If Reality Signals are missing, I cannot validate against execution behavior — pressure stays conservative.
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <!-- Status line: must be one long row, same width as chat -->
+          <div class="pa-chat__status" aria-label="Mode Status">
+            You’re talking with PlannerAgent BASIC. Observation only. No execution.
+          </div>
+
+          <!-- Mouth / Input -->
+          <form class="pa-chat__composer" aria-label="Message composer">
+            <button class="pa-plus" type="button" aria-label="Add data source (CSV, Excel, API)">
+              +
+            </button>
+
+            <input
+              class="pa-input"
+              type="text"
+              inputmode="text"
+              autocomplete="off"
+              placeholder="Press Enter to know what I can do"
+              aria-label="Message input"
+            />
+
+            <button class="pa-send" type="submit" aria-label="Send (or Explain by default)">
+              ⏎
+            </button>
+          </form>
+        </section>
+      </section>
+    </main>
+  </body>
+</html

@@ -1,3 +1,4 @@
+//core/src/governance/policy/bootstrap.ts
 /**
  * PlannerAgent — Governance Bootstrap
  * Status: CANONICAL · DETERMINISTIC · SIDE-EFFECT CONTROLLED

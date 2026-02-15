@@ -1,4 +1,4 @@
-// core/src/executor/contracts/execution.request.v1.ts
+// core/src/execution/contracts/execution.request.v1.ts
 // ======================================================
 // Execution Request — Governance Contract v1
 // Canonical Source of Truth

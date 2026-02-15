@@ -11,6 +11,9 @@ import { signSnapshotV1, verifySnapshotV1 } from "./governance/snapshot/snapshot
 
 import { healthRoute } from "./system/health.route";
 
+// 🔹 P6 — Industrial Fabric (READ-ONLY)
+import { getSystemRegistry } from "./industrial/system.registry";
+
 export interface Env {
   SNAPSHOT_HMAC_SECRET: string;
   ENVIRONMENT?: string;
@@ -29,16 +32,40 @@ export default {
     try {
       const url = new URL(req.url);
 
-      // ==========================================
-      // SYSTEM ROUTES (NO GOVERNANCE REQUIRED)
-      // ==========================================
+      // ==================================================
+      // SYSTEM ROUTES — NO GOVERNANCE / NO SNAPSHOT
+      // ==================================================
+
       if (req.method === "GET" && url.pathname === "/system/health") {
         return healthRoute(req, env);
       }
 
-      // ==========================================
-      // SANDBOX GATEWAY (POST ONLY)
-      // ==========================================
+      // ------------------------------------------
+      // P6.1 — Industrial Registry (capabilities + connectors)
+      // ------------------------------------------
+      if (req.method === "GET" && url.pathname === "/system/industrial/registry") {
+        const registry = await getSystemRegistry();
+        return json({
+          ok: true,
+          registry
+        });
+      }
+
+      // ------------------------------------------
+      // P6.1 — Connectors only (vendor / health)
+      // ------------------------------------------
+      if (req.method === "GET" && url.pathname === "/system/connectors") {
+        const registry = await getSystemRegistry();
+        return json({
+          ok: true,
+          connectors: registry.connectors
+        });
+      }
+
+      // ==================================================
+      // SANDBOX GATEWAY — POST ONLY
+      // ==================================================
+
       if (req.method !== "POST") {
         return json({ ok: false, reason: "METHOD_NOT_ALLOWED" }, 405);
       }

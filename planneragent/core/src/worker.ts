@@ -14,8 +14,21 @@ import { healthRoute } from "./system/health.route";
 // 🔹 P6 — Industrial Fabric (READ-ONLY)
 import { getSystemRegistry } from "./industrial/system.registry";
 
+// 🔹 P7 — Notifications (Twilio – optional)
+import { sendTwilioNotification } from "./notifications/twilio.hook";
+
+// 🔹 GOVERNANCE SCHEDULER
+import { runGovernanceScheduler } from "./scheduler/scheduler.runtime";
+import type { GovernanceSchedulerInput } from "./scheduler/scheduler.types";
+
 export interface Env {
   SNAPSHOT_HMAC_SECRET: string;
+
+  // P7 — Twilio (optional)
+  TWILIO_ACCOUNT_SID?: string;
+  TWILIO_AUTH_TOKEN?: string;
+  TWILIO_FROM_NUMBER?: string;
+
   ENVIRONMENT?: string;
   VERSION?: string;
 }
@@ -28,6 +41,9 @@ function json(body: any, status = 200): Response {
 }
 
 export default {
+  // ==================================================
+  // HTTP GATEWAY
+  // ==================================================
   async fetch(req: Request, env: Env): Promise<Response> {
     try {
       const url = new URL(req.url);
@@ -40,26 +56,14 @@ export default {
         return healthRoute(req, env);
       }
 
-      // ------------------------------------------
-      // P6.1 — Industrial Registry (capabilities + connectors)
-      // ------------------------------------------
       if (req.method === "GET" && url.pathname === "/system/industrial/registry") {
         const registry = await getSystemRegistry();
-        return json({
-          ok: true,
-          registry
-        });
+        return json({ ok: true, registry });
       }
 
-      // ------------------------------------------
-      // P6.1 — Connectors only (vendor / health)
-      // ------------------------------------------
       if (req.method === "GET" && url.pathname === "/system/connectors") {
         const registry = await getSystemRegistry();
-        return json({
-          ok: true,
-          connectors: registry.connectors
-        });
+        return json({ ok: true, connectors: registry.connectors });
       }
 
       // ==================================================
@@ -70,19 +74,9 @@ export default {
         return json({ ok: false, reason: "METHOD_NOT_ALLOWED" }, 405);
       }
 
-      // --------------------------------------
-      // 1. Raw client request
-      // --------------------------------------
       const raw = await req.json();
-
-      // --------------------------------------
-      // 2. Parse EDGE contract
-      // --------------------------------------
       const parsed = parseEdgeRequestV2(raw);
 
-      // --------------------------------------
-      // 3. Validate authority via OAG
-      // --------------------------------------
       const oag = await validateOagAndBuildProof({
         company_id: parsed.company_id,
         actor_id: parsed.actor_id,
@@ -95,74 +89,103 @@ export default {
         return json({ ok: false, reason: oag.reason }, 403);
       }
 
-      // --------------------------------------
-      // 4. Build constitutional snapshot
-      // --------------------------------------
       const snapshotUnsigned = {
         v: 1 as const,
         company_id: parsed.company_id,
         request_id: parsed.request_id,
-
         plan: parsed.plan,
         intent: parsed.intent,
         domain: parsed.domain,
-
         actor_id: parsed.actor_id,
         oag_proof: oag.proof,
-
         budget: {
           budget_remaining_eur: 0,
           reset_at: new Date().toISOString()
         },
-
         governance_flags: {
           sovereignty: "paid" as const
         },
-
         issued_at: new Date().toISOString()
       };
 
-      // --------------------------------------
-      // 5. Sign snapshot
-      // --------------------------------------
       const snapshot = await signSnapshotV1(
         env.SNAPSHOT_HMAC_SECRET,
         snapshotUnsigned
       );
 
-      // --------------------------------------
-      // 6. Verify snapshot integrity
-      // --------------------------------------
       const valid = await verifySnapshotV1(
         env.SNAPSHOT_HMAC_SECRET,
         snapshot
       );
 
       if (!valid) {
-        return json(
-          { ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" },
-          401
-        );
+        return json({ ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" }, 401);
       }
 
-      // --------------------------------------
-      // 7. Dispatch to CORE
-      // --------------------------------------
       const response = await evaluateSandboxV2({
         ...parsed,
         snapshot
+      });
+
+      // ------------------------------------------
+      // P7 — Optional notification (best-effort)
+      // ------------------------------------------
+      await sendTwilioNotification(env, {
+        to: "+391234567890", // placeholder
+        message: "PlannerAgent event completed"
       });
 
       return json(response);
 
     } catch (err: any) {
       return json(
-        {
-          ok: false,
-          reason: err?.message ?? "EDGE_FAILURE"
-        },
+        { ok: false, reason: err?.message ?? "EDGE_FAILURE" },
         400
       );
     }
+  },
+
+  // ==================================================
+  // GOVERNANCE SCHEDULER (CRON)
+  // ==================================================
+  async scheduled(
+    _event: ScheduledEvent,
+    env: Env,
+    ctx: ExecutionContext
+  ): Promise<void> {
+
+    const input: GovernanceSchedulerInput = {
+      now_iso: new Date().toISOString(),
+
+      open_srl_input: {
+        // 🔴 NOMI ALLINEATI ALLA RULE CANONICA
+        cash_available_eur: 0,
+
+        active_junior_accounts: 0,
+        junior_continuity_months: 0,
+
+        has_real_usage: false,
+
+        operational_friction_high: false,
+
+        governs_real_systems: false,
+        orchestrates_external_ai: false,
+        used_in_decisional_contexts: false,
+
+        founder_wants_institution: false
+      }
+    };
+
+    ctx.waitUntil(
+      runGovernanceScheduler(input).then(async (res) => {
+        if (res.action === "OPEN_SRL_TRIGGERED") {
+          await sendTwilioNotification(env, {
+            to: "+393932170828",
+            message:
+              "PlannerAgent governance: condizioni OK per aprire la SRL."
+          });
+        }
+      })
+    );
   }
 };

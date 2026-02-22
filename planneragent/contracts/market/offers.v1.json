@@ -1,0 +1,61 @@
+{
+  "version": "v1",
+  "currency": "USD",
+  "generated_at_utc": "2026-02-22T00:00:00.000Z",
+  "tiers": {
+    "VISION": {
+      "plan": "VISION",
+      "list_price_usd": 0,
+      "trial_days": 0,
+      "early_activation": null,
+      "visible_on_site": true,
+      "purchasable": true,
+      "availability": { "pre_srl": true, "srl": true }
+    },
+    "GRADUATE": {
+      "plan": "GRADUATE",
+      "list_price_usd": 0,
+      "trial_days": 0,
+      "early_activation": null,
+      "visible_on_site": false,
+      "purchasable": false,
+      "availability": { "pre_srl": false, "srl": false }
+    },
+    "JUNIOR": {
+      "plan": "JUNIOR",
+      "list_price_usd": 999,
+      "trial_days": 30,
+      "early_activation": { "price_usd": 699, "window_days": 30 },
+      "visible_on_site": true,
+      "purchasable": true,
+      "availability": { "pre_srl": true, "srl": true }
+    },
+    "SENIOR": {
+      "plan": "SENIOR",
+      "list_price_usd": 1999,
+      "trial_days": 60,
+      "early_activation": { "price_usd": 1499, "window_days": 60 },
+      "visible_on_site": true,
+      "purchasable": true,
+      "availability": { "pre_srl": true, "srl": true }
+    },
+    "PRINCIPAL": {
+      "plan": "PRINCIPAL",
+      "list_price_usd": 3999,
+      "trial_days": 90,
+      "early_activation": { "price_usd": 3499, "window_days": 90 },
+      "visible_on_site": false,
+      "purchasable": true,
+      "availability": { "pre_srl": true, "srl": true }
+    },
+    "CHARTER": {
+      "plan": "CHARTER",
+      "list_price_usd": 0,
+      "trial_days": 0,
+      "early_activation": null,
+      "visible_on_site": false,
+      "purchasable": false,
+      "availability": { "pre_srl": false, "srl": false }
+    }
+  }
+}

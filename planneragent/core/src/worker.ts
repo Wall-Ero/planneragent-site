@@ -14,7 +14,7 @@ import { healthRoute } from "./system/health.route";
 // 🔹 P6 — Industrial Fabric (READ-ONLY)
 import { getSystemRegistry } from "./industrial/system.registry";
 
-// 🔹 P7 — Notifications (Twilio – optional)
+// 🔹 P7.5 — SRL notification ONLY
 import { sendTwilioNotification } from "./notifications/twilio.hook";
 
 // 🔹 GOVERNANCE SCHEDULER
@@ -24,7 +24,7 @@ import type { GovernanceSchedulerInput } from "./scheduler/scheduler.types";
 export interface Env {
   SNAPSHOT_HMAC_SECRET: string;
 
-  // P7 — Twilio (optional)
+  // P7 — Twilio (SRL readiness only)
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_FROM_NUMBER?: string;
@@ -48,9 +48,9 @@ export default {
     try {
       const url = new URL(req.url);
 
-      // ==================================================
+      // --------------------------------------------------
       // SYSTEM ROUTES — NO GOVERNANCE / NO SNAPSHOT
-      // ==================================================
+      // --------------------------------------------------
 
       if (req.method === "GET" && url.pathname === "/system/health") {
         return healthRoute(req, env);
@@ -66,9 +66,9 @@ export default {
         return json({ ok: true, connectors: registry.connectors });
       }
 
-      // ==================================================
+      // --------------------------------------------------
       // SANDBOX GATEWAY — POST ONLY
-      // ==================================================
+      // --------------------------------------------------
 
       if (req.method !== "POST") {
         return json({ ok: false, reason: "METHOD_NOT_ALLOWED" }, 405);
@@ -127,13 +127,7 @@ export default {
         snapshot
       });
 
-      // ------------------------------------------
-      // P7 — Optional notification (best-effort)
-      // ------------------------------------------
-      await sendTwilioNotification(env, {
-        to: "+391234567890", // placeholder
-        message: "PlannerAgent event completed"
-      });
+      // ❗ NO NOTIFICATIONS HERE (by design)
 
       return json(response);
 
@@ -158,7 +152,6 @@ export default {
       now_iso: new Date().toISOString(),
 
       open_srl_input: {
-        // 🔴 NOMI ALLINEATI ALLA RULE CANONICA
         cash_available_eur: 0,
 
         active_junior_accounts: 0,
@@ -179,6 +172,7 @@ export default {
     ctx.waitUntil(
       runGovernanceScheduler(input).then(async (res) => {
         if (res.action === "OPEN_SRL_TRIGGERED") {
+          // 🔴 Only here we notify via Twilio
           await sendTwilioNotification(env, {
             to: "+393932170828",
             message:

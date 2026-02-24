@@ -1,12 +1,13 @@
 // core/src/billing/billing.gateway.ts
 // =====================================================
-// P7.2 — Billing Gateway (Canonical)
-// Provider-neutral · Reads ONLY offers.ts
+// Billing Gateway — Canonical Entry Point
+// P7.2 — Provider-neutral, pricing delegated to Market
 // =====================================================
 
-import { quotePricingForPlanTier } from "../market/offers";
-import { canCreateCheckout } from "./billing.policy";
 import { getBillingProvider } from "./billing.providers";
+import { canCreateCheckout } from "./billing.policy";
+import { quotePricingForPlanTier } from "../market/offers";
+
 import type { PlanTier } from "../sandbox/contracts.v2";
 import type { BillingCheckoutResult } from "./billing.providers";
 
@@ -20,14 +21,17 @@ export type CreateCheckoutInput = Readonly<{
 export async function createCheckout(
   input: CreateCheckoutInput
 ): Promise<BillingCheckoutResult> {
-  // 1. Policy gate
+  // ---------------------------------------------------
+  // 1. Policy gate (pure allow / deny)
+  // ---------------------------------------------------
   if (!canCreateCheckout(input.plan)) {
-    throw new Error("CHECKOUT_NOT_ALLOWED_FOR_PLAN");
+    throw new Error("CHECKOUT_NOT_ALLOWED");
   }
 
-  // 2. Deterministic pricing (domain-owned)
+  // ---------------------------------------------------
+  // 2. Pricing decision (Market = source of truth)
+  // ---------------------------------------------------
   const pricing = quotePricingForPlanTier(input.plan, {
-    phase: "pre_srl",
     now_utc: input.now_utc,
   });
 
@@ -35,7 +39,9 @@ export async function createCheckout(
     throw new Error("PLAN_NOT_PURCHASABLE");
   }
 
-  // 3. Provider delegation
+  // ---------------------------------------------------
+  // 3. Delegate to billing provider
+  // ---------------------------------------------------
   const provider = getBillingProvider();
 
   return provider.createCheckout({

@@ -1,91 +1,42 @@
 // core/src/ledger/ledger.event.ts
 // =====================================================
-// Ledger Event — Legal-Grade Evidence Schema (Canonical)
-// Append-only · Human-readable · Audit-first
+// Ledger Event — Legal Proof Schema (Append-only)
 // =====================================================
 
-/**
- * NON NEGOZIABILE:
- * - append-only
- * - leggibile senza codice
- * - orientato a responsabilità legale, non logging tecnico
- */
-
-// -----------------------------------------------------
-// EVENT CATEGORIES (Responsibility classes)
-// -----------------------------------------------------
-
 export type LedgerEventCategory =
-  | "ui_signal"              // osservazione, mai decisionale
-  | "intent_declared"        // qualcuno ha espresso una volontà
-  | "authority_granted"      // è stato concesso potere
-  | "approval_given"         // un umano ha approvato
-  | "execution_attempted"    // qualcuno ha provato ad agire
-  | "execution_blocked"      // il sistema ha bloccato
-  | "execution_completed"    // azione completata
-  | "commercial"             // fatti economici verificabili
-  | "governance"             // regole, stati costituzionali
-  | "notification";          // comunicazioni ufficiali inviate
-
-// -----------------------------------------------------
-// DOMAIN EVENT TYPES (chiusi e tipizzati)
-// -----------------------------------------------------
-
-export type LedgerEventType =
-  // Governance / SRL
-  | "OPEN_SRL_ELIGIBLE"
-  | "OPEN_SRL_TRIGGERED"
-
-  // Commercial
-  | "CHECKOUT_CREATED"
-  | "PAYMENT_SUCCEEDED"
-  | "PAYMENT_FAILED"
-  | "SUBSCRIPTION_STARTED"
-  | "SUBSCRIPTION_CANCELED";
-
-// -----------------------------------------------------
-// ACTOR & RESPONSIBILITY CONTEXT
-// -----------------------------------------------------
-
-export type LedgerActor = Readonly<{
-  actor_id: string;               // user_id | system | webhook
-  actor_type: "human" | "system";
-  role?: string;                  // Vision | Junior | Senior | Principal
-}>;
-
-// -----------------------------------------------------
-// LEDGER EVENT (LEGAL EVIDENCE)
-// -----------------------------------------------------
+  | "ui_signal"
+  | "intent_declared"
+  | "authority_granted"
+  | "approval_given"
+  | "execution_attempted"
+  | "execution_blocked"
+  | "execution_completed"
+  | "commercial"
+  | "governance"
+  | "notification"
+  | "onboarding";
 
 export type LedgerEvent = Readonly<{
+  // Immutable identifiers
   id: string;
+  recorded_at_iso: string;
 
-  /**
-   * Classe di responsabilità
-   * (serve per audit, board, legal review)
-   */
+  // Responsibility semantics
   category: LedgerEventCategory;
 
-  /**
-   * Cosa è successo
-   * - tipizzato per eventi di dominio
-   * - stringa libera SOLO per ui_signal
-   */
-  type: LedgerEventType | string;
+  // Human-readable, audit-friendly description
+  statement: string;
 
-  /**
-   * Chi è responsabile (se applicabile)
-   */
-  actor?: LedgerActor;
+  // Actor & authority context
+  actor: {
+    kind: "user" | "system" | "external_service";
+    id?: string;
+    role?: string;
+  };
 
-  /**
-   * Contesto dell’evento
-   * Deve essere JSON leggibile e autoesplicativo
-   */
-  payload: Readonly<Record<string, unknown>>;
+  authority_scope?: string;
+  system_state?: string;
 
-  /**
-   * Timestamp ISO, unico riferimento temporale
-   */
-  created_at: string;
+  // Evidence payload (non executable)
+  evidence: Record<string, unknown>;
 }>;

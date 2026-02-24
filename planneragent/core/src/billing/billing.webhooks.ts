@@ -1,11 +1,13 @@
 // core/src/billing/billing.webhooks.ts
 // =====================================================
-// Billing Webhooks — Provider → Ledger Translation
-// P7.2 — Append-only · Idempotent
+// Billing Webhooks → Responsibility Ledger
+// Append-only · Idempotent · Legal-grade
 // =====================================================
 
 import { appendLedgerEvent } from "../ledger/ledger.store";
-import type { LedgerEvent } from "../ledger/ledger.event";
+import {
+  subscriptionStartedEvent,
+} from "../ledger/responsibility.events";
 
 type StripeWebhookEvent = {
   id: string;
@@ -15,43 +17,39 @@ type StripeWebhookEvent = {
   };
 };
 
-export async function billingWebhookRoute(req: Request): Promise<Response> {
+export async function billingWebhookRoute(
+  req: Request
+): Promise<Response> {
   const raw = await req.text();
 
-  // ⚠️ Firma Stripe: qui stub / mock / verify in prod
-  // const signature = req.headers.get("stripe-signature");
-
+  // In produzione: verifica firma Stripe
   const event = JSON.parse(raw) as StripeWebhookEvent;
 
-  let ledgerType: string | null = null;
-
   switch (event.type) {
-    case "checkout.session.completed":
-      ledgerType = "PAYMENT_SUCCEEDED";
-      break;
+    case "checkout.session.completed": {
+      /**
+       * RESPONSIBILITY:
+       * External payment provider confirms subscription activation
+       */
+      const ledgerEvent = subscriptionStartedEvent({
+        external_ref: event.id,
+        plan: "JUNIOR",        // TODO: estrarre da payload Stripe
+        trial_days: 30,        // TODO: estrarre da payload Stripe
+      });
 
-    case "customer.subscription.deleted":
-      ledgerType = "SUBSCRIPTION_CANCELED";
-      break;
+      await appendLedgerEvent(ledgerEvent);
+
+      return new Response(
+        JSON.stringify({ ok: true }),
+        { status: 200 }
+      );
+    }
 
     default:
-      return new Response(JSON.stringify({ ok: true, ignored: true }), {
-        status: 200,
-      });
+      // Explicitly ignored but acknowledged
+      return new Response(
+        JSON.stringify({ ok: true, ignored: true }),
+        { status: 200 }
+      );
   }
-
-  const ledgerEvent: LedgerEvent = {
-    id: crypto.randomUUID(),
-    category: "commercial",
-    type: ledgerType,
-    payload: {
-      provider: "stripe",
-      raw_event_id: event.id,
-    },
-    created_at: new Date().toISOString(),
-  };
-
-  await appendLedgerEvent(ledgerEvent);
-
-  return new Response(JSON.stringify({ ok: true }), { status: 200 });
 }

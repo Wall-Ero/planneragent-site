@@ -1,19 +1,39 @@
 // core/src/billing/routes.billing.ts
 // =====================================================
 // Billing Routes — Canonical HTTP Entry Points
-// P7.2 — Provider-neutral
+// P7.2 — Responsibility-aware
 // =====================================================
 
 import { createCheckout } from "./billing.gateway";
 import { appendLedgerEvent } from "../ledger/ledger.store";
+import { checkoutIntentDeclaredEvent } from "../ledger/responsibility.events";
 import type { LedgerEvent } from "../ledger/ledger.event";
 import type { PlanTier } from "../sandbox/contracts.v2";
 
+// -----------------------------------------------------
+// Runtime guard (HTTP → Domain boundary)
+// -----------------------------------------------------
+
+function isPlanTier(value: string): value is PlanTier {
+  return [
+    "VISION",
+    "JUNIOR",
+    "SENIOR",
+    "PRINCIPAL",
+    "GRADUATE",
+    "CHARTER",
+  ].includes(value);
+}
+
 type CheckoutRequestBody = {
-  plan: PlanTier;
+  plan: string; // HTTP is string. Period.
   tenant_id: string;
   buyer_email: string;
 };
+
+// -----------------------------------------------------
+// Route
+// -----------------------------------------------------
 
 export async function billingCheckoutRoute(req: Request): Promise<Response> {
   if (req.method !== "POST") {
@@ -25,30 +45,37 @@ export async function billingCheckoutRoute(req: Request): Promise<Response> {
 
   const body = (await req.json()) as CheckoutRequestBody;
 
-  const result = await createCheckout({
-    plan: body.plan,
+  // ---------------------------------------------------
+  // 🔒 TYPE NARROWING (this is the missing piece)
+  // ---------------------------------------------------
+  if (!isPlanTier(body.plan)) {
+    return new Response(
+      JSON.stringify({ ok: false, reason: "INVALID_PLAN_TIER" }),
+      { status: 400 }
+    );
+  }
+
+  const plan: PlanTier = body.plan;
+
+  // ---------------------------------------------------
+  // Ledger — Intent declared (responsibility)
+  // ---------------------------------------------------
+  const intentEvent: LedgerEvent = checkoutIntentDeclaredEvent({
     tenant_id: body.tenant_id,
-    buyer_email: body.buyer_email,
-    now_utc: new Date().toISOString(),
+    plan,
   });
 
-  // ---------------------------------------------
-  // Ledger — commercial event (append-only)
-  // ---------------------------------------------
-  const event: LedgerEvent = {
-    id: crypto.randomUUID(),
-    category: "commercial",
-    type: "CHECKOUT_CREATED",
-    payload: {
-      tenant_id: body.tenant_id,
-      plan: body.plan,
-      provider: result.provider,
-      checkout_url: result.checkout_url,
-    },
-    created_at: new Date().toISOString(),
-  };
+  await appendLedgerEvent(intentEvent);
 
-  await appendLedgerEvent(event);
+  // ---------------------------------------------------
+  // Domain execution
+  // ---------------------------------------------------
+  const result = await createCheckout({
+    tenant_id: body.tenant_id,
+    buyer_email: body.buyer_email,
+    plan,
+    now_utc: new Date().toISOString(),
+  });
 
   return new Response(JSON.stringify({ ok: true, ...result }), {
     status: 200,

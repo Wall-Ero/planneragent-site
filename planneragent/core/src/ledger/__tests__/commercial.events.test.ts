@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from "vitest";
 import { subscriptionStartedEvent } from "../commercial.events";
-
+  
 describe("P7.2 — commercial.events", () => {
   it("creates SUBSCRIPTION_STARTED commercial event", () => {
     const evt = subscriptionStartedEvent({

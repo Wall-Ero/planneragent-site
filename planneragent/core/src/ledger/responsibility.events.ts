@@ -1,13 +1,13 @@
 // core/src/ledger/responsibility.events.ts
 // =====================================================
 // Responsibility Event Factories (Canonical + Aliases)
-// All LedgerEvent MUST be created here
+// ALL legal-grade LedgerEvent MUST be created here
 // =====================================================
 
 import type { LedgerEvent } from "./ledger.event";
 
 // -----------------------------------------------------
-// Base factory (append-only, legal proof)
+// Base factory — append-only, legal proof
 // -----------------------------------------------------
 
 function baseEvent(
@@ -21,7 +21,7 @@ function baseEvent(
 }
 
 // =====================================================
-// INTENT
+// INTENT — declared by human
 // =====================================================
 
 export function intentDeclaredEvent(input: {
@@ -30,7 +30,7 @@ export function intentDeclaredEvent(input: {
 }): LedgerEvent {
   return baseEvent({
     category: "intent_declared",
-    statement: "A tenant explicitly declared intent to start a checkout.",
+    statement: "A tenant explicitly declared intent to start a subscription checkout.",
 
     actor: {
       kind: "user",
@@ -46,11 +46,11 @@ export function intentDeclaredEvent(input: {
   });
 }
 
-// ⛓ Alias canonico (retro-compatibilità semantica)
+// Canonical alias (retro-compat / semantic freeze)
 export const checkoutIntentDeclaredEvent = intentDeclaredEvent;
 
 // =====================================================
-// EXECUTION — ATTEMPTED
+// EXECUTION — attempted by system
 // =====================================================
 
 export function executionAttemptedEvent(input: {
@@ -59,7 +59,7 @@ export function executionAttemptedEvent(input: {
 }): LedgerEvent {
   return baseEvent({
     category: "execution_attempted",
-    statement: "A billing execution was attempted via external provider.",
+    statement: "A billing execution was attempted via an external payment provider.",
 
     actor: {
       kind: "system",
@@ -77,17 +77,18 @@ export function executionAttemptedEvent(input: {
 }
 
 // =====================================================
-// EXECUTION — COMPLETED
+// EXECUTION — completed (PAYMENT CONFIRMED)
 // =====================================================
 
 export function executionCompletedEvent(input: {
   external_ref: string;
   plan: string;
   trial_days: number;
+  amount_usd?: number;
 }): LedgerEvent {
   return baseEvent({
     category: "execution_completed",
-    statement: "A commercial subscription was successfully activated.",
+    statement: "A commercial subscription was successfully activated by the payment provider.",
 
     actor: {
       kind: "external_service",
@@ -102,15 +103,16 @@ export function executionCompletedEvent(input: {
       external_ref: input.external_ref,
       plan: input.plan,
       trial_days: input.trial_days,
+      amount_usd: input.amount_usd, // ⬅️ chiave per P7.5 revenue metrics
     },
   });
 }
 
-// ⛓ Alias storico / test / webhook
+// Canonical alias used by billing/webhooks
 export const subscriptionStartedEvent = executionCompletedEvent;
 
 // =====================================================
-// EXECUTION — BLOCKED
+// EXECUTION — blocked by policy
 // =====================================================
 
 export function executionBlockedEvent(input: {
@@ -119,7 +121,7 @@ export function executionBlockedEvent(input: {
 }): LedgerEvent {
   return baseEvent({
     category: "execution_blocked",
-    statement: "A billing execution was blocked due to policy or system state.",
+    statement: "A billing execution was blocked due to policy or system constraints.",
 
     actor: {
       kind: "system",

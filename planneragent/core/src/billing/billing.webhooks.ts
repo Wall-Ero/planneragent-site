@@ -9,6 +9,10 @@ import {
   subscriptionStartedEvent,
 } from "../ledger/responsibility.events";
 
+// -----------------------------------------------------
+// Minimal Stripe webhook shape (intentionally loose)
+// -----------------------------------------------------
+
 type StripeWebhookEvent = {
   id: string;
   type: string;
@@ -22,19 +26,25 @@ export async function billingWebhookRoute(
 ): Promise<Response> {
   const raw = await req.text();
 
-  // In produzione: verifica firma Stripe
+  // In produzione: verifica firma Stripe (qui volutamente esclusa)
   const event = JSON.parse(raw) as StripeWebhookEvent;
 
   switch (event.type) {
     case "checkout.session.completed": {
       /**
-       * RESPONSIBILITY:
-       * External payment provider confirms subscription activation
+       * RESPONSIBILITY EVENT:
+       * External payment provider confirms subscription activation.
+       * This is legal-grade evidence.
        */
+
+      // ⚠️ PRE-SRL:
+      // Stripe payload parsing è volutamente minimale.
+      // I valori reali verranno estratti quando Stripe è live.
       const ledgerEvent = subscriptionStartedEvent({
         external_ref: event.id,
-        plan: "JUNIOR",        // TODO: estrarre da payload Stripe
-        trial_days: 30,        // TODO: estrarre da payload Stripe
+        plan: "JUNIOR",     // TODO: estrarre da metadata Stripe
+        trial_days: 30,     // TODO: estrarre da subscription
+        amount_usd: 999,    // TODO: estrarre da invoice.amount_paid / 100
       });
 
       await appendLedgerEvent(ledgerEvent);
@@ -46,7 +56,7 @@ export async function billingWebhookRoute(
     }
 
     default:
-      // Explicitly ignored but acknowledged
+      // Explicitly ignored but acknowledged (idempotent-safe)
       return new Response(
         JSON.stringify({ ok: true, ignored: true }),
         { status: 200 }

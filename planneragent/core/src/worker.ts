@@ -1,6 +1,6 @@
 // src/worker.ts
 // ============================================
-// EDGE WORKER — Constitutional Gateway v3
+// EDGE WORKER — Constitutional Gateway v4
 // Canonical Snapshot · Source of Truth
 // ============================================
 
@@ -14,7 +14,7 @@ import { healthRoute } from "./system/health.route";
 // 🔹 P6 — Industrial Fabric (READ-ONLY)
 import { getSystemRegistry } from "./industrial/system.registry";
 
-// 🔹 P7.5 — SRL notification ONLY
+// 🔹 P7.5 — SRL Notification ONLY (no other usage)
 import { sendTwilioNotification } from "./notifications/twilio.hook";
 
 // 🔹 GOVERNANCE SCHEDULER
@@ -33,10 +33,10 @@ export interface Env {
   VERSION?: string;
 }
 
-function json(body: any, status = 200): Response {
+function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
     status,
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json" },
   });
 }
 
@@ -56,7 +56,10 @@ export default {
         return healthRoute(req, env);
       }
 
-      if (req.method === "GET" && url.pathname === "/system/industrial/registry") {
+      if (
+        req.method === "GET" &&
+        url.pathname === "/system/industrial/registry"
+      ) {
         const registry = await getSystemRegistry();
         return json({ ok: true, registry });
       }
@@ -82,7 +85,7 @@ export default {
         actor_id: parsed.actor_id,
         plan: parsed.plan,
         intent: parsed.intent,
-        domain: parsed.domain
+        domain: parsed.domain,
       });
 
       if (!oag.ok) {
@@ -100,12 +103,12 @@ export default {
         oag_proof: oag.proof,
         budget: {
           budget_remaining_eur: 0,
-          reset_at: new Date().toISOString()
+          reset_at: new Date().toISOString(),
         },
         governance_flags: {
-          sovereignty: "paid" as const
+          sovereignty: "paid" as const,
         },
-        issued_at: new Date().toISOString()
+        issued_at: new Date().toISOString(),
       };
 
       const snapshot = await signSnapshotV1(
@@ -119,18 +122,21 @@ export default {
       );
 
       if (!valid) {
-        return json({ ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" }, 401);
+        return json(
+          { ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" },
+          401
+        );
       }
 
       const response = await evaluateSandboxV2({
         ...parsed,
-        snapshot
+        snapshot,
       });
 
-      // ❗ NO NOTIFICATIONS HERE (by design)
+      // ❗ Deliberately NO notifications here
+      // Governance-triggered notifications happen ONLY in scheduler()
 
       return json(response);
-
     } catch (err: any) {
       return json(
         { ok: false, reason: err?.message ?? "EDGE_FAILURE" },
@@ -147,39 +153,43 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-
     const input: GovernanceSchedulerInput = {
       now_iso: new Date().toISOString(),
 
-      open_srl_input: {
+      // 🔴 Canonical SRL Decision Input
+      srl_decision_input: {
+        // ECONOMIC
         cash_available_eur: 0,
 
+        // MARKET
         active_junior_accounts: 0,
         junior_continuity_months: 0,
-
         has_real_usage: false,
 
+        // OPERATIONAL
         operational_friction_high: false,
 
+        // RISK
         governs_real_systems: false,
         orchestrates_external_ai: false,
         used_in_decisional_contexts: false,
 
-        founder_wants_institution: false
-      }
+        // GOVERNANCE INTENT
+        founder_wants_institution: false,
+      },
     };
 
     ctx.waitUntil(
       runGovernanceScheduler(input).then(async (res) => {
         if (res.action === "OPEN_SRL_TRIGGERED") {
-          // 🔴 Only here we notify via Twilio
+          // 🔴 The ONLY place Twilio is used
           await sendTwilioNotification(env, {
             to: "+393932170828",
             message:
-              "PlannerAgent governance: condizioni OK per aprire la SRL."
+              "PlannerAgent governance: tutte le condizioni sono soddisfatte. È il momento di aprire la SRL.",
           });
         }
       })
     );
-  }
+  },
 };

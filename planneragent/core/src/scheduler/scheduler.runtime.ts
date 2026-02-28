@@ -1,29 +1,40 @@
 // core/src/scheduler/scheduler.runtime.ts
-// ============================================
-// P7.3 — Governance Scheduler Runtime (Canonical)
-// Cloudflare-safe · Deterministic · No hard deps
-// ============================================
+// =====================================================
+// Governance Scheduler Runtime (Canonical)
+// =====================================================
 
-import { evaluateOpenSrlRule } from "../governance/rules/open-srl.rule";
+import { evaluateSrlDecision } from "../commercial/srl.decision";
 import type {
   GovernanceSchedulerInput,
-  GovernanceSchedulerResult
+  GovernanceSchedulerResult,
 } from "./scheduler.types";
+
+import { appendLedgerEvent } from "../ledger/ledger.store";
+import { srlOpenTriggeredEvent } from "../ledger/responsibility.events";
 
 export async function runGovernanceScheduler(
   input: GovernanceSchedulerInput
 ): Promise<GovernanceSchedulerResult> {
+  const decision = evaluateSrlDecision(input.srl_decision_input);
 
-  const decision = evaluateOpenSrlRule(input.open_srl_input);
-
-  // 🔹 RULE FIRED
-  if (decision.allowed) {
+  if (!decision.allowed) {
     return {
-      ok: true,
-      action: "OPEN_SRL_TRIGGERED"
+      action: "NO_ACTION",
+      reasons: decision.blocking_reasons,
     };
   }
 
-  // 🔹 NO-OP (canonical)
-  return { ok: true };
+  // ---------------------------------------------------
+  // Ledger — SRL decision (idempotency handled at store)
+  // ---------------------------------------------------
+
+  await appendLedgerEvent(
+    srlOpenTriggeredEvent({
+      decided_at_iso: input.now_iso,
+    })
+  );
+
+  return {
+    action: "OPEN_SRL_TRIGGERED",
+  };
 }

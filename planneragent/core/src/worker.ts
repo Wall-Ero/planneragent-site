@@ -21,8 +21,14 @@ import { sendTwilioNotification } from "./notifications/twilio.hook";
 import { runGovernanceScheduler } from "./scheduler/scheduler.runtime";
 import type { GovernanceSchedulerInput } from "./scheduler/scheduler.types";
 
+// 🔹 LEGAL STATE FLAG (Week 0)
+import { resolveLegalState } from "../src/governance/legal/legalState";
+
 export interface Env {
   SNAPSHOT_HMAC_SECRET: string;
+
+  // Week 0 — legal switch
+  LEGAL_STATE?: string;
 
   // P7 — Twilio (SRL readiness only)
   TWILIO_ACCOUNT_SID?: string;
@@ -51,15 +57,11 @@ export default {
       // --------------------------------------------------
       // SYSTEM ROUTES — NO GOVERNANCE / NO SNAPSHOT
       // --------------------------------------------------
-
       if (req.method === "GET" && url.pathname === "/system/health") {
         return healthRoute(req, env);
       }
 
-      if (
-        req.method === "GET" &&
-        url.pathname === "/system/industrial/registry"
-      ) {
+      if (req.method === "GET" && url.pathname === "/system/industrial/registry") {
         const registry = await getSystemRegistry();
         return json({ ok: true, registry });
       }
@@ -72,7 +74,6 @@ export default {
       // --------------------------------------------------
       // SANDBOX GATEWAY — POST ONLY
       // --------------------------------------------------
-
       if (req.method !== "POST") {
         return json({ ok: false, reason: "METHOD_NOT_ALLOWED" }, 405);
       }
@@ -92,6 +93,8 @@ export default {
         return json({ ok: false, reason: oag.reason }, 403);
       }
 
+      const legal_state = resolveLegalState(env.LEGAL_STATE);
+
       const snapshotUnsigned = {
         v: 1 as const,
         company_id: parsed.company_id,
@@ -100,32 +103,28 @@ export default {
         intent: parsed.intent,
         domain: parsed.domain,
         actor_id: parsed.actor_id,
+
+        legal_state,
+
         oag_proof: oag.proof,
+
         budget: {
           budget_remaining_eur: 0,
           reset_at: new Date().toISOString(),
         },
+
         governance_flags: {
           sovereignty: "paid" as const,
         },
+
         issued_at: new Date().toISOString(),
       };
 
-      const snapshot = await signSnapshotV1(
-        env.SNAPSHOT_HMAC_SECRET,
-        snapshotUnsigned
-      );
+      const snapshot = await signSnapshotV1(env.SNAPSHOT_HMAC_SECRET, snapshotUnsigned);
 
-      const valid = await verifySnapshotV1(
-        env.SNAPSHOT_HMAC_SECRET,
-        snapshot
-      );
-
+      const valid = await verifySnapshotV1(env.SNAPSHOT_HMAC_SECRET, snapshot);
       if (!valid) {
-        return json(
-          { ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" },
-          401
-        );
+        return json({ ok: false, reason: "SNAPSHOT_SIGNATURE_INVALID" }, 401);
       }
 
       const response = await evaluateSandboxV2({
@@ -135,13 +134,10 @@ export default {
 
       // ❗ Deliberately NO notifications here
       // Governance-triggered notifications happen ONLY in scheduler()
-
       return json(response);
+
     } catch (err: any) {
-      return json(
-        { ok: false, reason: err?.message ?? "EDGE_FAILURE" },
-        400
-      );
+      return json({ ok: false, reason: err?.message ?? "EDGE_FAILURE" }, 400);
     }
   },
 
@@ -155,26 +151,15 @@ export default {
   ): Promise<void> {
     const input: GovernanceSchedulerInput = {
       now_iso: new Date().toISOString(),
-
-      // 🔴 Canonical SRL Decision Input
       srl_decision_input: {
-        // ECONOMIC
         cash_available_eur: 0,
-
-        // MARKET
         active_junior_accounts: 0,
         junior_continuity_months: 0,
         has_real_usage: false,
-
-        // OPERATIONAL
         operational_friction_high: false,
-
-        // RISK
         governs_real_systems: false,
         orchestrates_external_ai: false,
         used_in_decisional_contexts: false,
-
-        // GOVERNANCE INTENT
         founder_wants_institution: false,
       },
     };
@@ -182,7 +167,6 @@ export default {
     ctx.waitUntil(
       runGovernanceScheduler(input).then(async (res) => {
         if (res.action === "OPEN_SRL_TRIGGERED") {
-          // 🔴 The ONLY place Twilio is used
           await sendTwilioNotification(env, {
             to: "+393932170828",
             message:

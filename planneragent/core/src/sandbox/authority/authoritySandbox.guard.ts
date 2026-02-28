@@ -1,4 +1,4 @@
-// core/src/sandbox/authority/authoritySandbox.guard.ts
+// planneragent/core/src/sandbox/authority/authoritySandbox.guard.ts
 // ======================================================
 // Authority Sandbox Guard — P3 Minimal
 // Canonical Source of Truth
@@ -6,9 +6,7 @@
 
 import type { SignedSnapshotV1 } from "../contracts.v2";
 
-export type AuthorityGuardOk = {
-  ok: true;
-};
+export type AuthorityGuardOk = { ok: true };
 
 export type AuthorityGuardFail = {
   ok: false;
@@ -29,29 +27,16 @@ export type AuthorityGuardResult = AuthorityGuardOk | AuthorityGuardFail;
  *
  * NO graph validation here (already done in EDGE)
  */
-export function authoritySandboxGuard(
-  snapshot: SignedSnapshotV1
-): AuthorityGuardResult {
+export function authoritySandboxGuard(snapshot: SignedSnapshotV1): AuthorityGuardResult {
+  if (!snapshot) return { ok: false, reason: "SNAPSHOT_REQUIRED" };
 
-  if (!snapshot) {
-    return { ok: false, reason: "SNAPSHOT_REQUIRED" };
-  }
+  if (!snapshot.signature) return { ok: false, reason: "SNAPSHOT_SIGNATURE_MISSING" };
 
-  if (!snapshot.signature) {
-    return { ok: false, reason: "SNAPSHOT_SIGNATURE_MISSING" };
-  }
+  if (!snapshot.oag_proof) return { ok: false, reason: "OAG_PROOF_MISSING" };
 
-  if (!snapshot.oag_proof) {
-    return { ok: false, reason: "OAG_PROOF_MISSING" };
-  }
+  if (!snapshot.oag_proof.actor_id) return { ok: false, reason: "OAG_ACTOR_MISSING" };
 
-  if (!snapshot.oag_proof.actor_id) {
-    return { ok: false, reason: "OAG_ACTOR_MISSING" };
-  }
-
-  if (!snapshot.oag_proof.company_id) {
-    return { ok: false, reason: "OAG_COMPANY_MISSING" };
-  }
+  if (!snapshot.oag_proof.company_id) return { ok: false, reason: "OAG_COMPANY_MISSING" };
 
   return { ok: true };
 }

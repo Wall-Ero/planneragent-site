@@ -2,20 +2,8 @@
 // ======================================================
 // Canonical Governance & Execution Contracts — V2
 // P3 Authority-Aware Sandbox + Signed Snapshot Constitutional Envelope
-//
-// Source of truth for:
-// - Edge Worker (api boundary + snapshot builder + signature)
-// - Core Orchestrator (deterministic + governed execution)
-// - DL layer (evidence truth)
-// - Voice preview (read-only)
-//
-// Golden Rule:
-// Core NEVER runs without a valid signed snapshot.
 // ======================================================
 
-// ------------------------------------------------------
-// PLAN TIERS — Constitutional Authority Levels
-// ------------------------------------------------------
 export type PlanTier =
   | "VISION"
   | "GRADUATE"
@@ -24,18 +12,12 @@ export type PlanTier =
   | "PRINCIPAL"
   | "CHARTER";
 
-// ------------------------------------------------------
-// INTENTS — Allowed Cognitive Modes
-// ------------------------------------------------------
 export type Intent =
-  | "INFORM"   // Narrate deterministic truth
-  | "ADVISE"   // Scenario + tradeoff generation
-  | "EXECUTE"  // Delegated execution (authority gated)
-  | "WARN";    // Governance / policy boundary narration
+  | "INFORM"
+  | "ADVISE"
+  | "EXECUTE"
+  | "WARN";
 
-// ------------------------------------------------------
-// DOMAIN — Planning Context
-// ------------------------------------------------------
 export type PlanningDomain =
   | "supply_chain"
   | "production"
@@ -44,11 +26,12 @@ export type PlanningDomain =
   | "governance"
   | "general";
 
-// ------------------------------------------------------
-// HEALTH — Subsystem Status
-// ------------------------------------------------------
 export type Health = "ok" | "degraded" | "failed";
 
+// ------------------------------------------------------
+// LEGAL STATE — Week 0 Flag
+// ------------------------------------------------------
+export type LegalState = "PRE_SRL" | "SRL_ACTIVE";
 
 // ======================================================
 // SNAPSHOT V1 — SIGNED CONSTITUTIONAL ENVELOPE
@@ -66,6 +49,9 @@ export type SignedSnapshotV1 = {
 
   actor_id: string;
 
+  // Week 0 legal capability switch
+  legal_state: LegalState;
+
   // Authority proof chain (Edge validated)
   oag_proof: OagProof;
 
@@ -75,15 +61,13 @@ export type SignedSnapshotV1 = {
     reset_at: string; // ISO
   };
 
-  // Sovereignty / cost governance
   governance_flags: {
     sovereignty: "paid" | "free" | "oss";
   };
 
   issued_at: string; // ISO
-  signature: string; // Edge Worker signed (crypto verified in Core)
+  signature: string; // Edge Worker signed
 };
-
 
 // ======================================================
 // OAG PROOF — AUTHORITY GRAPH RESULT
@@ -104,7 +88,6 @@ export type OagProof = {
   authority: "human" | "board" | "system";
 };
 
-
 // ======================================================
 // DETERMINISTIC EVIDENCE — DL TRUTH LAYER
 // ======================================================
@@ -124,13 +107,12 @@ export type DlEvidenceV2 = {
   };
 
   risk_score: {
-    stockout_risk: number;        // 0..1
-    supplier_dependency: number;  // 0..1
+    stockout_risk: number;
+    supplier_dependency: number;
   };
 
   anomaly_signals: string[];
 };
-
 
 // ======================================================
 // VISION ADVISORY — INTERPRETATION LAYER
@@ -140,14 +122,12 @@ export type ScenarioAdvisoryV2 = {
   one_liner: string;
   key_signals: string[];
   labels: string[];
-
   questions: Array<{
     id: string;
     question: string;
     missing_field?: string;
   }>;
 };
-
 
 // ======================================================
 // SCENARIOS — HYPOTHESIS LAYER (NON-TRUTH)
@@ -159,7 +139,6 @@ export type ScenarioV2 = {
   summary: string;
   confidence: number; // 0..1
 };
-
 
 // ======================================================
 // REQUEST — EDGE → CORE
@@ -178,13 +157,11 @@ export type SandboxEvaluateRequestV2 = {
   baseline_snapshot_id: string;
   baseline_metrics: Record<string, unknown>;
 
-  // Mandatory constitutional envelope
   snapshot: SignedSnapshotV1;
 };
 
-
 // ======================================================
-// SUCCESS RESPONSE
+// RESPONSE
 // ======================================================
 
 export type SandboxEvaluateResultV2 = {
@@ -197,7 +174,6 @@ export type SandboxEvaluateResultV2 = {
   domain: PlanningDomain;
 
   scenarios: ScenarioV2[];
-
   advisory?: ScenarioAdvisoryV2;
 
   governance: {
@@ -208,21 +184,11 @@ export type SandboxEvaluateResultV2 = {
   issued_at: string;
 };
 
-
-// ======================================================
-// ERROR RESPONSE
-// ======================================================
-
 export type SandboxEvaluateErrorV2 = {
   ok: false;
   request_id?: string;
   reason: string;
 };
-
-
-// ======================================================
-// UNION RESPONSE
-// ======================================================
 
 export type SandboxEvaluateResponseV2 =
   | SandboxEvaluateResultV2

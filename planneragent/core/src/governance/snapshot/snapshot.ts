@@ -1,122 +1,61 @@
-// core/src/governance/snapshot/snapshot.ts
-// Canonical Constitutional Snapshot — V1
-// Source of Truth
-//
-// Responsibilities:
-// - Stable canonical JSON encoding
-// - HMAC-SHA256 signing
-// - Signature verification
-//
-// This file defines the ONLY valid snapshot version used by EDGE and CORE
+// src/governance/snapshot/snapshot.ts
+// ============================================
+// Snapshot Signing — HMAC v1
+// Canonical Snapshot · Source of Truth
+// ============================================
 
-import type { OagProof } from "../../sandbox/contracts.v2";
-import type {
-  PlanTier,
-  Intent,
-  PlanningDomain
-} from "../../sandbox/contracts.v2";
+import type { SignedSnapshotV1 } from "../../sandbox/contracts.v2";
 
-// ------------------------------------------------------------------
-// Types
-// ------------------------------------------------------------------
+export type UnsignedSnapshotV1 = Omit<SignedSnapshotV1, "signature">;
 
-export type SignedSnapshotV1 = {
-  v: 1;
+function stableStringify(obj: unknown): string {
+  const seen = new WeakSet<object>();
 
-  company_id: string;
-  request_id: string;
+  const sorter = (_key: string, value: any) => {
+    if (value && typeof value === "object") {
+      if (seen.has(value)) return undefined;
+      seen.add(value);
 
-  plan: PlanTier;
-  intent: Intent;
-  domain: PlanningDomain;
+      if (Array.isArray(value)) return value;
 
-  actor_id: string;
-  oag_proof: OagProof;
-
-  budget: {
-    budget_remaining_eur: number;
-    reset_at: string; // ISO timestamp
-  };
-
-  governance_flags: {
-    sovereignty: "paid" | "free" | "oss";
-  };
-
-  issued_at: string; // ISO timestamp
-  signature: string; // HMAC-SHA256 over canonical_json(payload_without_signature)
-};
-
-// ------------------------------------------------------------------
-// Canonical JSON (stable, deterministic, sorted keys)
-// ------------------------------------------------------------------
-
-function canonicalJson(x: unknown): string {
-  const seen = new WeakSet();
-
-  const stable = (v: any): any => {
-    if (v && typeof v === "object") {
-      if (seen.has(v)) return null;
-      seen.add(v);
-
-      if (Array.isArray(v)) {
-        return v.map(stable);
-      }
-
-      const out: Record<string, any> = {};
-      for (const k of Object.keys(v).sort()) {
-        out[k] = stable(v[k]);
-      }
+      const out: Record<string, unknown> = {};
+      for (const k of Object.keys(value).sort()) out[k] = value[k];
       return out;
     }
-    return v;
+    return value;
   };
 
-  return JSON.stringify(stable(x));
+  return JSON.stringify(obj, sorter);
 }
 
-// ------------------------------------------------------------------
-// Crypto
-// ------------------------------------------------------------------
+function toHex(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let s = "";
+  for (const b of bytes) s += b.toString(16).padStart(2, "0");
+  return s;
+}
 
-async function hmacSha256Hex(
-  secret: string,
-  msg: string
-): Promise<string> {
+async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
+  const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    enc.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign", "verify"]
   );
 
-  const sig = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(msg)
-  );
-
-  return [...new Uint8Array(sig)]
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
+  return toHex(sig);
 }
-
-// ------------------------------------------------------------------
-// API
-// ------------------------------------------------------------------
 
 export async function signSnapshotV1(
   secret: string,
-  snapshot: Omit<SignedSnapshotV1, "signature">
+  unsigned: UnsignedSnapshotV1
 ): Promise<SignedSnapshotV1> {
-  const payload = { ...snapshot };
-  const msg = canonicalJson(payload);
-  const signature = await hmacSha256Hex(secret, msg);
-
-  return {
-    ...payload,
-    signature
-  };
+  const payload = stableStringify(unsigned);
+  const signature = await hmacSha256Hex(secret, payload);
+  return { ...unsigned, signature };
 }
 
 export async function verifySnapshotV1(
@@ -124,8 +63,9 @@ export async function verifySnapshotV1(
   signed: SignedSnapshotV1
 ): Promise<boolean> {
   const { signature, ...rest } = signed as any;
-  const msg = canonicalJson(rest);
-  const expected = await hmacSha256Hex(secret, msg);
+  if (!signature || typeof signature !== "string") return false;
 
+  const payload = stableStringify(rest);
+  const expected = await hmacSha256Hex(secret, payload);
   return expected === signature;
 }

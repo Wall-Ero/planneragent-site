@@ -1,18 +1,31 @@
 // planneragent/ui/main.ts
-// ======================================================
-// P8 — UI ENTRY POINT
-// Renders UI state only (no Core, no authority creation)
-// ======================================================
 
 import { getUiState } from "./state/uiState";
+
+import {
+  classifyDataset,
+  type DatasetDescriptor,
+} from "../core/datasets/datasetClassifier";
+
+import { getSession } from "./auth/AuthProvider";
+import { resolveRoleFromSession } from "./auth/RoleResolver";
 
 function render() {
   const el = document.getElementById("app");
   if (!el) return;
 
-  // 🔹 For now: hard-coded visual mode (P8)
-  // Later this will come from sessionState / RoleResolver
-  const ui = getUiState("VISION");
+  // ---- MOCK TEMP (finché non colleghiamo input reali) ----
+  const dataset: DatasetDescriptor = {
+    hasSnapshot: true,
+    hasBehavioralEvents: false,
+    hasStructuralData: false,
+  };
+
+  const awareness = classifyDataset(dataset); // -> { level, evidence }
+  const ui = getUiState("VISION", awareness.level);
+
+  const session = getSession();
+  const role = resolveRoleFromSession(session);
 
   el.innerHTML = `
     <div style="
@@ -24,15 +37,22 @@ function render() {
       background: #0e0e11;
       color: #eaeaf0;
     ">
-      <div style="text-align:center; max-width: 420px;">
-        <h1 style="margin-bottom: 12px;">PlannerAgent</h1>
+      <div style="text-align:center; line-height: 1.4">
+        <h1 style="margin:0 0 12px 0;">PlannerAgent</h1>
 
-        <p style="font-size: 16px; margin: 0;">
+        <p style="margin:0;">
           <strong>Mode:</strong> ${ui.authority.title}
         </p>
-
-        <p style="opacity: 0.8; margin-top: 6px;">
+        <p style="margin:6px 0 14px 0; opacity: .9;">
           ${ui.authority.subtitle}
+        </p>
+
+        <p style="margin:0; opacity:.85;">
+          <strong>Data awareness:</strong> ${ui.dataAwareness.label}
+        </p>
+
+        <p style="margin:10px 0 0 0; opacity:.75;">
+          <strong>Role:</strong> ${role}
         </p>
       </div>
     </div>

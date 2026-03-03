@@ -1,10 +1,8 @@
-// ui/state/uiState.ts
+// planneragent/ui/state/uiState.ts
 // =====================================================
-// UI State — Canonical (P8 · UI-only)
-// Renders authority & data awareness (never creates it)
+// UI State — Canonical
+// Interprets sandbox signals for UI rendering
 // =====================================================
-
-import type { DataAwarenessLevel } from "../../core/datasets/datasetClassifier";
 
 export type UiMode =
   | "VISION"
@@ -12,9 +10,31 @@ export type UiMode =
   | "SENIOR"
   | "PRINCIPAL";
 
-export type UiDataAwarenessState = {
-  level: DataAwarenessLevel;
-  label: string;
+export type DataAwarenessLevel =
+  | "SNAPSHOT"
+  | "BEHAVIORAL"
+  | "STRUCTURAL";
+
+export type PlanState =
+  | "COHERENT"
+  | "SOME_GAPS"
+  | "INCOHERENT";
+
+export type RealityState =
+  | "ALIGNED"
+  | "DRIFTING"
+  | "MISALIGNED";
+
+export type DecisionPressureState =
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH";
+
+export type SandboxSignals = {
+  data_awareness?: DataAwarenessLevel;
+  plan?: PlanState;
+  reality?: RealityState;
+  decision_pressure?: DecisionPressureState;
 };
 
 export type UiAuthorityState = {
@@ -24,65 +44,47 @@ export type UiAuthorityState = {
 
 export type UiState = {
   authority: UiAuthorityState;
-  dataAwareness: UiDataAwarenessState;
+  signals: SandboxSignals;
 };
 
 export function getUiState(
   mode: UiMode,
-  dataAwareness: DataAwarenessLevel
+  signals: SandboxSignals
 ): UiState {
+
   return {
     authority: authorityStateForMode(mode),
-    dataAwareness: {
-      level: dataAwareness,
-      label: dataAwarenessLabel(dataAwareness),
-    },
+    signals
   };
 }
 
-// -----------------------------------------------------
-// Authority rendering (UI semantics only)
-// -----------------------------------------------------
 function authorityStateForMode(mode: UiMode): UiAuthorityState {
+
   switch (mode) {
+
     case "VISION":
       return {
         title: "VISION",
-        subtitle: "Observation only. No execution.",
+        subtitle: "Observation only. No execution."
       };
 
     case "JUNIOR":
       return {
         title: "JUNIOR",
-        subtitle: "Advisory. Execution by approval.",
+        subtitle: "Advisory. Execution by approval."
       };
 
     case "SENIOR":
       return {
         title: "SENIOR",
-        subtitle: "Delegated execution within scope.",
+        subtitle: "Delegated execution within scope."
       };
 
     case "PRINCIPAL":
       return {
         title: "PRINCIPAL",
-        subtitle: "Budget & responsibility authority.",
+        subtitle: "Budget & responsibility authority."
       };
-  }
-}
 
-// -----------------------------------------------------
-// Data Awareness rendering (epistemic confidence)
-// -----------------------------------------------------
-function dataAwarenessLabel(level: DataAwarenessLevel): string {
-  switch (level) {
-    case "SNAPSHOT":
-      return "Snapshot data (static)";
-
-    case "BEHAVIORAL":
-      return "Behavioral data (events & time)";
-
-    case "STRUCTURAL":
-      return "Structural data (system-of-record)";
   }
 }

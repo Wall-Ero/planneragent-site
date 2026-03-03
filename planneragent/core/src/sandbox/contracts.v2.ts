@@ -5,6 +5,8 @@
 // ======================================================
 
 export type PlanTier =
+  // Legacy alias kept for backward compatibility (must be normalized at boundary)
+  | "BASIC"
   | "VISION"
   | "GRADUATE"
   | "JUNIOR"
@@ -141,6 +143,64 @@ export type ScenarioV2 = {
 };
 
 // ======================================================
+// RATE CONTRACT (Policy v2)
+// ======================================================
+
+export type SandboxRateInfo = {
+  status: "OK" | "BURST" | "BLOCKED";
+  reset_at: string; // ISO
+  reason?: "DEBOUNCED" | "QUOTA_EXCEEDED" | "RATE_LIMITED";
+};
+
+// ======================================================
+// DATA AWARENESS — Dataset Descriptor (Frontend-driven, no inference)
+// ======================================================
+
+export type DataAwarenessLevel = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
+
+export type DatasetDescriptor = {
+  hasSnapshot: boolean;           // CSV/Excel/one-off export
+  hasBehavioralEvents: boolean;   // ordini/movimenti/eventi con timestamp
+  hasStructuralData: boolean;     // anagrafiche/BOM/routing/capacità/constraint
+};
+
+export type DatasetClassificationResult = {
+  level: DataAwarenessLevel;
+  evidence: string[];
+};
+
+// ======================================================
+// UI SIGNALS — Constitutional Projection v1 (LOCKED)
+// ======================================================
+
+export type DataAwarenessState =
+  | "SNAPSHOT"
+  | "BEHAVIORAL"
+  | "STRUCTURAL";
+
+export type PlanState =
+  | "COHERENT"
+  | "SOME_GAPS"
+  | "INCOHERENT";
+
+export type RealityState =
+  | "ALIGNED"
+  | "DRIFTING"
+  | "MISALIGNED";
+
+export type DecisionPressureState =
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH";
+
+export type UiSignalsV1 = {
+  data_awareness: DataAwarenessState;
+  plan: PlanState;
+  reality: RealityState;
+  decision_pressure: DecisionPressureState;
+};
+
+// ======================================================
 // REQUEST — EDGE → CORE
 // ======================================================
 
@@ -157,6 +217,9 @@ export type SandboxEvaluateRequestV2 = {
   baseline_snapshot_id: string;
   baseline_metrics: Record<string, unknown>;
 
+  // Frontend-driven descriptor (no inference). Optional; defaults to SNAPSHOT.
+  dataset_descriptor?: DatasetDescriptor;
+
   snapshot: SignedSnapshotV1;
 };
 
@@ -172,6 +235,9 @@ export type SandboxEvaluateResultV2 = {
   plan: PlanTier;
   intent: Intent;
   domain: PlanningDomain;
+
+  // UI-aligned, constitutionally derived, deterministic
+  signals: UiSignalsV1;
 
   scenarios: ScenarioV2[];
   advisory?: ScenarioAdvisoryV2;

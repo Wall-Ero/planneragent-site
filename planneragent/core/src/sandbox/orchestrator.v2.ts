@@ -1,4 +1,4 @@
-// planneragent/core/src/sandbox/orchestrator.v2.ts
+// src/sandbox/orchestrator.v2.ts
 // ======================================================
 // SANDBOX ORCHESTRATOR — V2 (P3 Authority Bound)
 // Canonical Source of Truth
@@ -7,6 +7,7 @@
 // - Enforce Authority via Signed Snapshot (P3)
 // - Run deterministic DL layer (truth)
 // - Allow LLM fanout only where governance allows
+// - Emit UI constitutional signals (v1) — NO UI inference
 // ======================================================
 
 import type {
@@ -16,10 +17,12 @@ import type {
   ScenarioAdvisoryV2,
   DlEvidenceV2,
   Health,
+  PlanTier,
 } from "./contracts.v2";
 
 import { computeDlEvidenceV2 } from "./dl.v2";
 import { authoritySandboxGuard } from "./authority/authoritySandbox.guard";
+import { buildUiSignalsV1 } from "./signal.engine.v1";
 
 // -----------------------------
 // INTERNAL TYPES
@@ -31,7 +34,7 @@ type Env = {
 // -----------------------------
 // GOVERNANCE HELPERS
 // -----------------------------
-function executionAllowed(plan: string, intent: string): boolean {
+function executionAllowed(plan: PlanTier, intent: string): boolean {
   if (intent !== "EXECUTE") return false;
 
   switch (plan) {
@@ -44,7 +47,7 @@ function executionAllowed(plan: string, intent: string): boolean {
   }
 }
 
-function llmAllowed(plan: string): boolean {
+function llmAllowed(plan: PlanTier): boolean {
   // CHARTER never calls LLM
   return plan !== "CHARTER";
 }
@@ -63,9 +66,7 @@ function buildVisionAdvisory(dl: DlEvidenceV2, health: Health): ScenarioAdvisory
 
   if (dl.risk_score.supplier_dependency > 0.7) {
     labels.push("SUPPLIER_DEPENDENCY");
-    keySignals.push(
-      `Supplier dependency high (${dl.risk_score.supplier_dependency})`
-    );
+    keySignals.push(`Supplier dependency high (${dl.risk_score.supplier_dependency})`);
   }
 
   const one_liner =
@@ -88,7 +89,10 @@ function buildVisionAdvisory(dl: DlEvidenceV2, health: Health): ScenarioAdvisory
 // -----------------------------
 // LLM FANOUT PLACEHOLDER
 // -----------------------------
-async function runLlmFanout(_req: SandboxEvaluateRequestV2, dl: DlEvidenceV2): Promise<ScenarioV2[]> {
+async function runLlmFanout(
+  _req: SandboxEvaluateRequestV2,
+  dl: DlEvidenceV2
+): Promise<ScenarioV2[]> {
   return [
     {
       id: "llm-1",
@@ -102,7 +106,9 @@ async function runLlmFanout(_req: SandboxEvaluateRequestV2, dl: DlEvidenceV2): P
 // ======================================================
 // MAIN ENTRY
 // ======================================================
-export async function evaluateSandboxV2(req: SandboxEvaluateRequestV2): Promise<SandboxEvaluateResponseV2> {
+export async function evaluateSandboxV2(
+  req: SandboxEvaluateRequestV2
+): Promise<SandboxEvaluateResponseV2> {
   const env: Env = { DL_ENABLED: "true" };
 
   // ======================================================
@@ -114,7 +120,6 @@ export async function evaluateSandboxV2(req: SandboxEvaluateRequestV2): Promise<
 
   const auth = authoritySandboxGuard(req.snapshot);
   if (!auth.ok) {
-    // ✅ auth is now correctly narrowed to { ok:false; reason:string }
     return { ok: false, request_id: req.request_id, reason: auth.reason };
   }
 
@@ -134,13 +139,21 @@ export async function evaluateSandboxV2(req: SandboxEvaluateRequestV2): Promise<
   const dlEvidence = dlResult.evidence;
 
   // ======================================================
-  // 2️⃣ Governance Decision
+  // 2️⃣ UI Signals (Constitution v1)
+  // ======================================================
+  const { signals } = buildUiSignalsV1({
+    dl: dlEvidence,
+    dataset_descriptor: req.dataset_descriptor,
+  });
+
+  // ======================================================
+  // 3️⃣ Governance Decision
   // ======================================================
   const execAllowed = executionAllowed(req.plan, req.intent);
   const allowLlm = llmAllowed(req.plan);
 
   // ======================================================
-  // 3️⃣ VISION MODE (Observation Only)
+  // 4️⃣ VISION MODE (Observation Only)
   // ======================================================
   if (req.plan === "VISION") {
     const advisory = buildVisionAdvisory(dlEvidence, dlResult.health);
@@ -151,6 +164,7 @@ export async function evaluateSandboxV2(req: SandboxEvaluateRequestV2): Promise<
       plan: req.plan,
       intent: req.intent,
       domain: req.domain,
+      signals,
       scenarios: [],
       advisory,
       governance: {
@@ -162,7 +176,7 @@ export async function evaluateSandboxV2(req: SandboxEvaluateRequestV2): Promise<
   }
 
   // ======================================================
-  // 4️⃣ JUNIOR / SENIOR / PRINCIPAL
+  // 5️⃣ JUNIOR / SENIOR / PRINCIPAL
   // ======================================================
   let scenarios: ScenarioV2[] = [];
   if (allowLlm) scenarios = await runLlmFanout(req, dlEvidence);
@@ -173,6 +187,7 @@ export async function evaluateSandboxV2(req: SandboxEvaluateRequestV2): Promise<
     plan: req.plan,
     intent: req.intent,
     domain: req.domain,
+    signals,
     scenarios,
     governance: {
       execution_allowed: execAllowed,

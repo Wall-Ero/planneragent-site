@@ -1,16 +1,26 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+
   "name": "planneragent-core",
   "main": "src/worker.ts",
   "compatibility_date": "2026-01-02",
 
-  // ======================
-  // ENV VARS (LLM LAYER)
-  // ======================
+  // ======================================================
+  // ENV VARS (Governance + LLM Layer)
+  // ======================================================
   "vars": {
+    // 🔐 Snapshot signing key (MANDATORY)
+    // Used to sign and verify constitutional snapshots.
+    // Must NEVER be empty.
+    "SNAPSHOT_HMAC_SECRET": "planneragent-dev-hmac-secret-2026",
+
+    // 🤖 LLM Layer (if used)
     "OPENROUTER_API_KEY": "sk-or-XXXXXXXXXXXX"
   },
 
+  // ======================================================
+  // D1 DATABASES
+  // ======================================================
   "d1_databases": [
     {
       "binding": "POLICIES_DB",

@@ -31,7 +31,7 @@
     "worker-configuration.d.ts",
     "src/**/*.ts",
     "decision-memory/**/*.ts"
-  ],
+, "datasets/dataAwareness.types.ts", "datasets/datasetClassifier.ts"  ],
 
   "exclude": [
     "node_modules",

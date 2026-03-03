@@ -1,4 +1,8 @@
 // src/sandbox/policy.v2.ts
+// ======================================================
+// SANDBOX RATE POLICY — v2
+// Source of Truth
+// ======================================================
 
 import type { PlanTier, SandboxRateInfo } from "./contracts.v2";
 
@@ -32,10 +36,6 @@ type Env = {
 // -----------------------------
 // Helpers
 // -----------------------------
-function nowIso() {
-  return new Date().toISOString();
-}
-
 function monthResetIsoUTC(): string {
   const d = new Date();
   const y = d.getUTCFullYear();
@@ -45,8 +45,8 @@ function monthResetIsoUTC(): string {
 }
 
 function defaults(plan: PlanTier) {
-  // COPY-LOCK defaults (from spec)
-  if (plan === "BASIC") return { monthly: 5, burst: 2 };
+  // Legacy: BASIC and VISION share the same defaults
+  if (plan === "BASIC" || plan === "VISION") return { monthly: 5, burst: 2 };
   if (plan === "JUNIOR") return { monthly: 15, burst: 5 };
   return { monthly: 30, burst: 10 };
 }
@@ -69,16 +69,14 @@ export async function rateGateV2(
       ok: true,
       rate: {
         status: "OK",
-        reset_at: resetAt
+        reset_at: resetAt,
       },
       monthly_remaining: Infinity,
-      burst_remaining: Infinity
+      burst_remaining: Infinity,
     };
   }
 
-  const key = `${companyId}::${baselineSnapshotId}::${intent
-    .trim()
-    .slice(0, 200)}`;
+  const key = `${companyId}::${baselineSnapshotId}::${intent.trim().slice(0, 200)}`;
 
   // -----------------------------
   // 1) Debounce gate
@@ -102,10 +100,10 @@ export async function rateGateV2(
       rate: {
         status: "BLOCKED",
         reset_at: resetAt,
-        reason: "DEBOUNCED"
+        reason: "DEBOUNCED",
       },
       monthly_remaining: 0,
-      burst_remaining: 0
+      burst_remaining: 0,
     };
   }
 
@@ -151,10 +149,10 @@ export async function rateGateV2(
       rate: {
         status: "BLOCKED",
         reset_at: resetAt,
-        reason: "RATE_LIMITED"
+        reason: "RATE_LIMITED",
       },
       monthly_remaining: 0,
-      burst_remaining: 0
+      burst_remaining: 0,
     };
   }
 
@@ -180,10 +178,7 @@ export async function rateGateV2(
       .run();
   }
 
-  const monthlyRemaining = Math.max(
-    0,
-    row.monthly_quota - monthlyUsed
-  );
+  const monthlyRemaining = Math.max(0, row.monthly_quota - monthlyUsed);
 
   // -----------------------------
   // 5) Enforce monthly quota
@@ -196,10 +191,10 @@ export async function rateGateV2(
       rate: {
         status: "BLOCKED",
         reset_at: row.reset_at,
-        reason: "QUOTA_EXCEEDED"
+        reason: "QUOTA_EXCEEDED",
       },
       monthly_remaining: 0,
-      burst_remaining: burstRemaining
+      burst_remaining: burstRemaining,
     };
   }
 
@@ -234,13 +229,10 @@ export async function rateGateV2(
     ok: true,
     rate: {
       status,
-      reset_at: row.reset_at
+      reset_at: row.reset_at,
     },
-    monthly_remaining: Math.max(
-      0,
-      row.monthly_quota - monthlyUsed
-    ),
-    burst_remaining: burstRemaining
+    monthly_remaining: Math.max(0, row.monthly_quota - monthlyUsed),
+    burst_remaining: burstRemaining,
   };
 }
 

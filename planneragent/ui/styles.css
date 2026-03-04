@@ -1,113 +1,316 @@
+/* planneragent/ui/styles.css */
 /* =====================================================
-PLANNER AGENT UI STYLE
-Canonical Source of Truth
+   PlannerAgent Cockpit System — UI Skin (ON/OFF only)
+   ===================================================== */
+/* =====================================================
+PlannerAgent Cockpit System
 ===================================================== */
-body{
-background:#0e0e11;
-font-family:system-ui;
-color:#eaeaf0;
-margin:0;
+/* =====================================================
+PlannerAgent Cockpit System
+===================================================== */
+
+:root{
+
+--pa-bg:#0e0f12;
+
+--pa-text:#cfd3d8;
+--pa-muted:rgba(207,211,216,0.55);
+
+--pa-gold:#d4af37;
+
+--pa-line:rgba(255,255,255,0.08);
+
+--pa-font:system-ui,-apple-system,Segoe UI,Roboto;
+
 }
+
+/* BASE */
+
+body{
+
+margin:0;
+background:radial-gradient(
+800px 500px at 50% 10%,
+rgba(212,175,55,0.15),
+transparent
+),
+var(--pa-bg);
+
+color:var(--pa-text);
+
+font-family:var(--pa-font);
+
+}
+
+/* PANEL */
 
 .panel{
-max-width:420px;
+
+max-width:1100px;
+
 margin:auto;
-padding:24px;
-text-align:center;
+
+padding:30px;
+
 }
+
+/* HEADER */
 
 .topbar{
+
 display:flex;
 justify-content:space-between;
-width:100%;
-margin-bottom:12px;
-font-size:13px;
-color:#9a9a9a;
+
+font-size:12px;
+
+letter-spacing:2px;
+
+opacity:0.6;
+
 }
 
-.faq{
-text-align:left;
-}
-
-.userid{
-text-align:right;
-}
+/* TITLE */
 
 .title{
-font-size:26px;
-letter-spacing:2px;
-color:#d4af37;
-font-weight:700;
+
+text-align:center;
+
+font-size:36px;
+
+letter-spacing:4px;
+
+color:var(--pa-gold);
+
+margin-top:20px;
+
 }
 
 .subtitle{
-font-size:13px;
-color:#c8c8c8;
-margin-top:4px;
+
+text-align:center;
+
+letter-spacing:4px;
+
+margin-top:6px;
+
+opacity:0.8;
+
 }
 
 .tagline{
-font-size:11px;
-color:#8f8f8f;
-margin-top:8px;
+
+text-align:center;
+
+margin-top:12px;
+
+opacity:0.6;
+
+font-size:12px;
+
+letter-spacing:2px;
+
 }
 
+/* DATA AWARENESS */
+
 .section{
-margin-top:28px;
+
+margin-top:40px;
+
+text-align:center;
+
 }
 
 .section-title{
+
 font-size:14px;
-letter-spacing:1px;
-color:#9a9a9a;
-margin-bottom:8px;
+
+letter-spacing:4px;
+
+margin-bottom:12px;
+
+opacity:0.8;
+
+}
+
+.options{
+
+display:flex;
+justify-content:center;
+gap:16px;
+
 }
 
 .option{
-margin:0 10px;
-font-size:12px;
-font-weight:500;
-color:#555;
+
+padding:10px 18px;
+
+border:1px solid var(--pa-line);
+
+border-radius:6px;
+
+opacity:0.6;
+
 }
 
 .option.active{
-color:#d4af37;
+
+color:var(--pa-gold);
+
+border-color:var(--pa-gold);
+
+opacity:1;
+
 }
 
-.plan-reality{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-top:28px;
+/* COCKPIT AREA */
+
+.cockpit{
+
+position:relative;
+
+margin-top:40px;
+
 }
+
+/* SVG FRAME */
+
+.cockpit svg{
+
+width:100%;
+height:260px;
+
+}
+
+/* SIGNAL LAYOUT */
+
+.triptych{
+
+position:absolute;
+
+top:40px;
+
+left:0;
+
+right:0;
+
+display:grid;
+
+grid-template-columns:1fr 1fr 1fr;
+
+text-align:center;
+
+}
+
+/* SIGNAL COLUMN */
 
 .column{
-font-size:12px;
+
+display:flex;
+flex-direction:column;
+gap:10px;
+
 }
 
+/* SIGNALS */
+
 .signal{
-margin:4px 0;
-font-size:13px;
-color:#555;
+
+padding:6px 12px;
+
+border:1px solid rgba(255,255,255,0.1);
+
+border-radius:6px;
+
+opacity:0.5;
+
 }
 
 .signal.active{
-color:#d4af37;
-font-weight:600;
+
+color:var(--pa-gold);
+
+border-color:var(--pa-gold);
+
+opacity:1;
+
 }
 
-.pressure{
-text-align:center;
+/* DECISION PRESSURE */
+.decision-pressure-label {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  text-align: center;
 }
+
+/* CHAT */
+
+.chat{
+
+margin-top:80px;
+
+}
+
+.chatbox{
+
+border:1px solid var(--pa-line);
+
+padding:20px;
+
+border-radius:8px;
+
+opacity:0.8;
+
+}
+
+.chatinput{
+
+margin-top:10px;
+
+border:1px solid var(--pa-line);
+
+padding:10px;
+
+border-radius:6px;
+
+}
+
+/* MODE */
 
 .mode{
-margin-top:30px;
+
+text-align:center;
+
+margin-top:20px;
+
 font-size:12px;
-color:#8c8c8c;
+
+opacity:0.7;
+
 }
 
 .mode-sub{
+
+text-align:center;
+
+font-size:12px;
+
+opacity:0.5;
+
+}
+
+/* FOOTER */
+
+.footer{
+
+margin-top:30px;
+
 font-size:11px;
-color:#6f6f6f;
-margin-top:4px;
+
+text-align:center;
+
+opacity:0.5;
+
 }

@@ -1,6 +1,6 @@
 // planneragent/ui/main.ts
 // =====================================================
-// PlannerAgent UI — Control Interface
+// PlannerAgent UI — Cockpit Interface
 // Canonical Source of Truth
 // =====================================================
 
@@ -27,68 +27,127 @@ type SandboxResponse = {
   signals?: SandboxSignals;
 };
 
+// -----------------------------------------------------
+// SANDBOX REQUEST
+// -----------------------------------------------------
+
 async function fetchSandbox(): Promise<SandboxResponse> {
 
-  const res = await fetch("/sandbox", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      company_id: "demo",
-      request_id: crypto.randomUUID(),
-      plan: "VISION",
-      intent: "INFORM",
-      domain: "supply_chain",
-      actor_id: "anonymous",
-      baseline_snapshot_id: "baseline-1",
-      baseline_metrics: {
-        demand: 800,
-        stock: 600,
-        supplier_dependency: 0.5
+  try {
+
+    const res = await fetch("/sandbox", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
       },
-      dataset_descriptor: {
-        hasSnapshot: true,
-        hasBehavioralEvents: false,
-        hasStructuralData: false
+
+      body: JSON.stringify({
+
+        company_id: "demo",
+
+        request_id: crypto.randomUUID(),
+
+        plan: "VISION",
+
+        intent: "INFORM",
+
+        domain: "supply_chain",
+
+        actor_id: "anonymous",
+
+        baseline_snapshot_id: "baseline-1",
+
+        baseline_metrics: {
+
+          demand: 800,
+          stock: 600,
+          supplier_dependency: 0.5
+
+        },
+
+        dataset_descriptor: {
+
+          hasSnapshot: true,
+          hasBehavioralEvents: false,
+          hasStructuralData: false
+
+        }
+
+      })
+
+    });
+
+    return await res.json();
+
+  } catch (e) {
+
+    // fallback mock se sandbox non esiste ancora
+    return {
+
+      ok: true,
+
+      plan: "VISION",
+
+      signals: {
+
+        data_awareness: "SNAPSHOT",
+        plan: "COHERENT",
+        reality: "ALIGNED",
+        decision_pressure: "MEDIUM"
+
       }
-    })
-  });
 
-  return res.json();
+    };
+
+  }
+
 }
-
 
 // -----------------------------------------------------
 // TYPE MAPPERS
 // -----------------------------------------------------
 
 function mapDataAwareness(v?: string): DataAwarenessLevel | undefined {
+
   if (v === "SNAPSHOT") return "SNAPSHOT";
   if (v === "BEHAVIORAL") return "BEHAVIORAL";
   if (v === "STRUCTURAL") return "STRUCTURAL";
+
   return undefined;
+
 }
 
 function mapPlan(v?: string): PlanState | undefined {
+
   if (v === "COHERENT") return "COHERENT";
   if (v === "SOME_GAPS") return "SOME_GAPS";
   if (v === "INCOHERENT") return "INCOHERENT";
+
   return undefined;
+
 }
 
 function mapReality(v?: string): RealityState | undefined {
+
   if (v === "ALIGNED") return "ALIGNED";
   if (v === "DRIFTING") return "DRIFTING";
   if (v === "MISALIGNED") return "MISALIGNED";
+
   return undefined;
+
 }
 
 function mapPressure(v?: string): DecisionPressureState | undefined {
+
   if (v === "LOW") return "LOW";
   if (v === "MEDIUM") return "MEDIUM";
   if (v === "HIGH") return "HIGH";
-  return undefined;
-}
 
+  return undefined;
+
+}
 
 // -----------------------------------------------------
 // RENDER HELPERS
@@ -112,7 +171,6 @@ function renderSignal(label: string, active?: string) {
   return `<div class="${cls}">${label}</div>`;
 }
 
-
 // -----------------------------------------------------
 // MAIN RENDER
 // -----------------------------------------------------
@@ -120,10 +178,10 @@ function renderSignal(label: string, active?: string) {
 async function render() {
 
   const el = document.getElementById("app");
+
   if (!el) return;
 
-  // session used only to check login state
-  const session = getSession();
+  getSession();
 
   const response = await fetchSandbox();
 
@@ -131,33 +189,32 @@ async function render() {
 
     el.innerHTML = `<div style="color:red">Sandbox error</div>`;
     return;
+
   }
 
   const s = response.signals ?? {};
 
   const signalState = {
+
     data_awareness: mapDataAwareness(s.data_awareness),
     plan: mapPlan(s.plan),
     reality: mapReality(s.reality),
     decision_pressure: mapPressure(s.decision_pressure)
+
   };
 
-  const ui = getUiState(
-    response.plan,
-    signalState
-  );
+  const ui = getUiState(response.plan);
 
   el.innerHTML = `
+
   <div class="panel">
 
     <div class="topbar">
-      <div class="faq">FAQ</div>
-      <div class="userid">ID</div>
+      <div>FAQ</div>
+      <div>ID</div>
     </div>
 
-    <div class="title">
-      PLANNER AGENT
-    </div>
+    <div class="title">PLANNER AGENT</div>
 
     <div class="subtitle">
       AI OPERATIONAL GOVERNANCE
@@ -167,57 +224,85 @@ async function render() {
       KEEP REALITY ALIGNED WITH PLAN. GET ADVICE. KEEP AI UNDER CONTROL.
     </div>
 
+
     <div class="section">
 
       <div class="section-title">
         DATA AWARENESS
       </div>
 
-      ${renderOption("SNAPSHOT", signalState.data_awareness)}
-      ${renderOption("BEHAVIORAL", signalState.data_awareness)}
-      ${renderOption("STRUCTURAL", signalState.data_awareness)}
+      <div class="options">
 
-    </div>
-
-    <div class="plan-reality">
-
-      <div class="column">
-
-        <div class="section-title">
-          PLAN
-        </div>
-
-        ${renderSignal("COHERENT", signalState.plan)}
-        ${renderSignal("SOME_GAPS", signalState.plan)}
-        ${renderSignal("INCOHERENT", signalState.plan)}
-
-      </div>
-
-      <div class="pressure">
-
-        ${renderSignal("HIGH", signalState.decision_pressure)}
-        ${renderSignal("MEDIUM", signalState.decision_pressure)}
-        ${renderSignal("LOW", signalState.decision_pressure)}
-
-        <div class="section-title">
-          DECISION PRESSURE
-        </div>
-
-      </div>
-
-      <div class="column">
-
-        <div class="section-title">
-          REALITY
-        </div>
-
-        ${renderSignal("ALIGNED", signalState.reality)}
-        ${renderSignal("DRIFTING", signalState.reality)}
-        ${renderSignal("MISALIGNED", signalState.reality)}
+        ${renderOption("SNAPSHOT", signalState.data_awareness)}
+        ${renderOption("BEHAVIORAL", signalState.data_awareness)}
+        ${renderOption("STRUCTURAL", signalState.data_awareness)}
 
       </div>
 
     </div>
+
+
+    <div class="cockpit">
+
+      <div class="cockpit-frame></div>
+
+      <div class="triptych">
+
+        <div class="column">
+
+          <div class="column-title">PLAN</div>
+
+          ${renderSignal("COHERENT", signalState.plan)}
+          ${renderSignal("SOME_GAPS", signalState.plan)}
+          ${renderSignal("INCOHERENT", signalState.plan)}
+
+        </div>
+
+
+        <div class="pressure">
+
+          ${renderSignal("HIGH", signalState.decision_pressure)}
+          ${renderSignal("MEDIUM", signalState.decision_pressure)}
+          ${renderSignal("LOW", signalState.decision_pressure)}
+
+          <div class="decision-label">
+            DECISION PRESSURE
+          </div>
+
+        </div>
+
+
+        <div class="column">
+
+          <div class="column-title">REALITY</div>
+
+          ${renderSignal("ALIGNED", signalState.reality)}
+          ${renderSignal("DRIFTING", signalState.reality)}
+          ${renderSignal("MISALIGNED", signalState.reality)}
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="chat">
+
+      <div class="chatbox">
+
+        <div class="chatprompt">
+          State your role and show me the plan
+        </div>
+
+        <div class="chatinput">
+          + Type here...
+        </div>
+
+      </div>
+
+    </div>
+
 
     <div class="mode">
       Mode: ${ui.authority.title}
@@ -227,8 +312,22 @@ async function render() {
       ${ui.authority.subtitle}
     </div>
 
+
+    <div class="footer">
+
+      Terms of Use · Privacy Policy · © 2026 PlannerAgent. All rights reserved.
+
+      <br/>
+
+      The visual design, interface layout, texts, and interaction patterns
+      of this website are protected by copyright law.
+
+    </div>
+
   </div>
+
   `;
+
 }
 
 render();

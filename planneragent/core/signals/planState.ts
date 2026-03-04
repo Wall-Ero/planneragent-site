@@ -1,10 +1,6 @@
 // planneragent/core/signals/planState.ts
 // =====================================================
-// Plan State — Canonical Type
-// Represents coherence of the operational plan
+// Plan State — Canonical
 // =====================================================
 
-export type PlanState =
-  | "COHERENT"
-  | "SOME_GAPS"
-  | "INCOHERENT";
+export type PlanState = "COHERENT" | "SOME_GAPS" | "INCOHERENT";

@@ -1,10 +1,6 @@
 // planneragent/core/signals/realityState.ts
 // =====================================================
-// Reality State — Canonical Type
-// Represents alignment between plan and real operations
+// Reality State — Canonical
 // =====================================================
 
-export type RealityState =
-  | "ALIGNED"
-  | "DRIFTING"
-  | "MISALIGNED";
+export type RealityState = "ALIGNED" | "DRIFTING" | "MISALIGNED";

@@ -1,10 +1,6 @@
 // planneragent/core/signals/decisionPressureState.ts
 // =====================================================
-// Decision Pressure State — Canonical Type
-// Represents urgency / pressure on decisions
+// Decision Pressure State — Canonical
 // =====================================================
 
-export type DecisionPressureState =
-  | "LOW"
-  | "MEDIUM"
-  | "HIGH";
+export type DecisionPressureState = "HIGH" | "MEDIUM" | "LOW";

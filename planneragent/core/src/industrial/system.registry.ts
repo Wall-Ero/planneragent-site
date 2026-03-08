@@ -1,6 +1,6 @@
 // core/src/industrial/system.registry.ts
 // =====================================================
-// Industrial System Registry
+// PlannerAgent — Industrial System Registry
 // Canonical Source of Truth
 // =====================================================
 
@@ -15,11 +15,11 @@ export type ConnectorHealth = {
 export type IndustrialConnector = {
   id: string;
   vendor: string;
+
   capabilities: IndustrialCapability[];
 
   health(): Promise<ConnectorHealth>;
 
-  // 🔴 REQUIRED FOR P6.2
   execute(
     capability_id: string,
     payload: Record<string, unknown>
@@ -29,25 +29,31 @@ export type IndustrialConnector = {
 const connectors: IndustrialConnector[] = [];
 
 // -----------------------------------------------------
+// Connector Registration
+// -----------------------------------------------------
 
 export function registerConnector(connector: IndustrialConnector) {
   connectors.push(connector);
 }
 
 // -----------------------------------------------------
+// Capability Map
+// -----------------------------------------------------
 
 export function getCapabilityMap(): CapabilityMap {
   const map: CapabilityMap = {};
 
-  for (const c of connectors) {
-    for (const cap of c.capabilities) {
-      map[cap.id] = cap;
+  for (const connector of connectors) {
+    for (const capability of connector.capabilities) {
+      map[capability.id] = capability;
     }
   }
 
   return map;
 }
 
+// -----------------------------------------------------
+// System Registry (External View)
 // -----------------------------------------------------
 
 export async function getSystemRegistry() {
@@ -57,6 +63,7 @@ export async function getSystemRegistry() {
         id: c.id,
         vendor: c.vendor,
         health: await c.health(),
+        capabilities: c.capabilities.map(cap => cap.id),
       }))
     ),
     capabilities: getCapabilityMap(),
@@ -64,7 +71,7 @@ export async function getSystemRegistry() {
 }
 
 // -----------------------------------------------------
-// INTERNAL — runtime only (P6.2)
+// INTERNAL RUNTIME ACCESS
 // -----------------------------------------------------
 
 export function getLiveConnectors(): IndustrialConnector[] {

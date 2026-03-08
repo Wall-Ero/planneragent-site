@@ -1,10 +1,13 @@
 // core/src/industrial/adapter.runtime.ts
 // =====================================================
-// Industrial Adapter Runtime — P6.2
+// PlannerAgent — Industrial Adapter Runtime
 // Canonical Source of Truth
 // =====================================================
 
-import { getSystemRegistry } from "./system.registry";
+import {
+  getCapabilityMap,
+  getLiveConnectors,
+} from "./system.registry";
 
 export type AdapterExecutionInput = {
   capability_id: string;
@@ -27,10 +30,15 @@ export type AdapterExecutionResult =
 export async function executeAdapter(
   input: AdapterExecutionInput
 ): Promise<AdapterExecutionResult> {
-  const registry = await getSystemRegistry();
 
-  // 1. Capability existence
-  const capability = registry.capabilities[input.capability_id];
+  const capabilityMap = getCapabilityMap();
+
+  // --------------------------------------------------
+  // Capability existence
+  // --------------------------------------------------
+
+  const capability = capabilityMap[input.capability_id];
+
   if (!capability) {
     return {
       ok: false,
@@ -38,21 +46,41 @@ export async function executeAdapter(
     };
   }
 
-  // 2. Find exactly one connector supporting it
-  const liveConnector = registry.connectors.find(c =>
-    c.health.ok &&
-    registry.capabilities[input.capability_id]
+  // --------------------------------------------------
+  // Connector discovery
+  // --------------------------------------------------
+
+  const connectors = getLiveConnectors();
+
+  const connector = connectors.find(c =>
+    c.capabilities.some(cap => cap.id === input.capability_id)
   );
 
-  if (!liveConnector) {
+  if (!connector) {
     return {
       ok: false,
-      reason: `No healthy connector for capability '${input.capability_id}'`,
+      reason: `No connector supports capability '${input.capability_id}'`,
     };
   }
 
-  // 3. Execute capability (runtime-owned)
-  const output = await executeCapability(
+  // --------------------------------------------------
+  // Health check
+  // --------------------------------------------------
+
+  const health = await connector.health();
+
+  if (!health.ok) {
+    return {
+      ok: false,
+      reason: `Connector '${connector.id}' not healthy`,
+    };
+  }
+
+  // --------------------------------------------------
+  // Execute capability
+  // --------------------------------------------------
+
+  const output = await connector.execute(
     input.capability_id,
     input.payload
   );
@@ -60,27 +88,8 @@ export async function executeAdapter(
   return {
     ok: true,
     capability_id: input.capability_id,
-    connector_id: liveConnector.id,
+    connector_id: connector.id,
     output,
     executed_at: new Date().toISOString(),
   };
-}
-
-// =====================================================
-// Capability execution (single-action, no orchestration)
-// =====================================================
-async function executeCapability(
-  capabilityId: string,
-  payload: Record<string, unknown>
-): Promise<unknown> {
-  switch (capabilityId) {
-    case "notify_supplier":
-      return {
-        notified: true,
-        payload,
-      };
-
-    default:
-      throw new Error(`No runtime handler for ${capabilityId}`);
-  }
 }

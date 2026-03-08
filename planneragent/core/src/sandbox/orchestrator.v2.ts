@@ -10,6 +10,7 @@
 // - Build topology + confidence
 // - Detect BOM divergence and ask SCM
 // - Run deterministic optimizer
+// - Evaluate decision pressure
 // - Keep cockpit state-only, explanations in advisory/chat
 // ======================================================
 
@@ -33,6 +34,11 @@ import { computeTopologyConfidence } from "../topology/topology.confidence";
 
 import { createBomReferenceDecision } from "../decision/optimizer/bomReferenceDecision";
 import { runOptimizerV1 } from "../decision/optimizer";
+
+import {
+  evaluateDecisionPressure,
+  PressureSignal
+} from "../pressure/pressure.engine";
 
 type Env = {
   DL_ENABLED?: string;
@@ -83,6 +89,44 @@ function buildVisionAdvisory(
     labels,
     questions: [],
   };
+}
+
+// ------------------------------------------------------
+// Pressure signal builder
+// ------------------------------------------------------
+
+function buildPressureSignals(
+  dl: DlEvidenceV2,
+  optimizer: any
+): PressureSignal[] {
+
+  const signals: PressureSignal[] = [];
+
+  if (dl.risk_score.stockout_risk > 0.65) {
+    signals.push({
+      type: "REALITY_DRIFT",
+      severity: dl.risk_score.stockout_risk,
+      description: "Stockout risk detected in deterministic evidence"
+    });
+  }
+
+  if (dl.risk_score.supplier_dependency > 0.7) {
+    signals.push({
+      type: "SUPPLY_RISK",
+      severity: dl.risk_score.supplier_dependency,
+      description: "Supplier dependency high"
+    });
+  }
+
+  if (optimizer?.best?.actions?.length > 0) {
+    signals.push({
+      type: "PLAN_INCOHERENCE",
+      severity: 0.6,
+      description: "Optimizer detected required corrective actions"
+    });
+  }
+
+  return signals;
 }
 
 async function runLlmFanout(
@@ -190,9 +234,6 @@ export async function evaluateSandboxV2(
 
   // --------------------------------------------------
   // BOM divergence detection
-  // - detect conflict
-  // - do not auto-decide
-  // - optionally consume explicit SCM choice if provided
   // --------------------------------------------------
 
   let advisory: ScenarioAdvisoryV2 | undefined;
@@ -253,10 +294,6 @@ export async function evaluateSandboxV2(
 
   // --------------------------------------------------
   // Optimizer
-  // Note:
-  // - if BOM conflict exists and SCM did not choose, optimizer still runs
-  //   on PLAN twin snapshot view, but advisory makes conflict explicit
-  // - responsibility for BOM selection remains human
   // --------------------------------------------------
 
   let optimizerOutput: any = null;
@@ -290,6 +327,16 @@ export async function evaluateSandboxV2(
   }
 
   // --------------------------------------------------
+  // Pressure evaluation
+  // --------------------------------------------------
+
+  const pressureSignals = buildPressureSignals(dlEvidence, optimizerOutput);
+
+  const pressure = evaluateDecisionPressure({
+    signals: pressureSignals,
+  });
+
+  // --------------------------------------------------
   // Advisory scenarios
   // --------------------------------------------------
 
@@ -301,8 +348,6 @@ export async function evaluateSandboxV2(
 
   // --------------------------------------------------
   // Response
-  // Cockpit stays state-only.
-  // Explanation lives in advisory/chat.
   // --------------------------------------------------
 
   return {
@@ -315,6 +360,12 @@ export async function evaluateSandboxV2(
     signals,
 
     advisory,
+
+    pressure: {
+      level: pressure.level,
+      score: pressure.score,
+      should_intervene: pressure.should_intervene,
+    },
 
     optimizer: optimizerOutput
       ? {

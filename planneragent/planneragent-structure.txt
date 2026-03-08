@@ -1,0 +1,424 @@
+.
+├── Source.CanonicalMap.md
+├── contracts
+│   ├── dlci
+│   ├── executor
+│   │   ├── execution.request.v1.ts
+│   │   ├── execution.result.v1.ts
+│   │   ├── executor.request.ts
+│   │   └── executor.result.ts
+│   ├── finance
+│   │   ├── fdc.d1.sql
+│   │   ├── fdc.types.ts
+│   │   ├── fdc.v1.json
+│   │   ├── fdg.v1.json
+│   │   └── financial-decision-commit.v1.json
+│   ├── governance
+│   │   ├── boundary.response.schema.json
+│   │   └── policy.leader.v1.ts
+│   ├── market
+│   │   └── offers.v1.json
+│   ├── msi
+│   ├── ord
+│   └── voice
+├── core
+│   ├── contracts
+│   │   ├── dlci
+│   │   │   └── dlci.types.ts
+│   │   ├── finance
+│   │   ├── governance
+│   │   ├── msi
+│   │   ├── ord
+│   │   └── voice
+│   ├── datasets
+│   │   ├── dataAwareness.types.ts
+│   │   ├── datasetClassifier.ts
+│   │   └── dlci
+│   │       ├── adapters
+│   │       ├── dlci.schema.json
+│   │       └── dlci.types.ts
+│   ├── decision
+│   │   ├── decisionReadinessGate.v1
+│   │   ├── ord
+│   │   │   ├── ord.evaluate.ts
+│   │   │   └── ordGate.v1.ts
+│   │   ├── ord.confidence.ts
+│   │   └── pressure.ts
+│   ├── decision-memory
+│   │   ├── schema
+│   │   └── snapshot
+│   ├── dev.vars
+│   ├── governance
+│   │   └── policy
+│   │       ├── governance.policy.schema.v1.json
+│   │       ├── governance.policy.types.v1.ts
+│   │       ├── governance.policy.v1.json
+│   │       └── policy.loader.v1.ts
+│   ├── legal
+│   ├── metrics
+│   ├── migrations
+│   │   ├── 0001_llm_usage.sql
+│   │   ├── 0003_llm_budget.sql
+│   │   └── 0004_llm_usage_context.sql
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── payload.json
+│   ├── public
+│   │   └── index.html
+│   ├── signals
+│   │   ├── decisionPressureState.ts
+│   │   ├── planState.ts
+│   │   └── realityState.ts
+│   ├── signed.json
+│   ├── src
+│   │   ├── analyzeCore.ts
+│   │   ├── billing
+│   │   │   ├── __tests__
+│   │   │   │   ├── billing.webhooks.test.ts
+│   │   │   │   └── routes.billing.test.ts
+│   │   │   ├── billing.gateway.ts
+│   │   │   ├── billing.policy.ts
+│   │   │   ├── billing.providers.ts
+│   │   │   ├── billing.webhooks.ts
+│   │   │   └── routes.billing.ts
+│   │   ├── commercial
+│   │   │   ├── __tests__
+│   │   │   │   ├── srl.governance.flow.test.ts
+│   │   │   │   └── srl.readiness.test.ts
+│   │   │   ├── revenue.metrics.ts
+│   │   │   ├── routes.srl.ts
+│   │   │   ├── srl.decision.ts
+│   │   │   └── srl.readiness.ts
+│   │   ├── connectors
+│   │   │   ├── erp.sap.adapter.ts
+│   │   │   └── mail.smtp.adapter.ts
+│   │   ├── datasets
+│   │   │   └── dlci
+│   │   │       └── adapters
+│   │   ├── decision
+│   │   │   └── optimizer
+│   │   │       ├── __tests__
+│   │   │       │   └── optimizer.v1.test.ts
+│   │   │       ├── actions.ts
+│   │   │       ├── budget.ts
+│   │   │       ├── constraints.ts
+│   │   │       ├── contracts.ts
+│   │   │       ├── evaluator.ts
+│   │   │       ├── generator.ts
+│   │   │       ├── index.ts
+│   │   │       ├── localSearch.ts
+│   │   │       ├── materialDemand.v1.ts
+│   │   │       ├── milp.stub.ts
+│   │   │       ├── multiLevelDemand.v1.ts
+│   │   │       ├── objective.ts
+│   │   │       ├── optimizer.ts
+│   │   │       └── seeds.ts
+│   │   ├── decision-memory
+│   │   │   ├── decision.store.ts
+│   │   │   ├── schema
+│   │   │   │   ├── decisionMemory.schema.json
+│   │   │   │   └── decisionMemorySnapshot.schema.json
+│   │   │   ├── snapshot
+│   │   │   │   ├── snapshot.builder.ts
+│   │   │   │   └── snapshot.types.ts
+│   │   │   └── tests
+│   │   │       └── decisionMemory.integration.test.ts
+│   │   ├── edge
+│   │   │   └── routes.evaluate.ts
+│   │   ├── execution
+│   │   │   ├── __tests__
+│   │   │   │   ├── execution.bridge.test.ts
+│   │   │   │   └── execution.governance.bridge.test.ts
+│   │   │   ├── adapters
+│   │   │   │   └── executor.safe.adapter.v1.ts
+│   │   │   ├── contracts
+│   │   │   │   ├── execution.contracts.v1.ts
+│   │   │   │   └── execution.request.v1.ts
+│   │   │   ├── execution.governance.bridge.ts
+│   │   │   └── governance
+│   │   │       └── execution.governance.guard.v1.ts
+│   │   ├── executor
+│   │   │   ├── __tests__
+│   │   │   │   └── executor.runtime.v1.test.ts
+│   │   │   ├── adapters
+│   │   │   │   ├── executor.adapter.v1.ts
+│   │   │   │   └── mock.adapter.v1.ts
+│   │   │   ├── executor.audit.store.v1.ts
+│   │   │   ├── executor.audit.ts
+│   │   │   ├── executor.audit.v1.ts
+│   │   │   ├── executor.guard.ts
+│   │   │   ├── executor.guard.v1.ts
+│   │   │   ├── executor.result.ts
+│   │   │   ├── executor.runtime.ts
+│   │   │   ├── executor.runtime.v1.ts
+│   │   │   ├── routes.executor.ts
+│   │   │   └── sql
+│   │   │       └── 001_executor_audit_v1.sql
+│   │   ├── feature-flags
+│   │   ├── finance
+│   │   │   ├── fdc.runtime.ts
+│   │   │   └── fdv.runtime.ts
+│   │   ├── governance
+│   │   │   ├── FounderNotificationPolicy.v1
+│   │   │   ├── __tests__
+│   │   │   ├── authority.graph.ts
+│   │   │   ├── boundary.policy.ts
+│   │   │   ├── boundary.responses.ts
+│   │   │   ├── charter
+│   │   │   │   └── charter.execution.guard.ts
+│   │   │   ├── decision.types.ts
+│   │   │   ├── events.ts
+│   │   │   ├── graduate
+│   │   │   │   └── graduate.tool.guard.ts
+│   │   │   ├── legal
+│   │   │   │   └── legalState.ts
+│   │   │   ├── legalReadiness.monitor.v1.ts
+│   │   │   ├── oag
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── oag.runtime.test.ts
+│   │   │   │   ├── authority.graph.runtime.ts
+│   │   │   │   ├── authority.graph.store.ts
+│   │   │   │   ├── sql
+│   │   │   │   │   ├── 001_oag.sql
+│   │   │   │   │   └── 001_oag_d1.sql
+│   │   │   │   ├── types.ts
+│   │   │   │   ├── validateOag.test.ts
+│   │   │   │   ├── validateOag.ts
+│   │   │   │   └── validateOagAndBuildProof.ts
+│   │   │   ├── policy
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── hod.boundary.test.ts
+│   │   │   │   ├── bootstrap.ts
+│   │   │   │   ├── boundary.ts
+│   │   │   │   ├── hod.ts
+│   │   │   │   ├── registry.ts
+│   │   │   │   ├── runtime.ts
+│   │   │   │   ├── types.ts
+│   │   │   │   └── validator.ts
+│   │   │   ├── principal.contract.v1.ts
+│   │   │   ├── registry.ts
+│   │   │   ├── rules
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── open-srl.rule.test.ts
+│   │   │   │   └── open-srl.rule.ts
+│   │   │   ├── runtime.ts
+│   │   │   ├── snapshot
+│   │   │   │   └── snapshot.ts
+│   │   │   ├── sql
+│   │   │   │   └── 003_principal_decisions.sql
+│   │   │   └── validator.ts
+│   │   ├── index.ts
+│   │   ├── industrial
+│   │   │   ├── __tests__
+│   │   │   │   ├── adapter.runtime.test.ts
+│   │   │   │   └── system.registry.test.ts
+│   │   │   ├── adapter.runtime.ts
+│   │   │   ├── routes
+│   │   │   │   ├── connectors.route.ts
+│   │   │   │   └── industrial.registry.route.ts
+│   │   │   ├── system.registry.ts
+│   │   │   └── uic.interface.ts
+│   │   ├── ledger
+│   │   │   ├── __tests__
+│   │   │   │   ├── commercial.events.test.ts
+│   │   │   │   └── responsibility.flow.test.ts
+│   │   │   ├── commercial.events.ts
+│   │   │   ├── ledger.event.ts
+│   │   │   ├── ledger.store.ts
+│   │   │   ├── responsibility.events.ts
+│   │   │   └── writeLedgerEvent.ts
+│   │   ├── legal
+│   │   ├── market
+│   │   │   ├── __tests__
+│   │   │   │   ├── offers.test.ts
+│   │   │   │   ├── trial.state.test.ts
+│   │   │   │   └── trial_discount_rules.test.ts
+│   │   │   ├── discount.engine.ts
+│   │   │   ├── eligibility.rules.ts
+│   │   │   ├── offers.ts
+│   │   │   ├── offers.validate.ts
+│   │   │   ├── trial.engine.ts
+│   │   │   ├── trial.events.ts
+│   │   │   └── trial.state.ts
+│   │   ├── metrics
+│   │   ├── migrations
+│   │   │   └── 001_decision_memory_snapshots.sql
+│   │   ├── msi
+│   │   ├── notifications
+│   │   │   ├── __tests__
+│   │   │   │   ├── notify.test.ts
+│   │   │   │   └── twilio.hook.test.ts
+│   │   │   ├── channels
+│   │   │   │   ├── email.smtp.ts
+│   │   │   │   ├── email.webhook.ts
+│   │   │   │   └── whatsapp.twilio.ts
+│   │   │   ├── notification.registry.ts
+│   │   │   ├── notification.types.ts
+│   │   │   ├── notifications.dispatch.ts
+│   │   │   ├── notify.ts
+│   │   │   ├── providers
+│   │   │   │   ├── emailProvider.ts
+│   │   │   │   └── twilioWhatsApp.ts
+│   │   │   ├── routes.notifications.ts
+│   │   │   ├── templates.ts
+│   │   │   └── twilio.hook.ts
+│   │   ├── onboarding
+│   │   │   ├── __tests__
+│   │   │   │   └── onboarding.flow.test.ts
+│   │   │   ├── onboarding.audit.ts
+│   │   │   ├── onboarding.state.ts
+│   │   │   └── routes.onboarding.ts
+│   │   ├── orchestrator
+│   │   │   └── __tests__
+│   │   ├── policy
+│   │   │   ├── enforcePolicy.ts
+│   │   │   ├── evaluateJuniorPolicy.ts
+│   │   │   ├── loadActivePolicy.ts
+│   │   │   └── types.ts
+│   │   ├── sandbox
+│   │   │   ├── LogLlmUsage.ts
+│   │   │   ├── __tests__
+│   │   │   │   ├── orchestrator.v2.test.ts
+│   │   │   │   └── p3.snapshot.integration.test.ts
+│   │   │   ├── apiBoundary.v2.ts
+│   │   │   ├── authority
+│   │   │   │   ├── authorityContext.builder.ts
+│   │   │   │   ├── authorityExecution.policy.ts
+│   │   │   │   ├── authoritySandbox.guard.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── budget.ts
+│   │   │   ├── contracts.ts
+│   │   │   ├── contracts.v2.ts
+│   │   │   ├── dl.v2.ts
+│   │   │   ├── dqm.ts
+│   │   │   ├── llm
+│   │   │   │   ├── executeWithLlmProviders.ts
+│   │   │   │   ├── health.routes.ts
+│   │   │   │   ├── providerMap.ts
+│   │   │   │   ├── providers
+│   │   │   │   │   ├── anthropic.ts
+│   │   │   │   │   ├── mistral.ts
+│   │   │   │   │   ├── mock.ts
+│   │   │   │   │   ├── openai.ts
+│   │   │   │   │   ├── openrouter.ts
+│   │   │   │   │   └── oss.ts
+│   │   │   │   ├── registry.ts
+│   │   │   │   ├── sovereignty.ts
+│   │   │   │   ├── sql
+│   │   │   │   │   ├── 001_llm_usage.sql
+│   │   │   │   │   ├── 002_llm_global_budget.sql
+│   │   │   │   │   └── 003_sandbox_events_v2.sql
+│   │   │   │   ├── types.ts
+│   │   │   │   └── usageLedger.ts
+│   │   │   ├── llm.ts
+│   │   │   ├── llm.v2.ts
+│   │   │   ├── llmcontracts.ts
+│   │   │   ├── orchestrator.ts
+│   │   │   ├── orchestrator.v2.ts
+│   │   │   ├── policy.v2.ts
+│   │   │   ├── reality
+│   │   │   │   └── inferBomFromProduction.v1.ts
+│   │   │   ├── routes.snapshot.ts
+│   │   │   ├── routes.voice.ts
+│   │   │   ├── security
+│   │   │   │   └── anonymousVision.rateShield.ts
+│   │   │   ├── signal.engine.v1.ts
+│   │   │   ├── snapshot
+│   │   │   │   └── verifySignedSnapshot.v1.ts
+│   │   │   ├── types.ts
+│   │   │   └── visionInterpreter.v1.ts
+│   │   ├── scheduler
+│   │   │   ├── __tests__
+│   │   │   │   └── scheduler.runtime.test.ts
+│   │   │   ├── scheduler.jobs.ts
+│   │   │   ├── scheduler.runtime.ts
+│   │   │   └── scheduler.types.ts
+│   │   ├── system
+│   │   │   ├── __tests__
+│   │   │   │   └── industrial.routes.test.ts
+│   │   │   └── health.route.ts
+│   │   ├── voice
+│   │   │   └── __tests__
+│   │   └── worker.ts
+│   ├── test
+│   │   ├── env.d.ts
+│   │   ├── index.spec.ts
+│   │   └── tsconfig.json
+│   ├── tsconfig.json
+│   ├── vitest.config.mts
+│   ├── worker-configuration.d.ts
+│   └── wrangler.jsonc
+├── gateway
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── index.html
+│   ├── src
+│   │   └── index.ts
+│   ├── test
+│   │   ├── env.d.ts
+│   │   ├── index.spec.ts
+│   │   └── tsconfig.json
+│   ├── tsconfig.json
+│   ├── vitest.config.mts
+│   ├── worker-configuration.d.ts
+│   └── wrangler.jsonc
+├── governance
+│   ├── CANONICAL.json
+│   └── STATE.md
+├── package-lock.json
+├── planneragent-structure.txt
+├── planneragent-ui
+│   ├── assets
+│   │   ├── chatPanel.svg
+│   │   ├── cockpitFrame.svg
+│   │   ├── dataAwarenessPanel.svg
+│   │   ├── frame.svg
+│   │   ├── header.svg
+│   │   ├── planPanel.svg
+│   │   ├── pressurePanel.svg
+│   │   └── realityPanel.svg
+│   ├── components
+│   │   ├── App.js
+│   │   ├── chat
+│   │   │   ├── ChatInput.js
+│   │   │   ├── ChatWindow.js
+│   │   │   └── MessageRenderer.js
+│   │   └── cockpit
+│   │       ├── cockpitLayout.js
+│   │       └── cockpitSignals.js
+│   ├── index.html
+│   ├── services
+│   │   └── sandboxClient.js
+│   ├── state
+│   │   └── uiState.js
+│   └── styles.css
+├── postcss.config.cjs
+├── scratch
+│   └── openai.ping.ts
+└── ui
+    ├── app
+    │   └── app.config.ts
+    ├── assets
+    │   └── theme
+    │       └── theme.tokens.ts
+    ├── auth
+    │   ├── AuthProvider.ts
+    │   ├── AuthSession.ts
+    │   └── RoleResolver.ts
+    ├── events
+    │   ├── eventEmitter.ts
+    │   └── uiEvents.ts
+    ├── index.html
+    ├── main.ts
+    ├── onboarding.ts
+    ├── package-lock.json
+    ├── package.json
+    ├── state
+    │   ├── sessionState.ts
+    │   ├── signalState.ts
+    │   └── uiState.ts
+    ├── styles.css
+    └── vite.config.ts
+
+131 directories, 291 files

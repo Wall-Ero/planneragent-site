@@ -1,26 +1,23 @@
 // core/src/sandbox/orchestrator.v2.ts
 // ======================================================
-// SANDBOX ORCHESTRATOR — V2
+// PlannerAgent — Sandbox Orchestrator V2
 // Canonical Source of Truth
 //
 // Responsibilities
-// - Enforce authority boundary
-// - Build operational reality
-// - Compute deterministic evidence
-// - Build topology + confidence
-// - Detect BOM divergence and ask SCM
-// - Run deterministic optimizer
-// - Evaluate decision pressure
-// - Keep cockpit state-only, explanations in advisory/chat
+// - validate sandbox request
+// - normalize operational datasets
+// - compute deterministic evidence
+// - derive cockpit signals
+// - run governed optimizer
+// - prepare execution preview
+// - keep a single semantic pressure: signals.decision_pressure
 // ======================================================
 
 import type {
   SandboxEvaluateRequestV2,
   SandboxEvaluateResponseV2,
   ScenarioV2,
-  ScenarioAdvisoryV2,
-  DlEvidenceV2,
-  Health,
+  GovernanceResult,
   PlanTier,
 } from "./contracts.v2";
 
@@ -32,17 +29,14 @@ import { buildReality } from "../reality/reality.builder";
 import { buildOperationalTopology } from "../topology/topology.builder";
 import { computeTopologyConfidence } from "../topology/topology.confidence";
 
-import { createBomReferenceDecision } from "../decision/optimizer/bomReferenceDecision";
 import { runOptimizerV1 } from "../decision/optimizer";
+import { routeActionToExecutionIntent } from "../execution/action.router";
 
 import {
-  evaluateDecisionPressure,
-  PressureSignal
-} from "../pressure/pressure.engine";
-
-type Env = {
-  DL_ENABLED?: string;
-};
+  normalizeOrders,
+  normalizeInventory,
+  normalizeMovements,
+} from "../../datasets/dlci/adapters";
 
 function executionAllowed(plan: PlanTier, intent: string): boolean {
   if (intent !== "EXECUTE") return false;
@@ -61,96 +55,103 @@ function llmAllowed(plan: PlanTier): boolean {
   return plan !== "CHARTER";
 }
 
-function buildVisionAdvisory(
-  dl: DlEvidenceV2,
-  health: Health
-): ScenarioAdvisoryV2 {
-  const labels: string[] = [];
-  const keySignals: string[] = [];
-
-  if (dl.risk_score.stockout_risk > 0.6) {
-    labels.push("STOCKOUT_RISK");
-    keySignals.push(`Stockout risk elevated (${dl.risk_score.stockout_risk})`);
-  }
-
-  if (dl.risk_score.supplier_dependency > 0.7) {
-    labels.push("SUPPLIER_DEPENDENCY");
-    keySignals.push(`Supplier dependency high (${dl.risk_score.supplier_dependency})`);
-  }
-
-  return {
-    one_liner:
-      health !== "ok"
-        ? "Deterministic layer degraded."
-        : labels.length
-        ? "Operational risk detected."
-        : "System stable.",
-    key_signals: keySignals.length ? keySignals : dl.anomaly_signals,
-    labels,
-    questions: [],
-  };
+function normalizeSandboxOrders(rows: unknown[]) {
+  return normalizeOrders(rows);
 }
 
-// ------------------------------------------------------
-// Pressure signal builder
-// ------------------------------------------------------
-
-function buildPressureSignals(
-  dl: DlEvidenceV2,
-  optimizer: any
-): PressureSignal[] {
-
-  const signals: PressureSignal[] = [];
-
-  if (dl.risk_score.stockout_risk > 0.65) {
-    signals.push({
-      type: "REALITY_DRIFT",
-      severity: dl.risk_score.stockout_risk,
-      description: "Stockout risk detected in deterministic evidence"
-    });
-  }
-
-  if (dl.risk_score.supplier_dependency > 0.7) {
-    signals.push({
-      type: "SUPPLY_RISK",
-      severity: dl.risk_score.supplier_dependency,
-      description: "Supplier dependency high"
-    });
-  }
-
-  if (optimizer?.best?.actions?.length > 0) {
-    signals.push({
-      type: "PLAN_INCOHERENCE",
-      severity: 0.6,
-      description: "Optimizer detected required corrective actions"
-    });
-  }
-
-  return signals;
+function normalizeSandboxInventory(rows: unknown[]) {
+  return normalizeInventory(rows);
 }
 
-async function runLlmFanout(
-  _req: SandboxEvaluateRequestV2,
-  dl: DlEvidenceV2
-): Promise<ScenarioV2[]> {
+function normalizeSandboxMovements(rows: unknown[]) {
+  return normalizeMovements(rows);
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function buildFallbackScenario(summary: string, confidence: number): ScenarioV2[] {
   return [
     {
       id: "llm-1",
       title: "Demand vs Stock Imbalance",
-      summary: `Demand p50=${dl.demand_forecast.p50} stockoutRisk=${dl.risk_score.stockout_risk}`,
-      confidence: Math.min(1, Math.max(0.3, dl.risk_score.stockout_risk + 0.2)),
+      summary,
+      confidence,
     },
   ];
+}
+
+async function runLlmFanout(
+  _req: SandboxEvaluateRequestV2,
+  summary: string,
+  confidence: number
+): Promise<ScenarioV2[]> {
+  return buildFallbackScenario(summary, confidence);
 }
 
 export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2
 ): Promise<SandboxEvaluateResponseV2> {
-  const env: Env = { DL_ENABLED: "true" };
+  // --------------------------------------------------
+  // Basic request validation aligned with real boundary
+  // --------------------------------------------------
 
-  // --------------------------------------------------
-  // Authority
-  // --------------------------------------------------
+  if (!req.request_id) {
+    return {
+      ok: false,
+      request_id: "unknown",
+      reason: "MISSING_FIELD: request_id",
+    };
+  }
+
+  if (!req.company_id) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_FIELD: company_id",
+    };
+  }
+
+  if (!(req as any).baseline_snapshot_id) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_FIELD: baseline_snapshot_id",
+    };
+  }
+
+  if (!req.plan) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_FIELD: plan",
+    };
+  }
+
+  if (!req.intent) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_FIELD: intent",
+    };
+  }
+
+  if (!req.domain) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_FIELD: domain",
+    };
+  }
+
+  if (!req.baseline_metrics) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_FIELD: baseline_metrics",
+    };
+  }
 
   if (!req.snapshot) {
     return {
@@ -171,31 +172,57 @@ export async function evaluateSandboxV2(
   }
 
   // --------------------------------------------------
-  // Reality
+  // Normalize incoming datasets
+  // --------------------------------------------------
+
+  const rawOrders = normalizeSandboxOrders(req.orders ?? []);
+  const rawInventory = normalizeSandboxInventory(req.inventory ?? []);
+  const rawMovements = normalizeSandboxMovements(req.movements ?? []);
+
+  // --------------------------------------------------
+  // Reality reconstruction
   // --------------------------------------------------
 
   const reality = buildReality({
-    orders: (req as any).orders ?? [],
-    inventory: (req as any).inventory ?? [],
-    movements: (req as any).movements ?? [],
-    movord: (req as any).movord ?? [],
-    movmag: (req as any).movmag ?? [],
-    masterBom: (req as any).masterBom ?? [],
+    orders: rawOrders,
+    inventory: rawInventory,
+    movements: rawMovements,
+    movord: (req.movord ?? []) as any[],
+    movmag: (req.movmag ?? []) as any[],
+    masterBom: (req.masterBom ?? []) as any[],
   });
 
-  const twin = reality.twinSnapshot;
+  let twinOrders = normalizeSandboxOrders((reality as any)?.observed?.orders ?? []);
+  let twinInventory = normalizeSandboxInventory((reality as any)?.observed?.inventory ?? []);
+  const twinMovements = rawMovements;
+
+  if (twinOrders.length === 0 && rawOrders.length > 0) {
+    twinOrders = rawOrders;
+  }
+
+  if (twinInventory.length === 0 && rawInventory.length > 0) {
+    twinInventory = rawInventory;
+  }
+
+  const inferredBom = (reality as any)?.reconstructed?.inferred_bom ?? [];
 
   // --------------------------------------------------
   // Deterministic evidence
   // --------------------------------------------------
 
-  const dlResult = await computeDlEvidenceV2(env, {
-    horizonDays: 30,
-    baselineMetrics: req.baseline_metrics as Record<string, unknown>,
-    scenarioMetrics: undefined,
-    movord: (req as any).movord ?? [],
-    movmag: (req as any).movmag ?? [],
-  });
+  const dlResult = await computeDlEvidenceV2(
+    { DL_ENABLED: "true" },
+    {
+      horizonDays: 30,
+      baselineMetrics: req.baseline_metrics ?? {},
+      scenarioMetrics: undefined,
+      orders: twinOrders as any[],
+      inventory: twinInventory as any[],
+      movements: twinMovements as any[],
+      movord: (req.movord ?? []) as any[],
+      movmag: (req.movmag ?? []) as any[],
+    }
+  );
 
   if (dlResult.health !== "ok" || !dlResult.evidence) {
     return {
@@ -212,10 +239,10 @@ export async function evaluateSandboxV2(
   // --------------------------------------------------
 
   const topology = buildOperationalTopology({
-    orders: twin.orders,
-    inventory: twin.inventory,
-    movements: (req as any).movements ?? [],
-    inferredBom: twin.bom,
+    orders: twinOrders,
+    inventory: twinInventory,
+    movements: twinMovements,
+    inferredBom,
   });
 
   const topologyConfidence = computeTopologyConfidence({
@@ -224,73 +251,15 @@ export async function evaluateSandboxV2(
   });
 
   // --------------------------------------------------
-  // Cockpit signals only
+  // Cockpit signals
+  // single semantic pressure only:
+  // signals.decision_pressure
   // --------------------------------------------------
 
   const { signals } = buildUiSignalsV1({
-    dl: dlEvidence,
+    dl: dlEvidence as any,
     dataset_descriptor: req.dataset_descriptor,
   });
-
-  // --------------------------------------------------
-  // BOM divergence detection
-  // --------------------------------------------------
-
-  let advisory: ScenarioAdvisoryV2 | undefined;
-
-  const fusion = (reality as any).fusion;
-  const needsBomDecision = Boolean(fusion?.needs_bom_reference_decision);
-
-  const requestedBomReference =
-    (req as any).bom_reference ??
-    (req as any).selected_bom_reference ??
-    undefined;
-
-  const bomReferenceDecision = requestedBomReference
-    ? createBomReferenceDecision({
-        company_id: (req as any).company_id,
-        selected_reference: requestedBomReference,
-        decided_by: (req as any).actor_id,
-        reason: "Explicit SCM selection received in sandbox request.",
-      })
-    : undefined;
-
-  if (needsBomDecision && !bomReferenceDecision) {
-    advisory = {
-      one_liner:
-        "BOM divergence detected between design, planned production, and actual production.",
-      labels: ["BOM_DIVERGENCE", "SCM_DECISION_REQUIRED"],
-      key_signals: fusion?.signals ?? ["bom_reference_decision_required"],
-      questions: [
-        "Which BOM should PlannerAgent use for optimization?",
-        "Options: MASTER / PLAN / REALITY",
-      ],
-    };
-  }
-
-  // --------------------------------------------------
-  // Vision mode
-  // --------------------------------------------------
-
-  if (req.plan === "VISION") {
-    const vision = buildVisionAdvisory(dlEvidence, dlResult.health);
-
-    return {
-      ok: true,
-      request_id: req.request_id,
-      plan: req.plan,
-      intent: req.intent,
-      domain: req.domain,
-      signals,
-      scenarios: [],
-      advisory: advisory ?? vision,
-      governance: {
-        execution_allowed: false,
-        reason: "OBSERVATION_ONLY",
-      },
-      issued_at: new Date().toISOString(),
-    };
-  }
 
   // --------------------------------------------------
   // Optimizer
@@ -299,52 +268,77 @@ export async function evaluateSandboxV2(
   let optimizerOutput: any = null;
 
   try {
-    const optimizerPlan: PlanTier =
-      req.plan === "BASIC" ? "VISION" : req.plan;
-
     optimizerOutput = await runOptimizerV1({
       requestId: req.request_id,
-      plan: optimizerPlan,
-      asOf: new Date().toISOString(),
+      plan: req.plan,
+      asOf: nowIso(),
 
-      orders: twin.orders,
-      inventory: twin.inventory,
-      movements: (req as any).movements ?? [],
+      orders: twinOrders,
+      inventory: twinInventory,
+      movements: twinMovements,
 
-      baseline_metrics: (req.baseline_metrics ?? {}) as Record<string, number>,
+      baseline_metrics: req.baseline_metrics ?? {},
       scenario_metrics: {},
-      constraints_hint: {},
+      constraints_hint: (req as any).constraints_hint ?? {},
       dlSignals: dlEvidence.risk_score ?? {},
 
-      inferredBom: twin.bom,
+      inferredBom,
       realitySnapshot: reality,
       operationalTopology: topology,
-      topologyConfidence: topologyConfidence.confidence,
-      bomReferenceDecision,
-    });
+      topologyConfidence: topologyConfidence?.confidence ?? 0.5,
+      bomReferenceDecision: undefined,
+    } as any);
   } catch {
     optimizerOutput = null;
   }
 
   // --------------------------------------------------
-  // Pressure evaluation
-  // --------------------------------------------------
-
-  const pressureSignals = buildPressureSignals(dlEvidence, optimizerOutput);
-
-  const pressure = evaluateDecisionPressure({
-    signals: pressureSignals,
-  });
-
-  // --------------------------------------------------
-  // Advisory scenarios
+  // Scenarios
   // --------------------------------------------------
 
   let scenarios: ScenarioV2[] = [];
 
+  const summary =
+    "Demand p50=" +
+    dlEvidence.demand_forecast.p50 +
+    " stockoutRisk=" +
+    dlEvidence.risk_score.stockout_risk;
+
+  const confidence = Math.min(
+    1,
+    Math.max(0.3, (dlEvidence.risk_score.stockout_risk ?? 0) + 0.2)
+  );
+
   if (llmAllowed(req.plan)) {
-    scenarios = await runLlmFanout(req, dlEvidence);
+    scenarios = await runLlmFanout(req, summary, confidence);
+  } else {
+    scenarios = buildFallbackScenario(summary, confidence);
   }
+
+  // --------------------------------------------------
+  // Execution preview
+  // --------------------------------------------------
+
+  const execution_preview =
+    executionAllowed(req.plan, req.intent) && optimizerOutput?.best?.actions?.length
+      ? optimizerOutput.best.actions.map((action: any) =>
+          routeActionToExecutionIntent(action, {
+            tenantId: req.company_id,
+            approver: req.actor_id,
+          })
+        )
+      : [];
+
+  // --------------------------------------------------
+  // Governance
+  // --------------------------------------------------
+
+  const governance: GovernanceResult = {
+    execution_allowed: executionAllowed(req.plan, req.intent),
+    reason: executionAllowed(req.plan, req.intent)
+      ? "DELEGATED_OR_BUDGETED_AUTHORITY"
+      : "ADVISORY_ONLY",
+  };
 
   // --------------------------------------------------
   // Response
@@ -359,31 +353,24 @@ export async function evaluateSandboxV2(
 
     signals,
 
-    advisory,
-
-    pressure: {
-      level: pressure.level,
-      score: pressure.score,
-      should_intervene: pressure.should_intervene,
-    },
-
     optimizer: optimizerOutput
       ? {
           best_score: optimizerOutput.best?.score ?? null,
           actions: optimizerOutput.best?.actions ?? [],
           candidates: optimizerOutput.candidates?.length ?? 0,
         }
-      : undefined,
+      : {
+          best_score: null,
+          actions: [],
+          candidates: 0,
+        },
 
     scenarios,
 
-    governance: {
-      execution_allowed: executionAllowed(req.plan, req.intent),
-      reason: executionAllowed(req.plan, req.intent)
-        ? "DELEGATED_OR_BUDGETED_AUTHORITY"
-        : "ADVISORY_ONLY",
-    },
+    execution_preview,
 
-    issued_at: new Date().toISOString(),
+    governance,
+
+    issued_at: nowIso(),
   };
 }

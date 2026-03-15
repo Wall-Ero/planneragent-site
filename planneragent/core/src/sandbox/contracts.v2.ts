@@ -1,12 +1,16 @@
-// src/sandbox/contracts.v2.ts
+// core/src/sandbox/contracts.v2.ts
 // ======================================================
-// Canonical Governance & Execution Contracts — V2
-// P3 Authority-Aware Sandbox + Signed Snapshot Constitutional Envelope
+// PlannerAgent — Sandbox Contracts V2
+// Canonical Source of Truth
 // ======================================================
 
+import type { DataAwarenessLevel } from "../reality/reality.types";
+
+/* =====================================================
+ PLAN TIERS
+===================================================== */
+
 export type PlanTier =
-  // Legacy alias kept for backward compatibility (must be normalized at boundary)
-  | "BASIC"
   | "VISION"
   | "GRADUATE"
   | "JUNIOR"
@@ -14,98 +18,103 @@ export type PlanTier =
   | "PRINCIPAL"
   | "CHARTER";
 
-export type Intent =
-  | "INFORM"
-  | "ADVISE"
-  | "EXECUTE"
-  | "WARN";
+/* =====================================================
+ HEALTH
+===================================================== */
 
-export type PlanningDomain =
-  | "supply_chain"
-  | "production"
-  | "logistics"
-  | "finance"
-  | "governance"
-  | "general";
+export type Health =
+  | "ok"
+  | "degraded"
+  | "failed";
 
-export type Health = "ok" | "degraded" | "failed";
+/* =====================================================
+ REQUEST
+===================================================== */
 
-// ------------------------------------------------------
-// LEGAL STATE — Week 0 Flag
-// ------------------------------------------------------
-export type LegalState = "PRE_SRL" | "SRL_ACTIVE";
+export interface SandboxEvaluateRequestV2 {
 
-// ======================================================
-// SNAPSHOT V1 — SIGNED CONSTITUTIONAL ENVELOPE
-// ======================================================
-
-export type SignedSnapshotV1 = {
-  v: 1;
-
-  company_id: string;
   request_id: string;
 
-  plan: PlanTier;
-  intent: Intent;
-  domain: PlanningDomain;
-
-  actor_id: string;
-
-  // Week 0 legal capability switch
-  legal_state: LegalState;
-
-  // Authority proof chain (Edge validated)
-  oag_proof: OagProof;
-
-  // Budget authority envelope (Principal / system pool)
-  budget: {
-    budget_remaining_eur: number;
-    reset_at: string; // ISO
-  };
-
-  governance_flags: {
-    sovereignty: "paid" | "free" | "oss";
-  };
-
-  issued_at: string; // ISO
-  signature: string; // Edge Worker signed
-};
-
-// ======================================================
-// OAG PROOF — AUTHORITY GRAPH RESULT
-// ======================================================
-
-export type OagProof = {
   company_id: string;
-  actor_id: string;
+
+  actor_id?: string;
 
   plan: PlanTier;
-  domain: PlanningDomain;
-  intent: Intent;
 
-  sponsor_id?: string;
+  intent: string;
 
-  issued_at: string;
+  domain: string;
 
-  authority: "human" | "board" | "system";
+  dataset_descriptor?: {
+    awareness_level?: DataAwarenessLevel;
+  };
+
+  baseline_metrics?: Record<string, number>;
+
+  snapshot?: unknown;
+
+  /* optional raw datasets */
+
+  orders?: unknown[];
+
+  inventory?: unknown[];
+
+  movements?: unknown[];
+
+  movord?: unknown[];
+
+  movmag?: unknown[];
+
+  masterBom?: unknown[];
+
+  /* SCM manual choice */
+
+  bom_reference?: "MASTER" | "PLAN" | "REALITY";
+
+  selected_bom_reference?: "MASTER" | "PLAN" | "REALITY";
+}
+
+/* =====================================================
+ SCENARIOS
+===================================================== */
+
+export type ScenarioV2 = {
+
+  id: string;
+
+  title: string;
+
+  summary: string;
+
+  confidence: number;
+
 };
 
-// ======================================================
-// DETERMINISTIC EVIDENCE — DL TRUTH LAYER
-// ======================================================
+/* =====================================================
+ ADVISORY
+===================================================== */
+
+export type ScenarioAdvisoryV2 = {
+
+  one_liner: string;
+
+  key_signals?: string[];
+
+  labels?: string[];
+
+  questions?: string[];
+
+};
+
+/* =====================================================
+ DL EVIDENCE
+===================================================== */
 
 export type DlEvidenceV2 = {
-  source: "synthetic" | "system" | "ingested";
 
   demand_forecast: {
-    horizon_days: number;
     p50: number;
-    p90: number;
-  };
-
-  lead_time_pred: {
-    supplier_B_p50_days: number;
-    supplier_B_p90_days: number;
+    p90?: number;
   };
 
   risk_score: {
@@ -114,148 +123,108 @@ export type DlEvidenceV2 = {
   };
 
   anomaly_signals: string[];
+
 };
 
-// ======================================================
-// VISION ADVISORY — INTERPRETATION LAYER
-// ======================================================
+/* =====================================================
+ PRESSURE
+===================================================== */
 
-export type ScenarioAdvisoryV2 = {
-  one_liner: string;
-  key_signals: string[];
-  labels: string[];
-  questions: Array<{
-    id: string;
-    question: string;
-    missing_field?: string;
-  }>;
-};
-
-// ======================================================
-// SCENARIOS — HYPOTHESIS LAYER (NON-TRUTH)
-// ======================================================
-
-export type ScenarioV2 = {
-  id: string;
-  title: string;
-  summary: string;
-  confidence: number; // 0..1
-};
-
-// ======================================================
-// RATE CONTRACT (Policy v2)
-// ======================================================
-
-export type SandboxRateInfo = {
-  status: "OK" | "BURST" | "BLOCKED";
-  reset_at: string; // ISO
-  reason?: "DEBOUNCED" | "QUOTA_EXCEEDED" | "RATE_LIMITED";
-};
-
-// ======================================================
-// DATA AWARENESS — Dataset Descriptor (Frontend-driven, no inference)
-// ======================================================
-
-export type DataAwarenessLevel = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
-
-export type DatasetDescriptor = {
-  hasSnapshot: boolean;           // CSV/Excel/one-off export
-  hasBehavioralEvents: boolean;   // ordini/movimenti/eventi con timestamp
-  hasStructuralData: boolean;     // anagrafiche/BOM/routing/capacità/constraint
-};
-
-export type DatasetClassificationResult = {
-  level: DataAwarenessLevel;
-  evidence: string[];
-};
-
-// ======================================================
-// UI SIGNALS — Constitutional Projection v1 (LOCKED)
-// ======================================================
-
-export type DataAwarenessState =
-  | "SNAPSHOT"
-  | "BEHAVIORAL"
-  | "STRUCTURAL";
-
-export type PlanState =
-  | "COHERENT"
-  | "SOME_GAPS"
-  | "INCOHERENT";
-
-export type RealityState =
-  | "ALIGNED"
-  | "DRIFTING"
-  | "MISALIGNED";
-
-export type DecisionPressureState =
+export type DecisionPressureLevel =
   | "LOW"
   | "MEDIUM"
-  | "HIGH";
+  | "HIGH"
+  | "CRITICAL";
 
-export type UiSignalsV1 = {
-  data_awareness: DataAwarenessState;
-  plan: PlanState;
-  reality: RealityState;
-  decision_pressure: DecisionPressureState;
+export type DecisionPressure = {
+
+  level: DecisionPressureLevel;
+
+  score: number;
+
+  should_intervene: boolean;
+
 };
 
-// ======================================================
-// REQUEST — EDGE → CORE
-// ======================================================
+/* =====================================================
+ OPTIMIZER
+===================================================== */
 
-export type SandboxEvaluateRequestV2 = {
-  company_id: string;
-  request_id: string;
+export type OptimizerResultV2 = {
 
-  plan: PlanTier;
-  intent: Intent;
-  domain: PlanningDomain;
+  best_score: number | null;
 
-  actor_id: string;
+  actions: unknown[];
 
-  baseline_snapshot_id: string;
-  baseline_metrics: Record<string, unknown>;
+  candidates: number;
 
-  // Frontend-driven descriptor (no inference). Optional; defaults to SNAPSHOT.
-  dataset_descriptor?: DatasetDescriptor;
-
-  snapshot: SignedSnapshotV1;
 };
 
-// ======================================================
-// RESPONSE
-// ======================================================
+/* =====================================================
+ EXECUTION PREVIEW
+===================================================== */
 
-export type SandboxEvaluateResultV2 = {
-  ok: true;
+export type ExecutionMode =
+  | "DIRECT"
+  | "AGENT";
+
+export type ExecutionIntentPreview = {
+
+  action_kind: string;
+
+  capability_id: string;
+
+  mode: ExecutionMode;
+
+  payload: Record<string, unknown>;
+
+  rationale?: string;
+
+};
+
+/* =====================================================
+ GOVERNANCE
+===================================================== */
+
+export type GovernanceResult = {
+
+  execution_allowed: boolean;
+
+  reason: string;
+
+};
+
+/* =====================================================
+ RESPONSE
+===================================================== */
+
+export interface SandboxEvaluateResponseV2 {
+
+  ok: boolean;
 
   request_id: string;
 
-  plan: PlanTier;
-  intent: Intent;
-  domain: PlanningDomain;
+  plan?: PlanTier;
 
-  // UI-aligned, constitutionally derived, deterministic
-  signals: UiSignalsV1;
+  intent?: string;
 
-  scenarios: ScenarioV2[];
+  domain?: string;
+
+  signals?: unknown[];
+
   advisory?: ScenarioAdvisoryV2;
 
-  governance: {
-    execution_allowed: boolean;
-    reason: string;
-  };
+  pressure?: DecisionPressure;
 
-  issued_at: string;
-};
+  optimizer?: OptimizerResultV2;
 
-export type SandboxEvaluateErrorV2 = {
-  ok: false;
-  request_id?: string;
-  reason: string;
-};
+  scenarios?: ScenarioV2[];
 
-export type SandboxEvaluateResponseV2 =
-  | SandboxEvaluateResultV2
-  | SandboxEvaluateErrorV2;
+  execution_preview?: ExecutionIntentPreview[];
+
+  governance?: GovernanceResult;
+
+  issued_at?: string;
+
+  reason?: string;
+}

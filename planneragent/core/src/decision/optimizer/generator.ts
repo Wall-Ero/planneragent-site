@@ -1,46 +1,99 @@
-// core/src/decision/optimizer/generator.ts
+// PATH: core/src/decision/optimizer/generator.ts
 // ======================================================
-// PlannerAgent — Optimizer v1 Candidate Generator
+// PlannerAgent — Optimizer Candidate Generator v6
 // Canonical Source of Truth
 //
-// v2 improvements:
-// - topology aware
-// - reality awareness aware
-// - assumption aware
-// - deterministic
+// v6 improvements
+// - deterministic debug logs
+// - canonical dataset usage
+// - shortage-driven candidates
 // ======================================================
 
 import type { Action, OptimizerInput } from "./contracts";
+
 import { resolveConstraintsHint } from "./constraints";
 import { mulberry32, pickInt, seedFromRequestId } from "./seeds";
 
+import {
+  normalizeOrders,
+  normalizeInventory,
+  normalizeMovements,
+} from "../../../datasets/dlci/adapters";
+
+// ======================================================
+// ENTRY
+// ======================================================
+
 export function generateCandidateActions(input: OptimizerInput): Action[][] {
+
+  console.log("GENERATOR_V6_ACTIVE");
 
   const hint = resolveConstraintsHint(input.constraints_hint);
 
   const seed = seedFromRequestId(input.requestId);
   const rng = mulberry32(seed);
 
-  const orders = normalizeOrders(input.orders);
+  const orders = normalizeOrders(input.orders ?? []);
+  const inventory = normalizeInventory(input.inventory ?? []);
+  const movements = normalizeMovements(input.movements ?? []);
 
-  const skus = extractSkusFromOrders(input.orders);
+  const skus = extractSkusFromOrders(orders);
 
-  const shortageBySku = estimateShortageBySku(input, skus);
+  const shortageBySku = estimateShortageBySku(
+    orders,
+    inventory,
+    movements,
+    skus
+  );
+
+  // --------------------------------------------------
+  // DETERMINISTIC DEBUG LOGS
+  // --------------------------------------------------
+
+  console.log(
+    "[OPT] ORDERS_SEEN",
+    orders.map(o => ({
+      orderId: o.orderId,
+      sku: o.sku,
+      qty: o.qty
+    }))
+  );
+
+  console.log(
+    "[OPT] INVENTORY_SEEN",
+    inventory.map(i => ({
+      sku: i.sku,
+      qty: i.qty
+    }))
+  );
+
+  console.log(
+    "[OPT] SHORTAGE_MAP",
+    Array.from(shortageBySku.entries())
+      .map(([sku, shortage]) => ({
+        sku,
+        shortage
+      }))
+  );
+
+  // --------------------------------------------------
+  // TOPOLOGY
+  // --------------------------------------------------
 
   const topology = buildTopologyDegreeMap(input);
 
-  const awarenessPenalty = computeAwarenessPenalty(input);
+  const leadTimes = extractLeadTimes(movements);
 
   const candidates: Action[][] = [];
 
   // --------------------------------------------------
-  // Candidate 0 — baseline
+  // BASELINE
   // --------------------------------------------------
 
   candidates.push([]);
 
   // --------------------------------------------------
-  // RESCHEDULE CANDIDATES
+  // RESCHEDULE
   // --------------------------------------------------
 
   for (const o of orders.slice(0, 12)) {
@@ -56,13 +109,14 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
         kind: "RESCHEDULE_DELIVERY",
         orderId: o.orderId,
         shiftDays: shift,
-        reason: "opt_v1_reschedule_for_feasibility",
+        reason: "opt_v6_reschedule",
       },
     ]);
+
   }
 
   // --------------------------------------------------
-  // EXPEDITE CANDIDATES
+  // SHORTAGE ACTIONS
   // --------------------------------------------------
 
   for (const [sku, shortage] of shortageBySku.entries()) {
@@ -71,66 +125,53 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
 
     const degree = topology.get(sku) ?? 0;
 
-    // skip completely isolated SKUs
-    if (degree === 0) continue;
+    const leadTime = leadTimes.get(sku) ?? 7;
 
-    const cap = shortage * hint.maxExpeditePercent;
-
-    let qty = Math.max(1, Math.floor(Math.min(shortage, cap)));
-
-    // reduce aggressiveness if low awareness
-    if (awarenessPenalty > 1) {
-      qty = Math.floor(qty * 0.6);
-    }
+    const qty = Math.max(
+      1,
+      Math.floor(shortage * hint.maxExpeditePercent)
+    );
 
     candidates.push([
       {
         kind: "EXPEDITE_SUPPLIER",
         sku,
         qty,
-        costFactor: 1.4,
-        reason: "opt_v2_expedite_topology_aware",
+        costFactor: leadTime > 10 ? 1.6 : 1.3,
+        reason:
+          degree === 0
+            ? "opt_v6_expedite_assumed_supply"
+            : "opt_v6_expedite_topology",
       },
     ]);
-  }
 
-  // --------------------------------------------------
-  // PRODUCTION ADJUST CANDIDATES
-  // --------------------------------------------------
+    if (degree > 0) {
 
-  for (const [sku, shortage] of shortageBySku.entries()) {
+      const adjustQty = Math.max(
+        1,
+        Math.floor(shortage * 0.5)
+      );
 
-    if (shortage <= 0) continue;
+      candidates.push([
+        {
+          kind: "SHORT_TERM_PRODUCTION_ADJUST",
+          sku,
+          qty: adjustQty,
+          availableInDays: pickInt(rng, 0, 3),
+          costFactor: 1.25,
+          reason: "opt_v6_prod_adjust",
+        },
+      ]);
 
-    const degree = topology.get(sku) ?? 0;
-
-    if (degree === 0) continue;
-
-    let qty = Math.max(1, Math.floor(shortage * 0.5));
-
-    if (awarenessPenalty > 1) {
-      qty = Math.floor(qty * 0.7);
     }
 
-    const days = pickInt(rng, 0, 3);
-
-    candidates.push([
-      {
-        kind: "SHORT_TERM_PRODUCTION_ADJUST",
-        sku,
-        qty,
-        availableInDays: days,
-        costFactor: 1.25,
-        reason: "opt_v2_short_term_prod_adjust",
-      },
-    ]);
   }
 
   // --------------------------------------------------
-  // MIXED CANDIDATES
+  // MIXED
   // --------------------------------------------------
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) {
 
     const o = orders[
       pickInt(
@@ -142,202 +183,126 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
 
     if (!o) break;
 
-    const sku = pickOneSku(rng, shortageBySku);
-
-    if (!sku) continue;
+    const sku = o.sku;
 
     const shortage = shortageBySku.get(sku) ?? 0;
 
     if (shortage <= 0) continue;
 
-    const degree = topology.get(sku) ?? 0;
+    const shift = pickInt(rng, 1, 3);
 
-    if (degree === 0) continue;
-
-    const shift = pickInt(
-      rng,
-      1,
-      Math.max(1, hint.maxRescheduleDays)
-    );
-
-    let qty = Math.max(1, Math.floor(shortage * 0.35));
-
-    if (awarenessPenalty > 1) {
-      qty = Math.floor(qty * 0.7);
-    }
+    const qty = Math.max(1, Math.floor(shortage * 0.3));
 
     candidates.push([
       {
         kind: "RESCHEDULE_DELIVERY",
         orderId: o.orderId,
         shiftDays: shift,
-        reason: "opt_v2_mix",
+        reason: "opt_v6_mix",
       },
       {
         kind: "EXPEDITE_SUPPLIER",
         sku,
         qty,
-        costFactor: 1.35,
-        reason: "opt_v2_mix",
+        costFactor: 1.4,
+        reason: "opt_v6_mix",
       },
     ]);
+
   }
 
   return dedupe(candidates);
+
 }
 
-// --------------------------------------------------
-// ORDER NORMALIZATION
-// --------------------------------------------------
-
-function normalizeOrders(orders: any[]) {
-
-  return (orders ?? [])
-    .map((o) => ({
-      orderId: String(o?.orderId ?? o?.id ?? ""),
-      sku: String(o?.sku ?? o?.item ?? o?.code ?? ""),
-      qty: Number(o?.qty ?? o?.quantity ?? 0),
-      dueDate: String(o?.dueDate ?? o?.due_date ?? ""),
-    }))
-    .filter(
-      (o) =>
-        o.orderId &&
-        o.sku &&
-        Number.isFinite(o.qty) &&
-        o.qty > 0
-    );
-}
-
-// --------------------------------------------------
-// SKU EXTRACTION
-// --------------------------------------------------
-
-function extractSkusFromOrders(orders: any[]) {
-
-  const set = new Set<string>();
-
-  for (const o of orders ?? []) {
-
-    const sku = String(
-      o?.sku ??
-      o?.item ??
-      o?.code ??
-      ""
-    );
-
-    if (sku) set.add(sku);
-  }
-
-  return Array.from(set);
-}
-
-// --------------------------------------------------
-// SHORTAGE ESTIMATION
-// --------------------------------------------------
+// ======================================================
+// SHORTAGE
+// ======================================================
 
 function estimateShortageBySku(
-  input: OptimizerInput,
+  orders: any[],
+  inventory: any[],
+  movements: any[],
   skus: string[]
 ) {
 
-  const demandBySku = new Map<string, number>();
+  const demand = new Map<string, number>();
+  const supply = new Map<string, number>();
 
-  for (const o of normalizeOrders(input.orders)) {
+  for (const o of orders) {
 
-    demandBySku.set(
+    demand.set(
       o.sku,
-      (demandBySku.get(o.sku) ?? 0) + o.qty
+      (demand.get(o.sku) ?? 0) + o.qty
     );
+
   }
 
-  const supplyBySku = new Map<string, number>();
+  for (const i of inventory) {
 
-  for (const it of input.inventory ?? []) {
-
-    const sku = String(
-      it?.sku ??
-      it?.item ??
-      it?.code ??
-      ""
+    supply.set(
+      i.sku,
+      (supply.get(i.sku) ?? 0) + i.qty
     );
 
-    if (!sku) continue;
-
-    const qty = Number(
-      it?.qty ??
-      it?.onHand ??
-      it?.quantity ??
-      0
-    );
-
-    supplyBySku.set(
-      sku,
-      (supplyBySku.get(sku) ?? 0) +
-        (Number.isFinite(qty) ? qty : 0)
-    );
   }
 
-  for (const mv of input.movements ?? []) {
+  for (const m of movements) {
 
-    const sku = String(
-      mv?.sku ??
-      mv?.item ??
-      mv?.code ??
-      ""
+    supply.set(
+      m.sku,
+      (supply.get(m.sku) ?? 0) + m.qty
     );
 
-    if (!sku) continue;
-
-    const type = String(
-      mv?.type ??
-      mv?.direction ??
-      ""
-    ).toUpperCase();
-
-    const qty = Number(
-      mv?.qty ??
-      mv?.quantity ??
-      0
-    );
-
-    if (!Number.isFinite(qty) || qty === 0) continue;
-
-    if (type === "IN" || type === "RECEIPT") {
-
-      supplyBySku.set(
-        sku,
-        (supplyBySku.get(sku) ?? 0) + qty
-      );
-
-    } else if (type === "OUT" || type === "ISSUE") {
-
-      supplyBySku.set(
-        sku,
-        (supplyBySku.get(sku) ?? 0) - Math.abs(qty)
-      );
-
-    }
   }
 
-  const shortageBySku = new Map<string, number>();
+  const shortage = new Map<string, number>();
 
   for (const sku of skus) {
 
-    const d = demandBySku.get(sku) ?? 0;
-    const s = supplyBySku.get(sku) ?? 0;
+    const d = demand.get(sku) ?? 0;
+    const s = supply.get(sku) ?? 0;
 
-    shortageBySku.set(
+    shortage.set(
       sku,
       Math.max(0, d - s)
     );
+
   }
 
-  return shortageBySku;
+  return shortage;
+
 }
 
-// --------------------------------------------------
+// ======================================================
+// LEAD TIMES
+// ======================================================
+
+function extractLeadTimes(movements: any[]) {
+
+  const map = new Map<string, number>();
+
+  for (const m of movements) {
+
+    if (!m.sku) continue;
+
+    const lt = Number(m.lead_time ?? 0);
+
+    if (lt > 0) {
+
+      map.set(m.sku, lt);
+
+    }
+
+  }
+
+  return map;
+
+}
+
+// ======================================================
 // TOPOLOGY
-// --------------------------------------------------
+// ======================================================
 
 function buildTopologyDegreeMap(input: OptimizerInput) {
 
@@ -349,78 +314,32 @@ function buildTopologyDegreeMap(input: OptimizerInput) {
 
   for (const e of topology.edges ?? []) {
 
-    map.set(
-      e.from,
-      (map.get(e.from) ?? 0) + 1
-    );
+    map.set(e.from, (map.get(e.from) ?? 0) + 1);
+    map.set(e.to, (map.get(e.to) ?? 0) + 1);
 
-    map.set(
-      e.to,
-      (map.get(e.to) ?? 0) + 1
-    );
   }
 
   return map;
+
 }
 
-// --------------------------------------------------
-// AWARENESS
-// --------------------------------------------------
+// ======================================================
+// HELPERS
+// ======================================================
 
-function computeAwarenessPenalty(input: OptimizerInput) {
+function extractSkusFromOrders(orders: any[]) {
 
-  const assumptions =
-    input.realitySnapshot?.assumptions ?? [];
+  const set = new Set<string>();
 
-  const awareness =
-    Number(
-      input.realitySnapshot?.awareness_level ?? 0
-    );
+  for (const o of orders) {
 
-  let penalty = 0;
+    if (o.sku) set.add(o.sku);
 
-  penalty += Math.min(
-    1.5,
-    assumptions.length * 0.15
-  );
+  }
 
-  if (awareness <= 0) penalty += 1;
-  else if (awareness === 1) penalty += 0.6;
-  else if (awareness === 2) penalty += 0.2;
+  return Array.from(set);
 
-  return penalty;
 }
-
-// --------------------------------------------------
-// RANDOM SKU PICK
-// --------------------------------------------------
-
-function pickOneSku(
-  rng: () => number,
-  shortageBySku: Map<string, number>
-) {
-
-  const skus = Array.from(shortageBySku.entries())
-    .filter(([_, sh]) => sh > 0)
-    .map(([sku]) => sku);
-
-  if (skus.length === 0) return null;
-
-  const idx = Math.floor(
-    rng() * skus.length
-  );
-
-  return skus[
-    Math.max(
-      0,
-      Math.min(skus.length - 1, idx)
-    )
-  ] ?? null;
-}
-
-// --------------------------------------------------
-// DEDUPE
-// --------------------------------------------------
 
 function dedupe(list: Action[][]) {
 
@@ -437,7 +356,9 @@ function dedupe(list: Action[][]) {
     seen.add(key);
 
     out.push(a);
+
   }
 
   return out;
+
 }

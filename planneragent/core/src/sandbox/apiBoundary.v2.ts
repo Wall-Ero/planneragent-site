@@ -1,4 +1,4 @@
-// src/sandbox/apiBoundary.v2.ts
+// core/src/sandbox/apiBoundary.v2.ts
 // ===============================
 // EDGE & CORE Boundary Contracts — V2
 // Source of Truth
@@ -7,31 +7,40 @@
 import type {
   SandboxEvaluateRequestV2,
   PlanTier,
-  Intent,
-  PlanningDomain,
-  DatasetDescriptor,
 } from "./contracts.v2";
+
+// -------------------------------
+// Local helper types
+// -------------------------------
+
+type DatasetDescriptorLike = {
+  awareness_level?: number;
+};
 
 // -------------------------------
 // Normalizers
 // -------------------------------
-function normalizePlan(plan: any): PlanTier {
-  const p = String(plan);
 
-  // Legacy alias normalization: BASIC is never exposed beyond the boundary.
+function normalizePlan(plan: unknown): PlanTier {
+  const p = String(plan ?? "");
+
   if (p === "BASIC") return "VISION";
 
   return p as PlanTier;
 }
 
-function normalizeDatasetDescriptor(x: any): DatasetDescriptor | undefined {
+function normalizeDatasetDescriptor(x: unknown): DatasetDescriptorLike | undefined {
   if (!x || typeof x !== "object") return undefined;
 
-  // No inference: accept only explicit booleans.
+  const raw = x as Record<string, unknown>;
+
+  const awareness =
+    typeof raw.awareness_level === "number"
+      ? raw.awareness_level
+      : undefined;
+
   return {
-    hasSnapshot: Boolean((x as any).hasSnapshot),
-    hasBehavioralEvents: Boolean((x as any).hasBehavioralEvents),
-    hasStructuralData: Boolean((x as any).hasStructuralData),
+    awareness_level: awareness,
   };
 }
 
@@ -40,6 +49,7 @@ function normalizeDatasetDescriptor(x: any): DatasetDescriptor | undefined {
 // Used by worker.ts (client → EDGE)
 // Snapshot MUST NOT be provided by client
 // -------------------------------
+
 export function parseEdgeRequestV2(body: any) {
   if (!body) throw new Error("EMPTY_BODY");
 
@@ -65,16 +75,27 @@ export function parseEdgeRequestV2(body: any) {
     request_id: String(body.request_id),
 
     plan: normalizePlan(body.plan),
-    intent: body.intent as Intent,
-    domain: body.domain as PlanningDomain,
+    intent: String(body.intent),
+    domain: String(body.domain),
 
     actor_id: String(body.actor_id),
 
     baseline_snapshot_id: String(body.baseline_snapshot_id),
     baseline_metrics: body.baseline_metrics,
 
-    // Frontend-driven (declared) descriptor; optional
     dataset_descriptor: normalizeDatasetDescriptor(body.dataset_descriptor),
+
+    // pass-through datasets
+    orders: body.orders ?? [],
+    inventory: body.inventory ?? [],
+    movements: body.movements ?? [],
+
+    movord: body.movord ?? [],
+    movmag: body.movmag ?? [],
+    masterBom: body.masterBom ?? [],
+
+    bom_reference: body.bom_reference,
+    selected_bom_reference: body.selected_bom_reference,
   };
 }
 
@@ -83,6 +104,7 @@ export function parseEdgeRequestV2(body: any) {
 // Used inside CORE (EDGE → CORE)
 // Snapshot MUST exist and be signed
 // -------------------------------
+
 export function parseSandboxEvaluateRequestV2(body: any): SandboxEvaluateRequestV2 {
   if (!body) throw new Error("EMPTY_BODY");
 
@@ -109,16 +131,27 @@ export function parseSandboxEvaluateRequestV2(body: any): SandboxEvaluateRequest
     request_id: String(body.request_id),
 
     plan: normalizePlan(body.plan),
-    intent: body.intent as Intent,
-    domain: body.domain as PlanningDomain,
+    intent: String(body.intent),
+    domain: String(body.domain),
 
     actor_id: String(body.actor_id),
 
-    baseline_snapshot_id: String(body.baseline_snapshot_id),
     baseline_metrics: body.baseline_metrics,
 
-    dataset_descriptor: normalizeDatasetDescriptor(body.dataset_descriptor),
+    dataset_descriptor: normalizeDatasetDescriptor(body.dataset_descriptor) as any,
 
     snapshot: body.snapshot,
+
+    // pass-through datasets
+    orders: body.orders ?? [],
+    inventory: body.inventory ?? [],
+    movements: body.movements ?? [],
+
+    movord: body.movord ?? [],
+    movmag: body.movmag ?? [],
+    masterBom: body.masterBom ?? [],
+
+    bom_reference: body.bom_reference,
+    selected_bom_reference: body.selected_bom_reference,
   };
 }

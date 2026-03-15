@@ -8,119 +8,119 @@ import type { ConstraintsHint } from "./contracts";
 
 export type ConstraintEval = {
   feasibleHard: boolean;
-  softViolations: string[];
-  notes: string[];
-};
+    softViolations: string[];
+      notes: string[];
+      };
 
-export function resolveConstraintsHint(h?: ConstraintsHint): Required<ConstraintsHint> {
-  return {
-    allowSplitAcrossSuppliers: Boolean(h?.allowSplitAcrossSuppliers ?? false),
-    allowEarlyRelease: Boolean(h?.allowEarlyRelease ?? true),
-    maxRescheduleDays: clampInt(h?.maxRescheduleDays ?? 14, 0, 365),
-    maxExpeditePercent: clampNum(h?.maxExpeditePercent ?? 1.0, 0, 10),
-    freezeHorizonDays: clampInt(h?.freezeHorizonDays ?? 2, 0, 365),
-  };
-}
+      export function resolveConstraintsHint(h?: ConstraintsHint): Required<ConstraintsHint> {
+        return {
+            allowSplitAcrossSuppliers: Boolean(h?.allowSplitAcrossSuppliers ?? false),
+                allowEarlyRelease: Boolean(h?.allowEarlyRelease ?? true),
+                    maxRescheduleDays: clampInt(h?.maxRescheduleDays ?? 14, 0, 365),
+                        maxExpeditePercent: clampNum(h?.maxExpeditePercent ?? 1.0, 0, 10),
+                            freezeHorizonDays: clampInt(h?.freezeHorizonDays ?? 2, 0, 365),
+                              };
+                              }
 
-export function evaluateActionConstraints(
-  actions: any[],
-  hint: Required<ConstraintsHint>,
-  asOfIso: string
-): ConstraintEval {
-  const soft: string[] = [];
-  const notes: string[] = [];
-  let feasibleHard = true;
+                              export function evaluateActionConstraints(
+                                actions: any[],
+                                  hint: Required<ConstraintsHint>,
+                                    asOfIso: string
+                                    ): ConstraintEval {
+                                      const soft: string[] = [];
+                                        const notes: string[] = [];
+                                          let feasibleHard = true;
 
-  for (const a of actions) {
-    if (!a || typeof a !== "object" || typeof a.kind !== "string") continue;
+                                            for (const a of actions) {
+                                                if (!a || typeof a !== "object" || typeof a.kind !== "string") continue;
 
-    if (a.kind === "RESCHEDULE_DELIVERY") {
-      const shiftDays = Number(a.shiftDays ?? 0);
-      if (!Number.isFinite(shiftDays)) {
-        feasibleHard = false;
-        notes.push("HARD:RESCHEDULE_NAN");
-      } else {
-        if (shiftDays < 0) {
-          // v1: we do not allow "earlier delivery" reschedule (usually not ERP-safe)
-          feasibleHard = false;
-          notes.push("HARD:RESCHEDULE_NEGATIVE");
-        }
-        if (shiftDays > hint.maxRescheduleDays) {
-          feasibleHard = false;
-          notes.push("HARD:RESCHEDULE_OVER_CAP");
-        }
+                                                    if (a.kind === "RESCHEDULE_DELIVERY") {
+                                                          const shiftDays = Number(a.shiftDays ?? 0);
+                                                                if (!Number.isFinite(shiftDays)) {
+                                                                        feasibleHard = false;
+                                                                                notes.push("HARD:RESCHEDULE_NAN");
+                                                                                      } else {
+                                                                                              if (shiftDays < 0) {
+                                                                                                        // v1: we do not allow "earlier delivery" reschedule (usually not ERP-safe)
+                                                                                                                  feasibleHard = false;
+                                                                                                                            notes.push("HARD:RESCHEDULE_NEGATIVE");
+                                                                                                                                    }
+                                                                                                                                            if (shiftDays > hint.maxRescheduleDays) {
+                                                                                                                                                      feasibleHard = false;
+                                                                                                                                                                notes.push("HARD:RESCHEDULE_OVER_CAP");
+                                                                                                                                                                        }
 
-        // freeze horizon: no reschedule inside fence (soft by default)
-        if (hint.freezeHorizonDays > 0) {
-          soft.push("SOFT:STABILITY_FREEZE_HORIZON");
-          notes.push(`SOFT:freezeHorizonDays=${hint.freezeHorizonDays} (enforced in evaluator)`);
-        }
-      }
-    }
+                                                                                                                                                                                // freeze horizon: no reschedule inside fence (soft by default)
+                                                                                                                                                                                        if (hint.freezeHorizonDays > 0) {
+                                                                                                                                                                                                  soft.push("SOFT:STABILITY_FREEZE_HORIZON");
+                                                                                                                                                                                                            notes.push(`SOFT:freezeHorizonDays=${hint.freezeHorizonDays} (enforced in evaluator)`);
+                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                              }
 
-    if (a.kind === "EXPEDITE_SUPPLIER") {
-      const qty = Number(a.qty ?? 0);
-      const cf = Number(a.costFactor ?? 1);
-      if (!Number.isFinite(qty) || qty <= 0) {
-        feasibleHard = false;
-        notes.push("HARD:EXPEDITE_BAD_QTY");
-      }
-      if (!Number.isFinite(cf) || cf < 1) {
-        feasibleHard = false;
-        notes.push("HARD:EXPEDITE_BAD_COSTFACTOR");
-      }
-    }
+                                                                                                                                                                                                                                  if (a.kind === "EXPEDITE_SUPPLIER") {
+                                                                                                                                                                                                                                        const qty = Number(a.qty ?? 0);
+                                                                                                                                                                                                                                              const cf = Number(a.costFactor ?? 1);
+                                                                                                                                                                                                                                                    if (!Number.isFinite(qty) || qty <= 0) {
+                                                                                                                                                                                                                                                            feasibleHard = false;
+                                                                                                                                                                                                                                                                    notes.push("HARD:EXPEDITE_BAD_QTY");
+                                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                                                if (!Number.isFinite(cf) || cf < 1) {
+                                                                                                                                                                                                                                                                                        feasibleHard = false;
+                                                                                                                                                                                                                                                                                                notes.push("HARD:EXPEDITE_BAD_COSTFACTOR");
+                                                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                                                          }
 
-    if (a.kind === "SHORT_TERM_PRODUCTION_ADJUST") {
-      const qty = Number(a.qty ?? 0);
-      const days = Number(a.availableInDays ?? 0);
-      const cf = Number(a.costFactor ?? 1);
-      if (!Number.isFinite(qty) || qty <= 0) {
-        feasibleHard = false;
-        notes.push("HARD:PROD_BAD_QTY");
-      }
-      if (!Number.isFinite(days) || days < 0 || days > 365) {
-        feasibleHard = false;
-        notes.push("HARD:PROD_BAD_DAYS");
-      }
-      if (!Number.isFinite(cf) || cf < 1) {
-        feasibleHard = false;
-        notes.push("HARD:PROD_BAD_COSTFACTOR");
-      }
-      if (!hint.allowEarlyRelease && days === 0) {
-        soft.push("SOFT:EARLY_RELEASE_DISABLED");
-      }
-    }
-  }
+                                                                                                                                                                                                                                                                                                              if (a.kind === "SHORT_TERM_PRODUCTION_ADJUST") {
+                                                                                                                                                                                                                                                                                                                    const qty = Number(a.qty ?? 0);
+                                                                                                                                                                                                                                                                                                                          const days = Number(a.availableInDays ?? 0);
+                                                                                                                                                                                                                                                                                                                                const cf = Number(a.costFactor ?? 1);
+                                                                                                                                                                                                                                                                                                                                      if (!Number.isFinite(qty) || qty <= 0) {
+                                                                                                                                                                                                                                                                                                                                              feasibleHard = false;
+                                                                                                                                                                                                                                                                                                                                                      notes.push("HARD:PROD_BAD_QTY");
+                                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                                                  if (!Number.isFinite(days) || days < 0 || days > 365) {
+                                                                                                                                                                                                                                                                                                                                                                          feasibleHard = false;
+                                                                                                                                                                                                                                                                                                                                                                                  notes.push("HARD:PROD_BAD_DAYS");
+                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                              if (!Number.isFinite(cf) || cf < 1) {
+                                                                                                                                                                                                                                                                                                                                                                                                      feasibleHard = false;
+                                                                                                                                                                                                                                                                                                                                                                                                              notes.push("HARD:PROD_BAD_COSTFACTOR");
+                                                                                                                                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                                                                                                                                          if (!hint.allowEarlyRelease && days === 0) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                  soft.push("SOFT:EARLY_RELEASE_DISABLED");
+                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                                                                                                                              }
 
-  // asOfIso parse check (soft)
-  if (!isIsoDate(asOfIso)) {
-    soft.push("SOFT:ASOF_NOT_ISO");
-  }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                // asOfIso parse check (soft)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                  if (!isIsoDate(asOfIso)) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      soft.push("SOFT:ASOF_NOT_ISO");
+                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
 
-  return { feasibleHard, softViolations: uniq(soft), notes: uniq(notes) };
-}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          return { feasibleHard, softViolations: uniq(soft), notes: uniq(notes) };
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          }
 
-function uniq(xs: string[]): string[] {
-  return Array.from(new Set(xs));
-}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          function uniq(xs: string[]): string[] {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            return Array.from(new Set(xs));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
 
-function clampInt(v: number, lo: number, hi: number): number {
-  if (!Number.isFinite(v)) return lo;
-  const n = Math.floor(v);
-  if (n < lo) return lo;
-  if (n > hi) return hi;
-  return n;
-}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            function clampInt(v: number, lo: number, hi: number): number {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                              if (!Number.isFinite(v)) return lo;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                const n = Math.floor(v);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  if (n < lo) return lo;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    if (n > hi) return hi;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                      return n;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }
 
-function clampNum(v: number, lo: number, hi: number): number {
-  if (!Number.isFinite(v)) return lo;
-  if (v < lo) return lo;
-  if (v > hi) return hi;
-  return v;
-}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                      function clampNum(v: number, lo: number, hi: number): number {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        if (!Number.isFinite(v)) return lo;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                          if (v < lo) return lo;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            if (v > hi) return hi;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                              return v;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }
 
-function isIsoDate(s: string): boolean {
-  // Accept YYYY-MM-DD or full ISO; v1 uses date-only for buckets
-  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s);
-}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                              function isIsoDate(s: string): boolean {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                // Accept YYYY-MM-DD or full ISO; v1 uses date-only for buckets
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  return typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  }

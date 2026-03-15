@@ -4,6 +4,7 @@
 // Canonical Snapshot · Source of Truth
 // ============================================
 
+import "./connectors";
 import { parseEdgeRequestV2 } from "./sandbox/apiBoundary.v2";
 import { evaluateSandboxV2 } from "./sandbox/orchestrator.v2";
 import { validateOagAndBuildProof } from "./governance/oag/validateOag";

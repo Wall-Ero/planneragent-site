@@ -1,7 +1,7 @@
-// core/src/decision/decision.trace.ts
+// PATH: core/src/decision/decision.trace.ts
 // ============================================================
 // Decision Trace — Canonical V2
-// Multi-layer governance + real-world impact
+// Multi-layer governance + real-world impact + execution evidence
 // Source of Truth
 // ============================================================
 
@@ -163,6 +163,26 @@ export interface CharterBlock {
 }
 
 // ------------------------------------------------------------
+// 🔥 EXECUTION EVIDENCE (NEW BLOCK)
+// ------------------------------------------------------------
+
+export interface ExecutionEvidence {
+  capability_id: string;
+
+  success: boolean;
+
+  executed_at: string;
+
+  external_ref?: string;
+
+  details?: Record<string, unknown>;
+}
+
+export interface ExecutionBlock {
+  evidences: ExecutionEvidence[];
+}
+
+// ------------------------------------------------------------
 // DECISION TRACE ROOT
 // ------------------------------------------------------------
 
@@ -179,6 +199,9 @@ export interface DecisionTraceV2 {
   senior?: SeniorBlock;
   principal?: PrincipalBlock;
   charter?: CharterBlock;
+
+  // 🔥 NUOVO BLOCCO
+  execution?: ExecutionBlock;
 }
 
 // ------------------------------------------------------------
@@ -195,6 +218,7 @@ export function createDecisionTraceV2(input: {
   senior?: SeniorBlock;
   principal?: PrincipalBlock;
   charter?: CharterBlock;
+  execution?: ExecutionBlock;
 }): DecisionTraceV2 {
   return {
     requestId: input.requestId,
@@ -209,5 +233,7 @@ export function createDecisionTraceV2(input: {
     senior: input.senior,
     principal: input.principal,
     charter: input.charter,
+
+    execution: input.execution,
   };
 }

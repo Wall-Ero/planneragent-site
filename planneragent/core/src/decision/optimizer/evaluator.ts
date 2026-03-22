@@ -67,7 +67,6 @@ export function evaluateCandidate(
   kpis.inventoryDeltaUnits = Math.max(0, adjusted.totalExtraSupply);
   kpis.serviceShortfall = alloc.serviceShortfall;
 
-  // NEW: context penalties from Reality Builder + Topology
   const contextPenalty = computeContextPenalty(input, actions, evalSteps);
   kpis.contextPenalty = contextPenalty;
 
@@ -138,9 +137,8 @@ function computeContextPenalty(
 ): number {
   let penalty = 0;
 
-  // 1) Assumption penalty
   const assumptions = input.realitySnapshot?.assumptions ?? [];
-  const awareness = num(input.realitySnapshot?.awareness_level, 0);
+  const awareness = num(input.realitySnapshot?.awareness_level ?? 0);
 
   if (assumptions.length > 0) {
     const raw = Math.min(2, assumptions.length * 0.15);
@@ -148,12 +146,10 @@ function computeContextPenalty(
     evalSteps.push(`context:assumptions=${assumptions.length}`);
   }
 
-  // lower awareness => higher penalty
   const awarenessPenalty = awareness <= 0 ? 1.0 : awareness === 1 ? 0.6 : awareness === 2 ? 0.2 : 0;
   penalty += awarenessPenalty;
   evalSteps.push(`context:awareness_penalty=${round3(awarenessPenalty)}`);
 
-  // 2) Topology penalty / fit
   const topology = input.operationalTopology;
   if (!topology || !Array.isArray(topology.nodes) || topology.nodes.length === 0) {
     penalty += 0.5;
@@ -174,7 +170,6 @@ function computeContextPenalty(
       continue;
     }
 
-    // if action touches a node with no dependencies, treat as weaker fit
     const degree = edgeIndex.get(sku) ?? 0;
     if (degree === 0) {
       penalty += 0.2;
@@ -297,18 +292,39 @@ function allocateOrders(
   softViolations: string[];
 } {
   const sorted = (orders ?? [])
-    .map((o) => ({
-      orderId: String(o?.orderId ?? o?.id ?? ""),
-      sku: String(o?.sku ?? o?.item ?? o?.code ?? ""),
-      qty: Number(o?.qty ?? o?.quantity ?? 0),
-      dueDate: String(o?.dueDate ?? o?.due_date ?? ""),
-    }))
-    .filter((o) => o.orderId && o.sku && Number.isFinite(o.qty) && o.qty > 0)
+    .map((o, index) => {
+      const orderIdRaw = String(o?.orderId ?? o?.id ?? "").trim();
+      const sku = String(o?.sku ?? o?.item ?? o?.code ?? "").trim();
+      const qty = Number(o?.qty ?? o?.quantity ?? 0);
+
+      const dueDateRaw =
+        o?.dueDate ??
+        o?.due_date ??
+        o?.deliveryDate ??
+        o?.delivery_date ??
+        "";
+
+      const dueDate = String(dueDateRaw ?? "").trim();
+
+      return {
+        orderId: orderIdRaw || `AUTO_ORDER_${index + 1}_${sku || "UNKNOWN"}`,
+        sku,
+        qty,
+        dueDate,
+      };
+    })
+    .filter((o) => o.sku && Number.isFinite(o.qty) && o.qty > 0)
     .sort((a, b) => {
-      const da = a.dueDate || "";
-      const db = b.dueDate || "";
-      if (da < db) return -1;
-      if (da > db) return 1;
+      const aHasDue = a.dueDate.length > 0;
+      const bHasDue = b.dueDate.length > 0;
+
+      if (aHasDue && bHasDue) {
+        if (a.dueDate < b.dueDate) return -1;
+        if (a.dueDate > b.dueDate) return 1;
+      } else if (aHasDue !== bHasDue) {
+        return aHasDue ? -1 : 1;
+      }
+
       return a.orderId.localeCompare(b.orderId);
     });
 

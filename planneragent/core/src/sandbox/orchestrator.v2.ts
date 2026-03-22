@@ -9,11 +9,13 @@
 // - compute deterministic evidence
 // - derive cockpit signals
 // - run governed optimizer
+// - build semantic actions
 // - build ORD technical trace
 // - build Decision Trace (governed)
 // - persist Decision Memory (when DB available)
 // - run Decision Replay against known history
 // - prepare execution preview
+// - execute governed intents when allowed
 // - keep a single semantic pressure: signals.decision_pressure
 // ======================================================
 
@@ -25,7 +27,10 @@ import type {
   PlanTier,
 } from "./contracts.v2";
 
-import type { DecisionTraceV2 } from "../decision/decision.trace";
+import type {
+  DecisionTraceV2,
+  ExecutionEvidence,
+} from "../decision/decision.trace";
 
 import { authoritySandboxGuard } from "./authority/authoritySandbox.guard";
 import { computeDlEvidenceV2 } from "./dl.v2";
@@ -40,7 +45,9 @@ import { buildOrdDecisionTrace } from "../decision/ord/ord.trace";
 import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
 import { replayDecision } from "../decision/decision.replay.engine";
 import { adaptRealitySnapshot } from "../decision/decision.reality.adapter";
+
 import { routeActionToExecutionIntent } from "../execution/action.router";
+import { executePlan } from "../execution/execution.bridge";
 
 import { persistDecisionTrace } from "../decision-memory/decision.memory.bridge";
 import { D1DecisionStoreAdapter } from "../decision-memory/decision.store";
@@ -53,6 +60,17 @@ import {
 
 type OrchestratorEnv = {
   DB?: D1Database;
+};
+
+type SemanticAction = {
+  id: string;
+  type: string;
+  sku?: string;
+  qty?: number;
+  orderId?: string;
+  shiftDays?: number;
+  source: "OPTIMIZER";
+  raw: any;
 };
 
 function executionAllowed(plan: PlanTier, intent: string): boolean {
@@ -252,6 +270,19 @@ function buildHistoryTraceFromSnapshot(s: any): DecisionTraceV2 {
   };
 }
 
+function buildSemanticActions(bestActions: any[]): SemanticAction[] {
+  return bestActions.map((a: any, index: number) => ({
+    id: `act-${Date.now()}-${index}-${a?.sku ?? a?.orderId ?? "generic"}`,
+    type: String(a?.kind ?? "UNKNOWN_ACTION"),
+    sku: a?.sku,
+    qty: typeof a?.qty === "number" ? a.qty : undefined,
+    orderId: a?.orderId,
+    shiftDays: typeof a?.shiftDays === "number" ? a.shiftDays : undefined,
+    source: "OPTIMIZER",
+    raw: a,
+  }));
+}
+
 export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2,
   env?: OrchestratorEnv
@@ -350,6 +381,7 @@ export async function evaluateSandboxV2(
 
   const rawOrders = normalizeSandboxOrders(req.orders ?? []);
   console.log("[DEBUG] rawOrders AFTER NORMALIZE", rawOrders);
+
   const rawInventory = normalizeSandboxInventory(req.inventory ?? []);
   const rawMovements = normalizeSandboxMovements(req.movements ?? []);
 
@@ -366,31 +398,25 @@ export async function evaluateSandboxV2(
     masterBom: (req.masterBom ?? []) as any[],
   });
 
- // ----------------------------------------------------------
-// NORMALIZATION FROM REALITY (if available)
-// ----------------------------------------------------------
+  // --------------------------------------------------
+  // NORMALIZATION FROM REALITY (if available)
+  // --------------------------------------------------
 
-let twinOrders = normalizeSandboxOrders(
-  ((reality as any)?.observed?.orders ?? [])
-);
+  let twinOrders = normalizeSandboxOrders((reality as any)?.observed?.orders ?? []);
+  let twinInventory = normalizeSandboxInventory((reality as any)?.observed?.inventory ?? []);
+  const twinMovements = rawMovements;
 
-let twinInventory = normalizeSandboxInventory(
-  ((reality as any)?.observed?.inventory ?? [])
-);
+  // --------------------------------------------------
+  // FALLBACK TO RAW INPUT (CRITICAL FIX)
+  // --------------------------------------------------
 
-const twinMovements = rawMovements;
+  if (twinOrders.length === 0 && rawOrders.length > 0) {
+    twinOrders = rawOrders;
+  }
 
-// ----------------------------------------------------------
-// FALLBACK TO RAW INPUT (CRITICAL FIX)
-// ----------------------------------------------------------
-
-if (twinOrders.length === 0 && rawOrders.length > 0) {
-  twinOrders = rawOrders;
-}
-
-if (twinInventory.length === 0 && rawInventory.length > 0) {
-  twinInventory = rawInventory;
-}
+  if (twinInventory.length === 0 && rawInventory.length > 0) {
+    twinInventory = rawInventory;
+  }
 
   const inferredBom = (reality as any)?.reconstructed?.inferred_bom ?? [];
 
@@ -478,6 +504,16 @@ if (twinInventory.length === 0 && rawInventory.length > 0) {
     optimizerOutput = null;
   }
 
+  console.log("[OPTIMIZER_OUTPUT]", JSON.stringify(optimizerOutput, null, 2));
+  
+  // --------------------------------------------------
+  // Semantic actions
+  // --------------------------------------------------
+
+  const semanticActions = buildSemanticActions(optimizerOutput?.best?.actions ?? []);
+
+  console.log("[SEMANTIC_ACTIONS]", JSON.stringify(semanticActions, null, 2));
+
   // --------------------------------------------------
   // Scenarios
   // --------------------------------------------------
@@ -517,14 +553,35 @@ if (twinInventory.length === 0 && rawInventory.length > 0) {
   // --------------------------------------------------
 
   const execution_preview =
-    executionAllowed(req.plan, req.intent) && optimizerOutput?.best?.actions?.length
-      ? optimizerOutput.best.actions.map((action: any) =>
-          routeActionToExecutionIntent(action, {
+    executionAllowed(req.plan, req.intent) && semanticActions.length > 0
+      ? semanticActions.map((action) =>
+          routeActionToExecutionIntent(action.raw, {
             tenantId: req.company_id,
             approver: req.actor_id,
           })
         )
       : [];
+
+  // --------------------------------------------------
+  // Execution (REAL)
+  // --------------------------------------------------
+
+  let executionEvidences: ExecutionEvidence[] = [];
+
+  if (
+    executionAllowed(req.plan, req.intent) &&
+    execution_preview.length > 0
+  ) {
+    const executionResult = await executePlan({
+      intents: execution_preview,
+      context: {
+        tenantId: req.company_id,
+        approver: req.actor_id,
+      },
+    });
+
+    executionEvidences = executionResult.evidences;
+  }
 
   // --------------------------------------------------
   // ORD Technical Trace
@@ -546,8 +603,8 @@ if (twinInventory.length === 0 && rawInventory.length > 0) {
     optimizerCandidates: optimizerOutput?.candidates?.length ?? 0,
     optimizerBestScore: optimizerOutput?.best?.score ?? 0,
 
-    actions: (optimizerOutput?.best?.actions ?? []).map((a: any) => ({
-      kind: a.kind,
+    actions: semanticActions.map((a) => ({
+      kind: a.type,
       sku: a.sku,
       qty: a.qty,
     })),
@@ -566,18 +623,22 @@ if (twinInventory.length === 0 && rawInventory.length > 0) {
   // --------------------------------------------------
 
   const decisionTrace = buildDecisionTraceFromOrd({
-  ord: ordTrace,
-  dl: dlEvidence,
-  authorityLevel: deriveAuthorityLevel(req.plan),
-  decisionMode: deriveDecisionModeForTrace(req.plan, req.intent),
-});
+    ord: ordTrace,
+    dl: dlEvidence,
+    authorityLevel: deriveAuthorityLevel(req.plan),
+    decisionMode: deriveDecisionModeForTrace(req.plan, req.intent),
+  });
+
+  decisionTrace.execution = {
+    evidences: executionEvidences,
+  };
 
   console.log("[DECISION_TRACE]", JSON.stringify(decisionTrace, null, 2));
 
   console.log(
-  "[PROPOSED_ACTIONS]",
-  JSON.stringify(decisionTrace.junior?.proposed_actions ?? [], null, 2)
-);
+    "[PROPOSED_ACTIONS]",
+    JSON.stringify(decisionTrace.junior?.proposed_actions ?? [], null, 2)
+  );
 
   // --------------------------------------------------
   // Decision Memory Persistence (optional)

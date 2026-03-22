@@ -4,7 +4,10 @@
 // Canonical Source of Truth
 // =====================================================
 
-import type { PlanTier, Intent, PlanningDomain } from "../../sandbox/contracts.v2";
+import { PlanTier } from "../../sandbox/contracts.v2";
+
+type Intent = string;
+type PlanningDomain = string;
 
 // -----------------------------------------------------
 // HASH CHAIN
@@ -42,9 +45,9 @@ export interface DecisionMemorySnapshotV1 {
   context_id: string;
 
   // Planning
-  plan: PlanTier;
-  intent: Intent;
-  domain: PlanningDomain;
+  plan: string;
+  intent: string;
+  domain: string;
 
   // Baseline
   baseline_snapshot_id: string;

@@ -4,11 +4,11 @@
 // Canonical Source of Truth
 //
 // Purpose
-// Transform optimizer actions into governed execution intents.
+// Transform governed planner actions into execution intents.
 //
 // Rules
-// - Optimizer decides WHAT should be done
-// - Action Router maps action -> capability
+// - Optimizer / semantic layer decides WHAT should be done
+// - Action Router maps action -> execution capability
 // - Executor decides HOW to execute within approved scope
 // - Execution may use:
 //   1) DIRECT industrial tools/adapters
@@ -50,14 +50,33 @@ export type AgentRole =
   | "SUPPLIER_COMMUNICATION_AGENT"
   | "ERP_UPDATE_AGENT";
 
+export type ExecutionCapabilityId =
+  | "notify_supplier"
+  | "update_order"
+  | "adjust_production";
+
 export type ExecutionIntent = {
   action_kind: OptimizerAction["kind"];
-  capability_id: "notify_supplier" | "update_order";
+  capability_id: ExecutionCapabilityId;
   mode: ExecutionMode;
   payload: Record<string, unknown>;
   agent_role?: AgentRole;
   rationale: string;
 };
+
+function buildBasePayload(
+  context: {
+    tenantId: string;
+    approver?: string;
+  }
+): Record<string, unknown> {
+  return {
+    tenantId: context.tenantId,
+    approver: context.approver ?? null,
+    requestedAt: new Date().toISOString(),
+    source: "PLANNERAGENT_GOVERNED_ACTION",
+  };
+}
 
 export function routeActionToExecutionIntent(
   action: OptimizerAction,
@@ -66,6 +85,8 @@ export function routeActionToExecutionIntent(
     approver?: string;
   }
 ): ExecutionIntent {
+  const base = buildBasePayload(context);
+
   switch (action.kind) {
     case "EXPEDITE_SUPPLIER":
       return {
@@ -74,25 +95,23 @@ export function routeActionToExecutionIntent(
         mode: "AGENT",
         agent_role: "SUPPLIER_COMMUNICATION_AGENT",
         payload: {
-          tenantId: context.tenantId,
-          approver: context.approver,
+          ...base,
           sku: action.sku,
           qty: action.qty,
           costFactor: action.costFactor ?? 1,
           reason: action.reason ?? "expedite_requested_by_optimizer",
         },
         rationale:
-          "Supplier communication may be executed through a governed AI agent, but the action itself was decided deterministically.",
+          "Supplier communication may be executed through a governed AI agent, but the action itself was decided deterministically by PlannerAgent.",
       };
 
     case "SHORT_TERM_PRODUCTION_ADJUST":
       return {
         action_kind: action.kind,
-        capability_id: "update_order",
+        capability_id: "adjust_production",
         mode: "DIRECT",
         payload: {
-          tenantId: context.tenantId,
-          approver: context.approver,
+          ...base,
           sku: action.sku,
           qty: action.qty,
           availableInDays: action.availableInDays ?? 0,
@@ -100,7 +119,7 @@ export function routeActionToExecutionIntent(
           reason: action.reason ?? "short_term_production_adjust",
         },
         rationale:
-          "Production adjustment maps to direct ERP/order update under governed execution.",
+          "Short-term production adjustment maps to a governed direct execution path toward production / ERP update.",
       };
 
     case "RESCHEDULE_DELIVERY":
@@ -109,14 +128,13 @@ export function routeActionToExecutionIntent(
         capability_id: "update_order",
         mode: "DIRECT",
         payload: {
-          tenantId: context.tenantId,
-          approver: context.approver,
+          ...base,
           orderId: action.orderId,
           shiftDays: action.shiftDays,
           reason: action.reason ?? "delivery_reschedule",
         },
         rationale:
-          "Delivery rescheduling maps to direct governed order update.",
+          "Delivery rescheduling maps to a governed direct order update within execution boundaries.",
       };
 
     default: {

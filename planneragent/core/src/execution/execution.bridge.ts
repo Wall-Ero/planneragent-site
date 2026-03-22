@@ -1,26 +1,71 @@
-// core/src/execution/execution.bridge.ts
+// PATH: core/src/execution/execution.bridge.ts
 // ======================================================
-// PlannerAgent — Execution Bridge
+// PlannerAgent — Execution Bridge V2
+// Canonical Source of Truth
 // ======================================================
+
+import type {
+  ExecutionRequest,
+  ExecutionResult,
+} from "./execution.contracts.v1";
+
+import type { ExecutionEvidence } from "../decision/decision.trace";
 
 import { runExecutor } from "../executor/executor.runtime.v1";
 
-export async function executePlan(plan: any, context: any) {
+function nowIso(): string {
+  return new Date().toISOString();
+}
 
-  const actions = plan.actions ?? [];
+export async function executePlan(
+  request: ExecutionRequest
+): Promise<{
+  results: ExecutionResult[];
+  evidences: ExecutionEvidence[];
+}> {
 
-  const results = [];
+  const { intents, context } = request;
 
-  for (const action of actions) {
+  const results: ExecutionResult[] = [];
+  const evidences: ExecutionEvidence[] = [];
+
+  for (const intent of intents) {
 
     const result = await runExecutor({
-      action,
+      intent,
+      tenantId: context.tenantId,
       approver: context.approver,
-      tenantId: context.tenantId
     });
 
-    results.push(result);
+    results.push({
+      capability_id: intent.capability_id,
+      success: result.ok,
+      executed_at: result.ok
+        ? result.executed_at
+        : nowIso(),
+
+      details: result.ok ? result.details : undefined,
+      error: result.ok ? undefined : result.reason,
+    });
+
+    evidences.push({
+      capability_id: intent.capability_id,
+      success: result.ok,
+      executed_at: result.ok
+        ? result.executed_at
+        : nowIso(),
+
+      external_ref:
+        result.ok &&
+        result.details &&
+        typeof result.details === "object" &&
+        "id" in result.details
+          ? String((result.details as any).id)
+          : undefined,
+
+      details: result.ok ? result.details : undefined,
+    });
   }
 
-  return results;
+  return { results, evidences };
 }

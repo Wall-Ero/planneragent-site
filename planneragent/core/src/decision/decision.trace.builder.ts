@@ -1,11 +1,12 @@
 // core/src/decision/decision.trace.builder.ts
 // ============================================================
-// Decision Trace Builder — From ORD Trace → V2 Governance Model
+// Decision Trace Builder — From ORD Trace + DL Evidence → V2 Governance Model
 // Canonical Source of Truth
 // ============================================================
 
-import type { OrdDecisionTrace } from "./ord/ord.trace"
 import type { DlEvidenceV2 } from "../sandbox/contracts.v2"
+import type { OrdDecisionTrace } from "./ord/ord.trace"
+import { deriveActionsV1 } from "./action.deriver"
 
 import {
   createDecisionTraceV2,
@@ -14,59 +15,46 @@ import {
   type DecisionMode
 } from "./decision.trace"
 
-import { deriveActionsV1 } from "./action.deriver"
-
-
 export function buildDecisionTraceFromOrd(input: {
   ord: OrdDecisionTrace
   dl: DlEvidenceV2
-
   authorityLevel: AuthorityLevel
   decisionMode: DecisionMode
-
 }): DecisionTraceV2 {
-
-  const { ord, dl } = input
+  const { ord, dl, authorityLevel, decisionMode } = input
 
   // ----------------------------------------------------------
   // VISION
   // ----------------------------------------------------------
 
-  const { ordersSeen, inventorySeen, shortagesDetected } = ord.reality
-
-  let data_quality: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN"
-
-  if (ordersSeen === 0 && inventorySeen === 0) {
-    data_quality = "UNKNOWN"
-  } else if (inventorySeen === 0) {
-    data_quality = "LOW"
-  } else if (shortagesDetected > 0) {
-    data_quality = "MEDIUM"
-  } else {
-    data_quality = "HIGH"
-  }
-
   const anomalies: string[] = []
 
-  if (inventorySeen === 0) {
-    anomalies.push("NO_INVENTORY_DATA")
-  }
-
-  if (shortagesDetected > 0) {
-    anomalies.push("SHORTAGE_DETECTED")
-  }
-
-  if (ordersSeen === 0) {
+  if (ord.reality.ordersSeen === 0) {
     anomalies.push("NO_ORDERS_DATA")
   }
 
+  if (ord.reality.inventorySeen === 0) {
+    anomalies.push("NO_INVENTORY_DATA")
+  }
+
+  if (ord.reality.shortagesDetected > 0) {
+    anomalies.push("SHORTAGE_DETECTED")
+  }
+
+  const dataQuality: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" =
+    ord.reality.ordersSeen > 0 && ord.reality.inventorySeen > 0
+      ? "MEDIUM"
+      : ord.reality.inventorySeen > 0 || ord.reality.ordersSeen > 0
+      ? "LOW"
+      : "UNKNOWN"
+
   const vision = {
     reality_snapshot: {
-      ordersSeen,
-      inventorySeen,
-      shortagesDetected
+      ordersSeen: ord.reality.ordersSeen,
+      inventorySeen: ord.reality.inventorySeen,
+      shortagesDetected: ord.reality.shortagesDetected
     },
-    data_quality,
+    data_quality: dataQuality,
     anomalies_detected: anomalies
   }
 
@@ -75,16 +63,25 @@ export function buildDecisionTraceFromOrd(input: {
   // ----------------------------------------------------------
 
   const authority = {
-    level: input.authorityLevel,
-    mode: input.decisionMode
+    level: authorityLevel,
+    mode: decisionMode
   }
+
+  // ----------------------------------------------------------
+  // DERIVED ACTIONS (deterministic, no LLM)
+  // ----------------------------------------------------------
+
+  const derivedActions = deriveActionsV1({
+    ord,
+    dl
+  })
 
   // ----------------------------------------------------------
   // GRADUATE
   // ----------------------------------------------------------
 
   const graduate =
-    input.authorityLevel === "GRADUATE"
+    authorityLevel === "GRADUATE"
       ? {
           ai_usage: {
             provider: "UNKNOWN",
@@ -110,30 +107,21 @@ export function buildDecisionTraceFromOrd(input: {
       : undefined
 
   // ----------------------------------------------------------
-  // JUNIOR (NOW POWERED BY ACTION DERIVER)
+  // JUNIOR
   // ----------------------------------------------------------
 
   const junior =
-    input.authorityLevel === "JUNIOR"
-      ? (() => {
-
-          const derived = deriveActionsV1({
-            ord,
-            dl
-          })
-
-          return {
-            proposed_actions: derived.proposed_actions.map(p => ({
-              type: p.action.kind,
-              description: p.reason,
-              expected_impact: p.expected_impact
-            })),
-            selected_action: {
-              approved_by_human:
-                input.decisionMode === "HUMAN_APPROVED"
-            }
+    authorityLevel === "JUNIOR"
+      ? {
+          proposed_actions: derivedActions.proposed_actions.map((item) => ({
+            type: item.action.kind,
+            description: item.reason,
+            expected_impact: item.expected_impact
+          })),
+          selected_action: {
+            approved_by_human: ord.decisionMode === "HUMAN_APPROVED"
           }
-        })()
+        }
       : undefined
 
   // ----------------------------------------------------------
@@ -141,10 +129,9 @@ export function buildDecisionTraceFromOrd(input: {
   // ----------------------------------------------------------
 
   const senior =
-    input.authorityLevel === "SENIOR" ||
-    input.authorityLevel === "PRINCIPAL"
+    authorityLevel === "SENIOR" || authorityLevel === "PRINCIPAL"
       ? {
-          autonomous_execution: (ord.actions ?? []).map(a => ({
+          autonomous_execution: (ord.actions ?? []).map((a) => ({
             type: a.kind,
             description: `Executed on SKU ${a.sku ?? "unknown"}`,
             executed: ord.governance.executionAllowed
@@ -157,7 +144,7 @@ export function buildDecisionTraceFromOrd(input: {
   // ----------------------------------------------------------
 
   const principal =
-    input.authorityLevel === "PRINCIPAL"
+    authorityLevel === "PRINCIPAL"
       ? {
           process_improvement: {
             action: "OPTIMIZATION_PROPOSAL",
@@ -175,7 +162,7 @@ export function buildDecisionTraceFromOrd(input: {
   // ----------------------------------------------------------
 
   const charter =
-    input.authorityLevel === "CHARTER"
+    authorityLevel === "CHARTER"
       ? {
           compliance: {
             allowed: ord.governance.executionAllowed,
@@ -193,10 +180,8 @@ export function buildDecisionTraceFromOrd(input: {
 
   return createDecisionTraceV2({
     requestId: ord.requestId,
-
     authority,
     vision,
-
     graduate,
     junior,
     senior,

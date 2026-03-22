@@ -1,0 +1,47 @@
+// PATH: core/src/execution/execution.contracts.v1.ts
+// ======================================================
+// PlannerAgent — Execution Contracts V1
+// Canonical Source of Truth
+// ======================================================
+
+export type ExecutionMode =
+  | "DIRECT"
+  | "AGENT";
+
+export type ExecutionCapabilityId =
+  | "notify_supplier"
+  | "update_order"
+  | "adjust_production";
+
+export interface ExecutionIntent {
+  action_kind: string;
+
+  capability_id: ExecutionCapabilityId;
+
+  mode: ExecutionMode;
+
+  payload: Record<string, unknown>;
+
+  rationale: string;
+}
+
+export interface ExecutionRequest {
+  intents: ExecutionIntent[];
+
+  context: {
+    tenantId: string;
+    approver?: string;
+  };
+}
+
+export interface ExecutionResult {
+  capability_id: ExecutionCapabilityId;
+
+  success: boolean;
+
+  executed_at: string;
+
+  details?: Record<string, unknown>;
+
+  error?: string;
+}

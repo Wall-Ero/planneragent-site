@@ -1,19 +1,17 @@
-// PATH: planneragent/contracts/executor/executor.result.ts
+// PATH: core/src/executor/executor.result.ts
 // ======================================================
-// PlannerAgent — Executor Result Contract
-// Status: CANONICAL · SOURCE OF TRUTH
-//
-// Responsibility:
-// - Standard execution outcome
-// - Used by Executor Light (P5)
-// - Returned by preview/run
+// PlannerAgent — Executor Result
+// Canonical Source of Truth
 // ======================================================
 
 export type ExecutorResult =
   | {
       ok: true;
       audit_ref: string;
-      executed_at: string; // ISO-8601
+      executed_at: string;
+
+      // 🔥 AGGIUNTO
+      details?: Record<string, unknown>;
     }
   | {
       ok: false;

@@ -1,12 +1,13 @@
 // PATH: core/src/decision/optimizer/generator.ts
 // ======================================================
-// PlannerAgent — Optimizer Candidate Generator v6
+// PlannerAgent — Optimizer Candidate Generator v7
 // Canonical Source of Truth
 //
-// v6 improvements
-// - deterministic debug logs
-// - canonical dataset usage
-// - shortage-driven candidates
+// v7 improvements
+// - builder-first architecture
+// - deterministic candidate injection
+// - preserves v6 logic as exploration layer
+// - eliminates semantic mismatch risk
 // ======================================================
 
 import type { Action, OptimizerInput } from "./contracts";
@@ -20,13 +21,15 @@ import {
   normalizeMovements,
 } from "../../../datasets/dlci/adapters";
 
+import { buildActionsFromRealityV2 } from "../../execution/action.builder.v2";
+
 // ======================================================
 // ENTRY
 // ======================================================
 
 export function generateCandidateActions(input: OptimizerInput): Action[][] {
 
-  console.log("GENERATOR_V6_ACTIVE");
+  console.log("GENERATOR_V7_ACTIVE");
 
   const hint = resolveConstraintsHint(input.constraints_hint);
 
@@ -47,7 +50,7 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   );
 
   // --------------------------------------------------
-  // DETERMINISTIC DEBUG LOGS
+  // DEBUG
   // --------------------------------------------------
 
   console.log(
@@ -77,14 +80,24 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   );
 
   // --------------------------------------------------
-  // TOPOLOGY
+  // TOPOLOGY / LEADTIME
   // --------------------------------------------------
 
   const topology = buildTopologyDegreeMap(input);
-
   const leadTimes = extractLeadTimes(movements);
 
   const candidates: Action[][] = [];
+
+  // ==================================================
+  // 🔥 BUILDER FIRST (CORE CHANGE V7)
+  // ==================================================
+
+  const builderActions = buildActionsFromRealityV2(input);
+
+  if (builderActions.length > 0) {
+    console.log("[GENERATOR] BUILDER_INJECTED", builderActions);
+    candidates.push(builderActions);
+  }
 
   // --------------------------------------------------
   // BASELINE
@@ -109,14 +122,14 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
         kind: "RESCHEDULE_DELIVERY",
         orderId: o.orderId,
         shiftDays: shift,
-        reason: "opt_v6_reschedule",
+        reason: "opt_v7_reschedule",
       },
     ]);
 
   }
 
   // --------------------------------------------------
-  // SHORTAGE ACTIONS
+  // SHORTAGE ACTIONS (V6 preserved)
   // --------------------------------------------------
 
   for (const [sku, shortage] of shortageBySku.entries()) {
@@ -124,7 +137,6 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
     if (shortage <= 0) continue;
 
     const degree = topology.get(sku) ?? 0;
-
     const leadTime = leadTimes.get(sku) ?? 7;
 
     const qty = Math.max(
@@ -140,8 +152,8 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
         costFactor: leadTime > 10 ? 1.6 : 1.3,
         reason:
           degree === 0
-            ? "opt_v6_expedite_assumed_supply"
-            : "opt_v6_expedite_topology",
+            ? "opt_v7_expedite_assumed_supply"
+            : "opt_v7_expedite_topology",
       },
     ]);
 
@@ -159,7 +171,7 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
           qty: adjustQty,
           availableInDays: pickInt(rng, 0, 3),
           costFactor: 1.25,
-          reason: "opt_v6_prod_adjust",
+          reason: "opt_v7_prod_adjust",
         },
       ]);
 
@@ -184,13 +196,11 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
     if (!o) break;
 
     const sku = o.sku;
-
     const shortage = shortageBySku.get(sku) ?? 0;
 
     if (shortage <= 0) continue;
 
     const shift = pickInt(rng, 1, 3);
-
     const qty = Math.max(1, Math.floor(shortage * 0.3));
 
     candidates.push([
@@ -198,14 +208,14 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
         kind: "RESCHEDULE_DELIVERY",
         orderId: o.orderId,
         shiftDays: shift,
-        reason: "opt_v6_mix",
+        reason: "opt_v7_mix",
       },
       {
         kind: "EXPEDITE_SUPPLIER",
         sku,
         qty,
         costFactor: 1.4,
-        reason: "opt_v6_mix",
+        reason: "opt_v7_mix",
       },
     ]);
 
@@ -230,48 +240,26 @@ function estimateShortageBySku(
   const supply = new Map<string, number>();
 
   for (const o of orders) {
-
-    demand.set(
-      o.sku,
-      (demand.get(o.sku) ?? 0) + o.qty
-    );
-
+    demand.set(o.sku, (demand.get(o.sku) ?? 0) + o.qty);
   }
 
   for (const i of inventory) {
-
-    supply.set(
-      i.sku,
-      (supply.get(i.sku) ?? 0) + i.qty
-    );
-
+    supply.set(i.sku, (supply.get(i.sku) ?? 0) + i.qty);
   }
 
   for (const m of movements) {
-
-    supply.set(
-      m.sku,
-      (supply.get(m.sku) ?? 0) + m.qty
-    );
-
+    supply.set(m.sku, (supply.get(m.sku) ?? 0) + m.qty);
   }
 
   const shortage = new Map<string, number>();
 
   for (const sku of skus) {
-
     const d = demand.get(sku) ?? 0;
     const s = supply.get(sku) ?? 0;
-
-    shortage.set(
-      sku,
-      Math.max(0, d - s)
-    );
-
+    shortage.set(sku, Math.max(0, d - s));
   }
 
   return shortage;
-
 }
 
 // ======================================================
@@ -283,21 +271,16 @@ function extractLeadTimes(movements: any[]) {
   const map = new Map<string, number>();
 
   for (const m of movements) {
-
     if (!m.sku) continue;
 
     const lt = Number(m.lead_time ?? 0);
 
     if (lt > 0) {
-
       map.set(m.sku, lt);
-
     }
-
   }
 
   return map;
-
 }
 
 // ======================================================
@@ -307,20 +290,16 @@ function extractLeadTimes(movements: any[]) {
 function buildTopologyDegreeMap(input: OptimizerInput) {
 
   const map = new Map<string, number>();
-
   const topology = input.operationalTopology;
 
   if (!topology) return map;
 
   for (const e of topology.edges ?? []) {
-
     map.set(e.from, (map.get(e.from) ?? 0) + 1);
     map.set(e.to, (map.get(e.to) ?? 0) + 1);
-
   }
 
   return map;
-
 }
 
 // ======================================================
@@ -328,37 +307,28 @@ function buildTopologyDegreeMap(input: OptimizerInput) {
 // ======================================================
 
 function extractSkusFromOrders(orders: any[]) {
-
   const set = new Set<string>();
 
   for (const o of orders) {
-
     if (o.sku) set.add(o.sku);
-
   }
 
   return Array.from(set);
-
 }
 
 function dedupe(list: Action[][]) {
 
   const seen = new Set<string>();
-
   const out: Action[][] = [];
 
   for (const a of list) {
-
     const key = JSON.stringify(a);
 
     if (seen.has(key)) continue;
 
     seen.add(key);
-
     out.push(a);
-
   }
 
   return out;
-
 }

@@ -1,6 +1,6 @@
 // core/src/decision/optimizer/evaluator.ts
 // ======================================================
-// PlannerAgent — Optimizer v1 Candidate Evaluator
+// PlannerAgent — Optimizer v2 Candidate Evaluator
 // Canonical Source of Truth
 // ======================================================
 
@@ -11,6 +11,7 @@ import type {
   ObjectiveWeights,
   OptimizerInput,
 } from "./contracts";
+
 import { evaluateActionConstraints, resolveConstraintsHint } from "./constraints";
 import { actionsSignature } from "./actions";
 
@@ -45,7 +46,7 @@ export function evaluateCandidate(
   const cEval = evaluateActionConstraints(actions, constraintsUsed, input.asOf);
 
   const evalSteps: string[] = [];
-  evalSteps.push("eval:v1:start");
+  evalSteps.push("eval:v2:start");
 
   const baseSupply = buildBaseSupply(input.inventory, input.movements, evalSteps);
 
@@ -67,8 +68,8 @@ export function evaluateCandidate(
   kpis.inventoryDeltaUnits = Math.max(0, adjusted.totalExtraSupply);
   kpis.serviceShortfall = alloc.serviceShortfall;
 
-  const contextPenalty = computeContextPenalty(input, actions, evalSteps);
-  kpis.contextPenalty = contextPenalty;
+  const plannerContext = computePlannerContextMetrics(input, actions, evalSteps);
+  kpis.contextPenalty = plannerContext.contextPenalty;
 
   let feasibleHard = cEval.feasibleHard;
   if (alloc.hardInfeasible) {
@@ -78,11 +79,15 @@ export function evaluateCandidate(
 
   const soft = [...cEval.softViolations, ...alloc.softViolations];
 
-  const score = scoreFromKpis(kpis, weightsUsed);
+  const score = scoreFromKpis(
+    kpis,
+    weightsUsed,
+    plannerContext
+  );
 
   const id = `cand_${candidateIndex}_${hashShort(actionsSignature(actions))}`;
 
-  evalSteps.push("eval:v1:done");
+  evalSteps.push("eval:v2:done");
 
   return {
     id,
@@ -103,9 +108,18 @@ export function evaluateCandidate(
 // Scoring
 // ------------------------------------------------------
 
+type PlannerContextMetrics = {
+  contextPenalty: number;
+  singleActionPenalty: number;
+  diversityBonus: number;
+  assumedSupplyPenalty: number;
+  confidenceBonus: number;
+};
+
 function scoreFromKpis(
   kpis: Record<string, number>,
-  weights: Required<ObjectiveWeights>
+  weights: Required<ObjectiveWeights>,
+  plannerContext: PlannerContextMetrics
 ): number {
   const lateness = num(kpis.latenessDays);
   const shortage = num(kpis.shortageUnits);
@@ -115,26 +129,35 @@ function scoreFromKpis(
   const serviceLoss = num(kpis.serviceShortfall);
   const contextPenalty = num(kpis.contextPenalty);
 
-  return (
+  const baseScore =
     weights.lateness * lateness +
     weights.shortage * shortage +
     weights.inventory * inv +
     weights.stability * churn +
     weights.cost * cost +
     weights.service * serviceLoss +
-    weights.context * contextPenalty
-  );
+    weights.context * contextPenalty;
+
+  const plannerPenalty =
+    plannerContext.singleActionPenalty +
+    plannerContext.assumedSupplyPenalty;
+
+  const plannerBonus =
+    plannerContext.diversityBonus +
+    plannerContext.confidenceBonus;
+
+  return round3(baseScore + plannerPenalty - plannerBonus);
 }
 
 // ------------------------------------------------------
-// Context penalty
+// Planner-aware context
 // ------------------------------------------------------
 
-function computeContextPenalty(
+function computePlannerContextMetrics(
   input: OptimizerInput,
   actions: Action[],
   evalSteps: string[]
-): number {
+): PlannerContextMetrics {
   let penalty = 0;
 
   const assumptions = input.realitySnapshot?.assumptions ?? [];
@@ -146,38 +169,98 @@ function computeContextPenalty(
     evalSteps.push(`context:assumptions=${assumptions.length}`);
   }
 
-  const awarenessPenalty = awareness <= 0 ? 1.0 : awareness === 1 ? 0.6 : awareness === 2 ? 0.2 : 0;
+  const awarenessPenalty =
+    awareness <= 0 ? 1.0 :
+    awareness === 1 ? 0.6 :
+    awareness === 2 ? 0.2 :
+    0;
+
   penalty += awarenessPenalty;
   evalSteps.push(`context:awareness_penalty=${round3(awarenessPenalty)}`);
 
   const topology = input.operationalTopology;
+
+  let isolatedSkuCount = 0;
+  let topologyMissing = false;
+
   if (!topology || !Array.isArray(topology.nodes) || topology.nodes.length === 0) {
     penalty += 0.5;
+    topologyMissing = true;
     evalSteps.push("context:topology_missing");
-    return round3(penalty);
+  } else {
+    const nodeIds = new Set(topology.nodes.map((n) => n.id));
+    const edgeIndex = buildEdgeIndex(topology.edges ?? []);
+
+    // ✅ penalizza una sola volta per SKU, non per ogni action
+    const uniqueSkus = new Set<string>();
+
+    for (const a of actions) {
+      const sku = actionSku(a);
+      if (!sku) continue;
+      uniqueSkus.add(sku);
+    }
+
+    for (const sku of uniqueSkus) {
+      if (!nodeIds.has(sku)) {
+        penalty += 0.4;
+        evalSteps.push(`context:sku_not_in_topology:${sku}`);
+        continue;
+      }
+
+      const degree = edgeIndex.get(sku) ?? 0;
+      if (degree === 0) {
+        isolatedSkuCount += 1;
+        penalty += 0.2;
+        evalSteps.push(`context:isolated_topology_node:${sku}`);
+      }
+    }
   }
 
-  const nodeIds = new Set(topology.nodes.map((n) => n.id));
-  const edgeIndex = buildEdgeIndex(topology.edges ?? []);
+  const actionKinds = new Set(actions.map((a) => a.kind));
+  const actionCount = actions.length;
+  const actionTypeCount = actionKinds.size;
 
+  let singleActionPenalty = 0;
+  if (actionCount === 1) {
+    singleActionPenalty = 12;
+    evalSteps.push("planner:single_action_penalty");
+  }
+
+  let diversityBonus = 0;
+  if (actionTypeCount >= 2) {
+    diversityBonus = 10;
+    evalSteps.push(`planner:diversity_bonus=${actionTypeCount}`);
+  }
+
+  let assumedSupplyPenalty = 0;
   for (const a of actions) {
-    const sku = actionSku(a);
-    if (!sku) continue;
-
-    if (!nodeIds.has(sku)) {
-      penalty += 0.4;
-      evalSteps.push(`context:sku_not_in_topology:${sku}`);
-      continue;
-    }
-
-    const degree = edgeIndex.get(sku) ?? 0;
-    if (degree === 0) {
-      penalty += 0.2;
-      evalSteps.push(`context:isolated_topology_node:${sku}`);
+    const reason = String((a as any).reason ?? "");
+    if (reason.includes("assumed_supply") || reason.includes("isolated_topology")) {
+      assumedSupplyPenalty += 4;
     }
   }
 
-  return round3(penalty);
+  if (assumedSupplyPenalty > 0) {
+    evalSteps.push(`planner:assumed_supply_penalty=${round3(assumedSupplyPenalty)}`);
+  }
+
+  const confidenceBonus = topologyMissing
+    ? 0
+    : isolatedSkuCount === 0
+      ? 1.0
+      : 0;
+
+  if (confidenceBonus > 0) {
+    evalSteps.push(`planner:confidence_bonus=${round3(confidenceBonus)}`);
+  }
+
+  return {
+    contextPenalty: round3(penalty),
+    singleActionPenalty: round3(singleActionPenalty),
+    diversityBonus: round3(diversityBonus),
+    assumedSupplyPenalty: round3(assumedSupplyPenalty),
+    confidenceBonus: round3(confidenceBonus),
+  };
 }
 
 function buildEdgeIndex(
@@ -208,12 +291,17 @@ type SupplyModel = {
   totalExtraSupply: number;
 };
 
-function buildBaseSupply(inventory: any[], movements: any[], evalSteps: string[]): SupplyModel {
+function buildBaseSupply(
+  inventory: any[],
+  movements: any[],
+  evalSteps: string[]
+): SupplyModel {
   const supplyBySku = new Map<string, number>();
 
   for (const it of inventory ?? []) {
     const sku = String(it?.sku ?? it?.item ?? it?.code ?? "");
     if (!sku) continue;
+
     const qty = Number(it?.qty ?? it?.onHand ?? it?.on_hand ?? it?.quantity ?? 0);
     add(supplyBySku, sku, qty);
   }
@@ -233,6 +321,7 @@ function buildBaseSupply(inventory: any[], movements: any[], evalSteps: string[]
   }
 
   evalSteps.push(`model:baseSupply:skus=${supplyBySku.size}`);
+
   return { supplyBySku, totalExtraSupply: 0 };
 }
 
@@ -250,6 +339,7 @@ function applyActionsToModel(
     if (a.kind === "EXPEDITE_SUPPLIER") {
       const sku = a.sku;
       const qty = Number(a.qty);
+
       if (sku && Number.isFinite(qty) && qty > 0) {
         add(supplyBySku, sku, qty);
         totalExtraSupply += qty;
@@ -260,6 +350,7 @@ function applyActionsToModel(
     if (a.kind === "SHORT_TERM_PRODUCTION_ADJUST") {
       const sku = a.sku;
       const qty = Number(a.qty);
+
       if (sku && Number.isFinite(qty) && qty > 0) {
         add(supplyBySku, sku, qty);
         totalExtraSupply += qty;

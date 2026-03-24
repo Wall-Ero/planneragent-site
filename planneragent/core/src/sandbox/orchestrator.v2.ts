@@ -1,7 +1,7 @@
 // core/src/sandbox/orchestrator.v2.ts
 // ======================================================
 // PlannerAgent — Sandbox Orchestrator V2
-// Canonical Source of Truth (UPDATED WITH BUILDER V2)
+// Canonical Source of Truth (UPDATED WITH EXPLAINER V1)
 // ======================================================
 
 import type {
@@ -30,6 +30,9 @@ import { buildOrdDecisionTrace } from "../decision/ord/ord.trace";
 import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
 import { replayDecision } from "../decision/decision.replay.engine";
 import { adaptRealitySnapshot } from "../decision/decision.reality.adapter";
+
+// 🔥 NEW
+import { explainDecision } from "../decision/explainer/decision.explainer.v1";
 
 import { routeActionToExecutionIntent } from "../execution/action.router";
 import { executePlan } from "../execution/execution.bridge";
@@ -214,7 +217,7 @@ export async function evaluateSandboxV2(
   });
 
   // ==================================================
-  // 🔥 BUILDER V2 (NEW CORE STEP)
+  // BUILDER V2
   // ==================================================
 
   const builtActions = buildActionsFromRealityV2({
@@ -263,7 +266,6 @@ export async function evaluateSandboxV2(
     optimizerOutput = null;
   }
 
-  // 👉 fallback: if optimizer chooses empty, use builder
   if (
     optimizerOutput &&
     (!optimizerOutput.best?.actions || optimizerOutput.best.actions.length === 0)
@@ -272,6 +274,17 @@ export async function evaluateSandboxV2(
   }
 
   console.log("[OPTIMIZER_OUTPUT]", JSON.stringify(optimizerOutput, null, 2));
+
+  // ==================================================
+  // 🔥 EXPLAINER (NEW)
+  // ==================================================
+
+  const explanation = optimizerOutput?.best
+    ? explainDecision(
+        optimizerOutput.best,
+        optimizerOutput.candidates ?? []
+      )
+    : null;
 
   // --------------------------------------------------
   // SEMANTIC
@@ -293,71 +306,6 @@ export async function evaluateSandboxV2(
   };
 
   // --------------------------------------------------
-  // EXECUTION PREVIEW
-  // --------------------------------------------------
-
-  const execution_preview =
-    governance.execution_allowed && semanticActions.length > 0
-      ? semanticActions.map((action) =>
-          routeActionToExecutionIntent(action.raw, {
-            tenantId: req.company_id,
-            approver: req.actor_id,
-          })
-        )
-      : [];
-
-  // --------------------------------------------------
-  // EXECUTION
-  // --------------------------------------------------
-
-  let executionEvidences: ExecutionEvidence[] = [];
-
-  if (governance.execution_allowed && execution_preview.length > 0) {
-    const executionResult = await executePlan({
-      intents: execution_preview,
-      context: {
-        tenantId: req.company_id,
-        approver: req.actor_id,
-      },
-    });
-
-    executionEvidences = executionResult.evidences;
-  }
-
-  // --------------------------------------------------
-  // TRACE
-  // --------------------------------------------------
-
-  const ordTrace = buildOrdDecisionTrace({
-    requestId: req.request_id,
-    ordersSeen: twinOrders.length,
-    inventorySeen: twinInventory.length,
-    shortagesDetected: builtActions.length,
-    optimizerCandidates: optimizerOutput?.candidates?.length ?? 0,
-    optimizerBestScore: optimizerOutput?.best?.score ?? 0,
-    actions: semanticActions.map((a) => ({
-      kind: a.type,
-      sku: a.sku,
-      qty: a.qty,
-    })),
-    executionAllowed: governance.execution_allowed,
-    governanceReason: governance.reason,
-    executionLevel: "JUNIOR",
-    decisionMode: "HUMAN_APPROVED",
-  });
-
-  const decisionTrace = buildDecisionTraceFromOrd({
-    ord: ordTrace,
-    dl: dlEvidence,
-    authorityLevel: "JUNIOR",
-    decisionMode: "HUMAN_APPROVED",
-  });
-
-  decisionTrace.execution = {
-    evidences: executionEvidences,
-  };
-
-  // --------------------------------------------------
   // RESPONSE
   // --------------------------------------------------
 
@@ -376,9 +324,10 @@ export async function evaluateSandboxV2(
       candidates: optimizerOutput?.candidates?.length ?? 0,
     },
 
-    execution_preview,
+    explanation, // 🔥 NEW
+
     governance,
-    decision_trace: decisionTrace,
+    decision_trace: null,
     issued_at: nowIso(),
   } as any;
 }

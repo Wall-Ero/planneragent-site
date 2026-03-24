@@ -1,7 +1,7 @@
 // core/src/sandbox/contracts.v2.ts
 // ======================================================
 // PlannerAgent — Sandbox Contracts V2
-// Canonical Source of Truth
+// Canonical Source of Truth (EXTENDED, NOT REDUCED)
 // ======================================================
 
 import type { DataAwarenessLevel } from "../reality/reality.types";
@@ -17,6 +17,16 @@ export type PlanTier =
   | "SENIOR"
   | "PRINCIPAL"
   | "CHARTER";
+
+/* =====================================================
+ DOMAIN (🔥 aggiunto, NON rompe nulla)
+===================================================== */
+
+export type PlanningDomain =
+  | "supply_chain"
+  | "production"
+  | "logistics"
+  | "general";
 
 /* =====================================================
  HEALTH
@@ -43,7 +53,7 @@ export interface SandboxEvaluateRequestV2 {
 
   intent: string;
 
-  domain: string;
+  domain: PlanningDomain;
 
   dataset_descriptor?: {
     awareness_level?: DataAwarenessLevel;
@@ -51,7 +61,13 @@ export interface SandboxEvaluateRequestV2 {
 
   baseline_metrics?: Record<string, number>;
 
+  scenario_metrics?: Record<string, number>; // 🔥 aggiunto
+
   snapshot?: unknown;
+
+  baseline_snapshot_id?: string; // 🔥 aggiunto
+
+  constraints_hint?: Record<string, unknown>; // 🔥 aggiunto
 
   /* optional raw datasets */
 
@@ -75,7 +91,7 @@ export interface SandboxEvaluateRequestV2 {
 }
 
 /* =====================================================
- SCENARIOS
+ SCENARIOS (🔥 RIAGGIUNTO)
 ===================================================== */
 
 export type ScenarioV2 = {
@@ -91,7 +107,7 @@ export type ScenarioV2 = {
 };
 
 /* =====================================================
- ADVISORY
+ ADVISORY (intatto)
 ===================================================== */
 
 export type ScenarioAdvisoryV2 = {
@@ -107,7 +123,7 @@ export type ScenarioAdvisoryV2 = {
 };
 
 /* =====================================================
- DL EVIDENCE
+ DL EVIDENCE (intatto)
 ===================================================== */
 
 export type DlEvidenceV2 = {
@@ -127,7 +143,7 @@ export type DlEvidenceV2 = {
 };
 
 /* =====================================================
- PRESSURE
+ PRESSURE (intatto)
 ===================================================== */
 
 export type DecisionPressureLevel =
@@ -147,7 +163,7 @@ export type DecisionPressure = {
 };
 
 /* =====================================================
- OPTIMIZER
+ OPTIMIZER (intatto)
 ===================================================== */
 
 export type OptimizerResultV2 = {
@@ -161,7 +177,7 @@ export type OptimizerResultV2 = {
 };
 
 /* =====================================================
- EXECUTION PREVIEW
+ EXECUTION PREVIEW (intatto)
 ===================================================== */
 
 export type ExecutionMode =
@@ -183,7 +199,7 @@ export type ExecutionIntentPreview = {
 };
 
 /* =====================================================
- GOVERNANCE
+ GOVERNANCE (intatto)
 ===================================================== */
 
 export type GovernanceResult = {
@@ -192,6 +208,17 @@ export type GovernanceResult = {
 
   reason: string;
 
+};
+
+/* =====================================================
+ 🔥 EXPLANATION (NUOVO BLOCCO)
+===================================================== */
+
+export type DecisionExplanation = {
+  summary: string;
+  whyChosen: string[];
+  tradeoffs: string[];
+  risks: string[];
 };
 
 /* =====================================================
@@ -208,9 +235,9 @@ export interface SandboxEvaluateResponseV2 {
 
   intent?: string;
 
-  domain?: string;
+  domain?: PlanningDomain;
 
-  signals?: unknown[];
+  signals?: unknown;
 
   advisory?: ScenarioAdvisoryV2;
 
@@ -223,6 +250,8 @@ export interface SandboxEvaluateResponseV2 {
   execution_preview?: ExecutionIntentPreview[];
 
   governance?: GovernanceResult;
+
+  explanation?: DecisionExplanation; // 🔥 aggiunto
 
   issued_at?: string;
 

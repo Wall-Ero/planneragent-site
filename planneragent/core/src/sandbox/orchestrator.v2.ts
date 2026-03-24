@@ -1,7 +1,12 @@
 // core/src/sandbox/orchestrator.v2.ts
 // ======================================================
 // PlannerAgent — Sandbox Orchestrator V2
-// Canonical Source of Truth (UPDATED WITH EXPLAINER V1)
+// Canonical Source of Truth
+// Updated with:
+// - Explainer V1
+// - Policy Overlay V1
+// - Policy Resolver V1
+// - Policy Enforcer V1
 // ======================================================
 
 import type {
@@ -31,8 +36,10 @@ import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
 import { replayDecision } from "../decision/decision.replay.engine";
 import { adaptRealitySnapshot } from "../decision/decision.reality.adapter";
 
-// 🔥 NEW
 import { explainDecision } from "../decision/explainer/decision.explainer.v1";
+import { applyPolicy } from "../decision/policy/policy.engine.v1";
+import { resolvePolicy } from "../decision/policy/policy.resolver.v1";
+import { applyPolicyConstraints } from "../decision/policy/policy.enforcer.v1";
 
 import { routeActionToExecutionIntent } from "../execution/action.router";
 import { executePlan } from "../execution/execution.bridge";
@@ -66,6 +73,24 @@ type SemanticAction = {
   raw: any;
 };
 
+type GovernedCandidate = {
+  id?: string;
+  score: number;
+  adjustedScore?: number;
+  actions: any[];
+  feasibleHard?: boolean;
+  softViolations?: string[];
+  kpis?: {
+    serviceShortfall?: number;
+    estimatedCost?: number;
+    planChurn?: number;
+    [key: string]: number | undefined;
+  };
+  evidence?: any;
+  violations?: string[];
+  [key: string]: any;
+};
+
 // ======================================================
 // HELPERS
 // ======================================================
@@ -83,10 +108,6 @@ function llmAllowed(plan: PlanTier): boolean {
 function nowIso(): string {
   return new Date().toISOString();
 }
-
-// ======================================================
-// SEMANTIC
-// ======================================================
 
 function buildSemanticActions(bestActions: any[]): SemanticAction[] {
   return bestActions.map((a: any, index: number) => ({
@@ -117,24 +138,24 @@ export async function evaluateSandboxV2(
   // --------------------------------------------------
 
   if (!req.request_id) {
-    return { ok: false, request_id: "unknown", reason: "MISSING_FIELD: request_id" };
+    return { ok: false, request_id: "unknown", reason: "MISSING_FIELD: request_id" } as any;
   }
 
   if (!req.company_id) {
-    return { ok: false, request_id: req.request_id, reason: "MISSING_FIELD: company_id" };
+    return { ok: false, request_id: req.request_id, reason: "MISSING_FIELD: company_id" } as any;
   }
 
   if (!(req as any).baseline_snapshot_id) {
-    return { ok: false, request_id: req.request_id, reason: "MISSING_FIELD: baseline_snapshot_id" };
+    return { ok: false, request_id: req.request_id, reason: "MISSING_FIELD: baseline_snapshot_id" } as any;
   }
 
   if (!req.snapshot) {
-    return { ok: false, request_id: req.request_id, reason: "SNAPSHOT_REQUIRED" };
+    return { ok: false, request_id: req.request_id, reason: "SNAPSHOT_REQUIRED" } as any;
   }
 
   const auth = authoritySandboxGuard(req.snapshot);
   if (!auth.ok) {
-    return { ok: false, request_id: req.request_id, reason: auth.reason };
+    return { ok: false, request_id: req.request_id, reason: auth.reason } as any;
   }
 
   // --------------------------------------------------
@@ -186,7 +207,7 @@ export async function evaluateSandboxV2(
   );
 
   if (dlResult.health !== "ok" || !dlResult.evidence) {
-    return { ok: false, request_id: req.request_id, reason: "DL_LAYER_FAILED" };
+    return { ok: false, request_id: req.request_id, reason: "DL_LAYER_FAILED" } as any;
   }
 
   const dlEvidence = dlResult.evidence;
@@ -276,13 +297,70 @@ export async function evaluateSandboxV2(
   console.log("[OPTIMIZER_OUTPUT]", JSON.stringify(optimizerOutput, null, 2));
 
   // ==================================================
-  // 🔥 EXPLAINER (NEW)
+  // POLICY RESOLUTION
   // ==================================================
 
-  const explanation = optimizerOutput?.best
+  const effectivePolicy = resolvePolicy({
+    history: [] // prossimo step: decision memory / dati reali
+  });
+
+  // ==================================================
+  // POLICY OVERLAY
+  // Applies company preference to already-built candidates
+  // Does NOT replace decision logic — only reweights selection
+  // ==================================================
+
+  let selectedBest: GovernedCandidate | null = optimizerOutput?.best ?? null;
+  let selectedCandidates: GovernedCandidate[] = optimizerOutput?.candidates ?? [];
+  let policyDebug: any[] = [];
+
+  if (optimizerOutput?.candidates?.length) {
+    const policyWeightedCandidates = applyPolicy(
+      optimizerOutput.candidates,
+      effectivePolicy
+    ) as GovernedCandidate[];
+
+    const policyEnforced = applyPolicyConstraints(
+      policyWeightedCandidates,
+      {
+        primary_focus: effectivePolicy.primary_focus,
+        weights: effectivePolicy.weights,
+        prefer_multi_action: effectivePolicy.prefer_multi_action,
+        allow_single_lever: effectivePolicy.allow_single_lever,
+        max_plan_churn: effectivePolicy.max_plan_churn,
+        risk_profile:
+          effectivePolicy.risk_profile === "CONSERVATIVE"
+            ? "LOW"
+            : effectivePolicy.risk_profile === "AGGRESSIVE"
+            ? "HIGH"
+            : "BALANCED",
+      }
+    );
+
+    policyDebug = policyEnforced.debug ?? [];
+
+    selectedCandidates = (policyEnforced.debug ?? [])
+      .filter((c: any) => !c.violations?.includes("HARD_BLOCK"))
+      .sort((a: any, b: any) => {
+        const aScore = typeof a.adjustedScore === "number" ? a.adjustedScore : a.score;
+        const bScore = typeof b.adjustedScore === "number" ? b.adjustedScore : b.score;
+        return bScore - aScore;
+      });
+
+    selectedBest =
+      (policyEnforced.best as GovernedCandidate | null) ??
+      selectedCandidates[0] ??
+      optimizerOutput.best;
+  }
+
+  // ==================================================
+  // EXPLAINER
+  // ==================================================
+
+  const explanation = selectedBest
     ? explainDecision(
-        optimizerOutput.best,
-        optimizerOutput.candidates ?? []
+        selectedBest as any,
+        selectedCandidates as any
       )
     : null;
 
@@ -291,7 +369,7 @@ export async function evaluateSandboxV2(
   // --------------------------------------------------
 
   const semanticActions = buildSemanticActions(
-    optimizerOutput?.best?.actions ?? []
+    selectedBest?.actions ?? []
   );
 
   // --------------------------------------------------
@@ -319,14 +397,21 @@ export async function evaluateSandboxV2(
     signals,
 
     optimizer: {
-      best_score: optimizerOutput?.best?.score ?? null,
-      actions: optimizerOutput?.best?.actions ?? [],
-      candidates: optimizerOutput?.candidates?.length ?? 0,
+      best_score:
+        typeof selectedBest?.adjustedScore === "number"
+          ? selectedBest.adjustedScore
+          : selectedBest?.score ?? null,
+      actions: selectedBest?.actions ?? [],
+      candidates: selectedCandidates.length ?? 0,
     },
 
-    explanation, // 🔥 NEW
+    explanation,
 
     governance,
+
+    policy_used: effectivePolicy,
+    policy_debug: policyDebug,
+
     decision_trace: null,
     issued_at: nowIso(),
   } as any;

@@ -1,13 +1,17 @@
 // core/src/sandbox/routes.voice.ts
 // ======================================================
-// PlannerAgent — Voice Decision Preview (Canonical v5)
+// PlannerAgent — Voice Decision Preview (Canonical v7)
 // FINAL:
 // - No BASIC
-// - VISION is first-class
-// - Governance-aligned voice
+// - VISION first-class
+// - Structured voice model
+// - Policy context + recommendation split
+// - Governance translated to language
 // ======================================================
 
 import { evaluateSandboxV2 } from "./orchestrator.v2";
+import { buildPolicyContext } from "../decision/policy/policy.context.v1";
+
 import type {
   SandboxEvaluateRequestV2,
   PlanTier,
@@ -20,11 +24,29 @@ import { DECISION_CODE_MAP } from "../decision/explainer/decision.codes.v1";
 // TYPES
 // ======================================================
 
-type VoiceBlock = {
+type VoiceDecision = {
   message: string;
   why: string[];
   tradeoffs: string[];
   risks: string[];
+};
+
+type VoiceContext = {
+  historical: {
+    summary: string;
+    confidence: number;
+    signals: string[];
+  } | null;
+};
+
+type VoiceGovernance = {
+  execution: string;
+};
+
+type StructuredVoice = {
+  decision: VoiceDecision;
+  context: VoiceContext;
+  governance: VoiceGovernance;
 };
 
 // ======================================================
@@ -54,7 +76,7 @@ export async function voiceDecisionPreview(
     };
 
     // --------------------------------------------------
-    // PLAN (no alias, no BASIC)
+    // PLAN
     // --------------------------------------------------
 
     const plan: PlanTier = body.plan ?? "VISION";
@@ -109,12 +131,12 @@ export async function voiceDecisionPreview(
     }
 
     // --------------------------------------------------
-    // BASE VOICE
+    // DECISION BLOCK
     // --------------------------------------------------
 
     const explanation = result.explanation;
 
-    const baseVoice: VoiceBlock = {
+    const decision: VoiceDecision = {
       message: explanation?.summary ?? "No summary available",
       why: translateCodes(explanation?.whyChosen),
       tradeoffs: translateCodes(explanation?.tradeoffs),
@@ -122,10 +144,34 @@ export async function voiceDecisionPreview(
     };
 
     // --------------------------------------------------
-    // GOVERNANCE VOICE
+    // POLICY CONTEXT (historical)
     // --------------------------------------------------
 
-    const adaptedVoice = adaptVoiceByPlan(plan, baseVoice);
+    const policyContext = result.policy_used
+  ? buildPolicyContext(result.policy_used)
+  : null;
+
+    const context: VoiceContext = {
+      historical: policyContext
+    };
+
+    // --------------------------------------------------
+    // GOVERNANCE TRANSLATION
+    // --------------------------------------------------
+
+    const governance: VoiceGovernance = {
+      execution: translateGovernance(plan)
+    };
+
+    // --------------------------------------------------
+    // FINAL STRUCTURED VOICE
+    // --------------------------------------------------
+
+    const structuredVoice = adaptVoiceByPlan(plan, {
+      decision,
+      context,
+      governance
+    });
 
     // --------------------------------------------------
     // RESPONSE
@@ -135,8 +181,8 @@ export async function voiceDecisionPreview(
       ok: true,
       plan,
       intent,
-      voice: adaptedVoice,
-      governance: result.governance,
+      voice: structuredVoice,
+      governance_raw: result.governance
     });
 
   } catch (err: any) {
@@ -162,44 +208,84 @@ function translateCodes(codes: string[] = []): string[] {
 }
 
 // ======================================================
-// GOVERNANCE VOICE
+// GOVERNANCE TRANSLATION (HUMAN)
 // ======================================================
 
-function adaptVoiceByPlan(plan: PlanTier, voice: VoiceBlock): VoiceBlock {
+function translateGovernance(plan: PlanTier): string {
+
+  if (plan === "VISION") {
+    return "Observation only. No execution allowed.";
+  }
+
+  if (plan === "JUNIOR" || plan === "GRADUATE") {
+    return "Execution requires explicit approval.";
+  }
+
+  if (plan === "SENIOR") {
+    return "Execution allowed within delegated scope.";
+  }
+
+  if (plan === "PRINCIPAL") {
+    return "Execution allowed with budget authority.";
+  }
+
+  return "Unknown governance state";
+}
+
+// ======================================================
+// GOVERNANCE VOICE ADAPTATION
+// ======================================================
+
+function adaptVoiceByPlan(
+  plan: PlanTier,
+  voice: StructuredVoice
+): StructuredVoice {
 
   // -------------------------
-  // VISION → OBSERVATION
+  // VISION → PURE OBSERVATION
   // -------------------------
   if (plan === "VISION") {
     return {
-      message: `Observation: ${voice.message}`,
-      why: voice.why,
-      tradeoffs: [],
-      risks: voice.risks,
+      decision: {
+        ...voice.decision,
+        message: `Observation: ${voice.decision.message}`,
+        tradeoffs: []
+      },
+      context: {
+        historical: null // 👉 VISION non interpreta policy
+      },
+      governance: voice.governance
     };
   }
 
   // -------------------------
-  // JUNIOR / GRADUATE → APPROVAL
+  // JUNIOR / GRADUATE → DIALOGUE
   // -------------------------
   if (plan === "JUNIOR" || plan === "GRADUATE") {
     return {
-      message: `Recommendation (requires approval): ${voice.message}`,
-      why: voice.why,
-      tradeoffs: voice.tradeoffs,
-      risks: voice.risks,
+      decision: {
+        ...voice.decision,
+        message:
+          `In similar situations, your company has typically operated this way.\n` +
+          `You can continue this approach or consider an alternative.\n\n` +
+          `Recommendation: ${voice.decision.message}`
+      },
+      context: voice.context,
+      governance: voice.governance
     };
   }
 
   // -------------------------
-  // SENIOR → DELEGATED
+  // SENIOR → EXECUTION
   // -------------------------
   if (plan === "SENIOR") {
     return {
-      message: `Delegated execution: ${voice.message}`,
-      why: voice.why,
-      tradeoffs: voice.tradeoffs,
-      risks: voice.risks,
+      decision: {
+        ...voice.decision,
+        message: `Executing under delegation: ${voice.decision.message}`
+      },
+      context: voice.context,
+      governance: voice.governance
     };
   }
 
@@ -208,10 +294,14 @@ function adaptVoiceByPlan(plan: PlanTier, voice: VoiceBlock): VoiceBlock {
   // -------------------------
   if (plan === "PRINCIPAL") {
     return {
-      message: `Improvement proposal (budget-aware): ${voice.message}`,
-      why: voice.why,
-      tradeoffs: voice.tradeoffs,
-      risks: voice.risks,
+      decision: {
+        ...voice.decision,
+        message:
+          `System-level improvement opportunity identified.\n\n` +
+          `${voice.decision.message}`
+      },
+      context: voice.context,
+      governance: voice.governance
     };
   }
 

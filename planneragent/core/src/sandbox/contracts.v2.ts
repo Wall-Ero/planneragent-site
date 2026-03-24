@@ -256,4 +256,7 @@ export interface SandboxEvaluateResponseV2 {
   issued_at?: string;
 
   reason?: string;
+
+  policy_used?: import("../decision/policy/policy.schema.v1").PolicyRules;
+  
 }

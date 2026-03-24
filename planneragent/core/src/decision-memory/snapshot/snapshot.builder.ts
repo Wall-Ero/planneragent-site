@@ -24,7 +24,7 @@ async function sha256(input: string): Promise<string> {
 }
 
 // ---------------------------------------------------------------
-// Stable JSON stringify (hash deterministic)
+// Stable JSON stringify
 // ---------------------------------------------------------------
 function stableStringify(obj: any): string {
   return JSON.stringify(obj, Object.keys(obj).sort());
@@ -39,8 +39,17 @@ export async function buildDecisionMemorySnapshotV1(
 
   const created_at = new Date().toISOString();
 
+  // 👉 snapshot_id deterministico
+  const snapshot_id = await sha256(
+    stableStringify({
+      tenant_id: input.tenant_id,
+      context_id: input.context_id,
+      created_at
+    })
+  );
+
   const payloadForHash = stableStringify({
-    snapshot_id: input.snapshot_id,
+    snapshot_id,
     tenant_id: input.tenant_id,
     company_id: input.company_id,
     context_id: input.context_id,
@@ -49,7 +58,7 @@ export async function buildDecisionMemorySnapshotV1(
     domain: input.domain,
     baseline_snapshot_id: input.baseline_snapshot_id,
     baseline_metrics: input.baseline_metrics,
-    ord_status: input.ord_status,
+    ord: input.ord,
     previous_hash: input.previous_hash,
     created_at
   });
@@ -57,7 +66,7 @@ export async function buildDecisionMemorySnapshotV1(
   const current_hash = await sha256(payloadForHash);
 
   return {
-    snapshot_id: input.snapshot_id,
+    snapshot_id,
     tenant_id: input.tenant_id,
 
     company_id: input.company_id,
@@ -70,9 +79,7 @@ export async function buildDecisionMemorySnapshotV1(
     baseline_snapshot_id: input.baseline_snapshot_id,
     baseline_metrics: input.baseline_metrics,
 
-    ord: {
-      status: input.ord_status
-    },
+    ord: input.ord,
 
     hash_chain: {
       previous_hash: input.previous_hash,

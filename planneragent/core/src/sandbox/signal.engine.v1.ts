@@ -32,7 +32,6 @@ function classifyDataAwareness(descriptor?: DatasetDescriptor): DatasetClassific
       hasStructuralData: false,
     };
 
-  // No inference: we only classify based on declared booleans.
   return classifyDatasetDescriptor(d);
 }
 
@@ -75,19 +74,30 @@ export function buildUiSignalsV1(input: {
   dl: DlEvidenceV2;
   dataset_descriptor?: DatasetDescriptor;
 }): { signals: UiSignalsV1; dataset: DatasetClassificationResult } {
-  const dataset = classifyDataAwareness(input.dataset_descriptor);
+  // ==================================================
+  // DATASET (SAFE FALLBACK)
+  // ==================================================
+  const descriptor: DatasetDescriptor =
+    input.dataset_descriptor ?? {
+      hasSnapshot: true,
+      hasBehavioralEvents: false,
+      hasStructuralData: false,
+    };
 
-  // Deterministic indexes (0..1) derived only from DL evidence.
+  const dataset = classifyDataAwareness(descriptor);
+
+  // ==================================================
+  // DL METRICS
+  // ==================================================
   const stockoutRisk = clamp01(input.dl.risk_score.stockout_risk);
   const supplierDependency = clamp01(input.dl.risk_score.supplier_dependency);
 
-  // Pressure: "how urgent is a decision now?"
   const pressureIndex = clamp01(Math.max(stockoutRisk, supplierDependency));
-
-  // Reality drift: "how far is reality from what we can sustain?"
-  // v1 heuristic: combine risk sources; no extra inference.
   const driftIndex = clamp01(stockoutRisk * 0.7 + supplierDependency * 0.3);
 
+  // ==================================================
+  // BASE SIGNALS
+  // ==================================================
   const signals: UiSignalsV1 = {
     data_awareness: mapDataAwarenessState(dataset.level),
     plan: mapPlanState(stockoutRisk),
@@ -95,5 +105,22 @@ export function buildUiSignalsV1(input: {
     decision_pressure: mapDecisionPressureState(pressureIndex),
   };
 
+  // ==================================================
+  // REALITY GOVERNANCE OVERRIDE (🔥 CORE LOGIC)
+  // ==================================================
+  const assumptions = input.dl.assumptions ?? 0;
+  const topologyConfidence = input.dl.topologyConfidence?.confidence ?? 1;
+
+  if (assumptions > 0 && topologyConfidence < 0.6) {
+    signals.reality = "ASSUMED";
+  } else if (topologyConfidence < 0.6) {
+    signals.reality = "MISALIGNED";
+  } else if (assumptions > 0) {
+    signals.reality = "DRIFTING";
+  }
+
+  // ==================================================
+  // OUTPUT
+  // ==================================================
   return { signals, dataset };
 }

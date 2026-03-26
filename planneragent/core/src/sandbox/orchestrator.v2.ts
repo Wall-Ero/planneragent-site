@@ -7,6 +7,9 @@
 // - Policy Overlay V1
 // - Policy Resolver V1
 // - Policy Enforcer V1
+// - Decision Memory V1
+// - Outcome Validator V1
+// - Anomaly Guard V2
 // ======================================================
 
 import type {
@@ -47,12 +50,18 @@ import { buildActionsFromRealityV2 } from "../execution/action.builder.v2";
 
 import { persistDecisionTrace } from "../decision-memory/decision.memory.bridge";
 import { D1DecisionStoreAdapter } from "../decision-memory/decision.store";
+import { getDecisionHistory, recordDecision } from "../decision-memory/decision.memory";
+
+import { validateDecisionOutcome } from "../decision/decision.outcome.validator";
+import { detectDecisionAnomalyV2 } from "../decision/decision.anomaly.guard.v2";
 
 import {
   normalizeOrders,
   normalizeInventory,
   normalizeMovements,
 } from "../../datasets/dlci/adapters";
+
+import type { DatasetDescriptor } from "./contracts.v2";
 
 // ======================================================
 // TYPES
@@ -95,7 +104,7 @@ type GovernedCandidate = {
 // HELPERS
 // ======================================================
 
-function executionAllowed(plan: PlanTier, intent: string): boolean {
+function executionAllowedByPlan(plan: PlanTier, intent: string): boolean {
   if (intent !== "EXECUTE") return false;
 
   return plan === "JUNIOR" || plan === "SENIOR" || plan === "PRINCIPAL";
@@ -130,7 +139,6 @@ export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2,
   env?: OrchestratorEnv
 ): Promise<SandboxEvaluateResponseV2> {
-
   console.log("DB_PRESENT", !!env?.DB);
 
   // --------------------------------------------------
@@ -185,8 +193,8 @@ export async function evaluateSandboxV2(
     masterBom: (req.masterBom ?? []) as any[],
   });
 
-  let twinOrders = rawOrders;
-  let twinInventory = rawInventory;
+  const twinOrders = rawOrders;
+  const twinInventory = rawInventory;
   const twinMovements = rawMovements;
 
   const inferredBom = (reality as any)?.reconstructed?.inferred_bom ?? [];
@@ -232,10 +240,23 @@ export async function evaluateSandboxV2(
   // SIGNALS
   // --------------------------------------------------
 
-  const { signals } = buildUiSignalsV1({
-    dl: dlEvidence as any,
-    dataset_descriptor: req.dataset_descriptor,
-  });
+  const normalizedDatasetDescriptor: DatasetDescriptor =
+  req.dataset_descriptor &&
+  typeof req.dataset_descriptor === "object" &&
+  "hasSnapshot" in req.dataset_descriptor &&
+  "hasBehavioralEvents" in req.dataset_descriptor &&
+  "hasStructuralData" in req.dataset_descriptor
+    ? (req.dataset_descriptor as DatasetDescriptor)
+    : {
+        hasSnapshot: true,
+        hasBehavioralEvents: false,
+        hasStructuralData: false,
+      };
+
+const { signals } = buildUiSignalsV1({
+  dl: dlEvidence,
+  dataset_descriptor: normalizedDatasetDescriptor,
+});
 
   // ==================================================
   // BUILDER V2
@@ -300,14 +321,14 @@ export async function evaluateSandboxV2(
   // POLICY RESOLUTION
   // ==================================================
 
+  const decisionHistory = getDecisionHistory();
+
   const effectivePolicy = resolvePolicy({
-    history: [] // prossimo step: decision memory / dati reali
+    history: decisionHistory,
   });
 
   // ==================================================
   // POLICY OVERLAY
-  // Applies company preference to already-built candidates
-  // Does NOT replace decision logic — only reweights selection
   // ==================================================
 
   let selectedBest: GovernedCandidate | null = optimizerOutput?.best ?? null;
@@ -354,6 +375,58 @@ export async function evaluateSandboxV2(
   }
 
   // ==================================================
+  // DECISION MEMORY / OUTCOME / ANOMALY
+  // ==================================================
+
+  let anomalyResult = {
+    anomaly: false,
+    reasons: [] as string[],
+  };
+
+  let runtimeExecutionAllowed = executionAllowedByPlan(req.plan, req.intent);
+  let runtimeGovernanceReason = runtimeExecutionAllowed
+    ? "DELEGATED_OR_BUDGETED_AUTHORITY"
+    : "ADVISORY_ONLY";
+
+  if (selectedBest) {
+    const outcome = validateDecisionOutcome(selectedBest);
+
+    anomalyResult = detectDecisionAnomalyV2({
+      candidate: selectedBest,
+      dl: {
+        risk_score: dlEvidence?.risk_score?.stockout_risk,
+        anomaly_signals: dlEvidence?.anomaly_signals,
+      },
+      topologyConfidence: topologyConfidence?.confidence,
+      policy: {
+        primary_focus: effectivePolicy.primary_focus,
+      },
+    });
+
+    console.log("ANOMALY_INPUT_DEBUG", {
+      dlEvidence,
+      topologyConfidence,
+    });
+
+    if (anomalyResult.anomaly) {
+      console.warn("ANOMALY_DETECTED", anomalyResult.reasons);
+    }
+
+    if (anomalyResult.anomaly && req.intent === "EXECUTE") {
+      runtimeExecutionAllowed = false;
+      runtimeGovernanceReason =
+        `BLOCKED_BY_ANOMALY:${anomalyResult.reasons.join("|")}`;
+    }
+
+    recordDecision({
+      decision_id: req.request_id,
+      policy_used: effectivePolicy,
+      outcome,
+      anomaly: anomalyResult.anomaly,
+    });
+  }
+
+  // ==================================================
   // EXPLAINER
   // ==================================================
 
@@ -376,11 +449,14 @@ export async function evaluateSandboxV2(
   // GOVERNANCE
   // --------------------------------------------------
 
-  const governance: GovernanceResult = {
-    execution_allowed: executionAllowed(req.plan, req.intent),
-    reason: executionAllowed(req.plan, req.intent)
-      ? "DELEGATED_OR_BUDGETED_AUTHORITY"
-      : "ADVISORY_ONLY",
+  const governance: GovernanceResult & {
+    anomaly?: boolean;
+    anomaly_reasons?: string[];
+  } = {
+    execution_allowed: runtimeExecutionAllowed,
+    reason: runtimeGovernanceReason,
+    anomaly: anomalyResult.anomaly,
+    anomaly_reasons: anomalyResult.reasons,
   };
 
   // --------------------------------------------------
@@ -408,6 +484,8 @@ export async function evaluateSandboxV2(
     explanation,
 
     governance,
+
+    executionAllowed: runtimeExecutionAllowed,
 
     policy_used: effectivePolicy,
     policy_debug: policyDebug,

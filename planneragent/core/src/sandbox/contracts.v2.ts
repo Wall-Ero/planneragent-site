@@ -29,6 +29,41 @@ export type PlanningDomain =
   | "general";
 
 /* =====================================================
+ SIGNAL UI
+===================================================== */
+
+
+  export type DataAwarenessState = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
+
+export type PlanState = "COHERENT" | "SOME_GAPS" | "INCOHERENT";
+
+export type RealityState =
+  | "ALIGNED"
+  | "DRIFTING"
+  | "MISALIGNED"
+  | "ASSUMED"; // 👈 nuovo
+
+export type DecisionPressureState = "LOW" | "MEDIUM" | "HIGH";
+
+export interface UiSignalsV1 {
+  data_awareness: DataAwarenessState;
+  plan: PlanState;
+  reality: RealityState;
+  decision_pressure: DecisionPressureState;
+}
+
+export interface DatasetDescriptor {
+  hasSnapshot: boolean;
+  hasBehavioralEvents: boolean;
+  hasStructuralData: boolean;
+}
+
+export interface DatasetClassificationResult {
+  level: "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
+}
+
+
+/* =====================================================
  HEALTH
 ===================================================== */
 
@@ -137,6 +172,13 @@ export type DlEvidenceV2 = {
     stockout_risk: number;
     supplier_dependency: number;
   };
+
+  assumptions?: number;
+
+topologyConfidence?: {
+  confidence: number;
+  signals?: string[];
+};
 
   anomaly_signals: string[];
 

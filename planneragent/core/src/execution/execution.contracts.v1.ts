@@ -1,8 +1,12 @@
-// PATH: core/src/execution/execution.contracts.v1.ts
+// core/src/execution/execution.contracts.v1.ts
 // ======================================================
 // PlannerAgent — Execution Contracts V1
 // Canonical Source of Truth
 // ======================================================
+
+import type { OptimizerAction } from "./action.router";
+
+// ------------------------------------------------------
 
 export type ExecutionMode =
   | "DIRECT"
@@ -13,8 +17,11 @@ export type ExecutionCapabilityId =
   | "update_order"
   | "adjust_production";
 
+// ------------------------------------------------------
+
 export interface ExecutionIntent {
-  action_kind: string;
+  // 🔥 ALLINEATO
+  action_kind: OptimizerAction["kind"];
 
   capability_id: ExecutionCapabilityId;
 
@@ -25,6 +32,8 @@ export interface ExecutionIntent {
   rationale: string;
 }
 
+// ------------------------------------------------------
+
 export interface ExecutionRequest {
   intents: ExecutionIntent[];
 
@@ -33,6 +42,8 @@ export interface ExecutionRequest {
     approver?: string;
   };
 }
+
+// ------------------------------------------------------
 
 export interface ExecutionResult {
   capability_id: ExecutionCapabilityId;

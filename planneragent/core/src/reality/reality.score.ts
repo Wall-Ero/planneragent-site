@@ -1,13 +1,14 @@
 // core/src/reality/reality.score.ts
 // ======================================================
 // PlannerAgent — Reality Score Engine
-// Canonical Source of Truth (AWARENESS + DIVERGENCE + TOPOLOGY)
+// Canonical Source of Truth
 // ======================================================
 
 import type {
   DataAwarenessLevel,
   ConfidenceMap,
   AssumptionRecord,
+  BomDivergenceMap,
 } from "./reality.types";
 
 // ------------------------------------------------------
@@ -26,14 +27,9 @@ export function computeRealityScore(params: {
   awareness_level: DataAwarenessLevel;
   confidence: ConfidenceMap;
   assumptions: AssumptionRecord[];
-  bom_divergence: {
-    master_vs_plan?: boolean;
-    plan_vs_reality?: boolean;
-    master_vs_reality?: boolean;
-  };
+  bom_divergence: BomDivergenceMap;
   topology_confidence?: number;
 }): number {
-
   // -------------------------------
   // 1. Awareness score
   // -------------------------------
@@ -73,8 +69,9 @@ export function computeRealityScore(params: {
       divergencePenalty += 0.15;
     }
 
-    if (params.bom_divergence.plan_vs_reality) {
-      divergencePenalty += 0.25;
+    const d = params.bom_divergence.plan_vs_reality;
+    if (d?.has_divergence) {
+      divergencePenalty += d.severity * 0.35;
     }
 
     if (params.bom_divergence.master_vs_reality) {
@@ -83,15 +80,16 @@ export function computeRealityScore(params: {
   } else {
     // SNAPSHOT
 
-    if (params.bom_divergence.plan_vs_reality) {
-      divergencePenalty += 0.1;
+    const d = params.bom_divergence.plan_vs_reality;
+    if (d?.has_divergence) {
+      divergencePenalty += d.severity * 0.15;
     }
   }
 
   const divergenceScore = 1 - clamp01(divergencePenalty);
 
   // -------------------------------
-  // 5. Topology penalty (NEW)
+  // 5. Topology penalty (placeholder)
   // -------------------------------
   let topologyScore = 1;
 

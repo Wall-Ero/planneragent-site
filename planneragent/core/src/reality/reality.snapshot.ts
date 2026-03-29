@@ -9,7 +9,10 @@ import type {
   ObservedReality,
   ReconstructedReality,
   AssumedReality,
-  ConfidenceMap
+  ConfidenceMap,
+  DataAwarenessLevel,
+  BomDivergenceMap,
+  ProcessInstabilitySignal
 } from "./reality.types";
 
 import { AssumptionRegistry } from "./assumption.registry";
@@ -18,9 +21,17 @@ export function createRealitySnapshot(params: {
   observed: ObservedReality;
   reconstructed: ReconstructedReality;
   assumed: AssumedReality;
+
   confidence: ConfidenceMap;
-  awareness_level: number;
+
+  awareness_level: DataAwarenessLevel;
+
   assumptions: AssumptionRegistry;
+
+  reality_score?: number;
+
+  bom_divergence?: BomDivergenceMap;
+  process_instability?: ProcessInstabilitySignal;
 
   fusion?: unknown;
   twinSnapshot?: unknown;
@@ -38,10 +49,15 @@ export function createRealitySnapshot(params: {
 
     assumptions: params.assumptions.list(),
 
+    reality_score: params.reality_score ?? null,
+
+    bom_divergence: params.bom_divergence,
+    process_instability: params.process_instability,
+
     fusion: params.fusion,
     twinSnapshot: params.twinSnapshot,
     signals: params.signals ?? [],
 
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   };
 }

@@ -1,13 +1,14 @@
 // core/src/reality/reality.builder.ts
 // ======================================================
 // PlannerAgent — Reality Builder
-// Canonical Source of Truth
+// Canonical Source of Truth (FIXED + STABLE)
 // ======================================================
 
 import { computeDataAwarenessLevel } from "./reality.level";
 import { computeRealityScore } from "./reality.score";
 import { AssumptionRegistry } from "./assumption.registry";
 import { createRealitySnapshot } from "./reality.snapshot";
+import { computeBomDivergence } from "./planRealityToDivergence.v1";
 
 import { inferBomFromOrders } from "../sandbox/reality/inferBomFromOrders.v1";
 import { inferBomFromProduction } from "../sandbox/reality/inferBomFromProduction.v1";
@@ -16,7 +17,27 @@ import { comparePlanReality } from "../sandbox/reality/planRealityDiff.v1";
 import { fuseReality } from "./reality.fusion";
 import { createTwinSnapshot } from "../simulation/twin.snapshot";
 
+import { computeProcessInstability } from "./process.instability.v1";
+
 type AnyRow = Record<string, unknown>;
+
+// ======================================================
+// TYPES
+// ======================================================
+
+type BuildRealityParams = {
+  orders?: AnyRow[];
+  inventory?: AnyRow[];
+  movements?: AnyRow[];
+
+  movord?: AnyRow[];
+  movmag?: AnyRow[];
+  masterBom?: AnyRow[];
+};
+
+// ======================================================
+// HELPERS
+// ======================================================
 
 function flattenPlanBom(rows: any[]) {
   return (rows ?? []).flatMap((p) =>
@@ -48,22 +69,26 @@ function normalizeMasterBom(rows: AnyRow[]) {
     .filter((r) => r.parent && r.component && r.ratio > 0);
 }
 
-export function buildReality(params: {
-  orders?: AnyRow[];
-  inventory?: AnyRow[];
-  movements?: AnyRow[];
-  movord?: AnyRow[];
-  movmag?: AnyRow[];
-  masterBom?: AnyRow[];
-}) {
+// ======================================================
+// MAIN
+// ======================================================
 
+export function buildReality(params: BuildRealityParams) {
   const assumptions = new AssumptionRegistry();
+
+  // ------------------------------------------------------
+  // DATA AWARENESS
+  // ------------------------------------------------------
 
   const awareness = computeDataAwarenessLevel({
     orders: params.orders,
     inventory: params.inventory,
     movements: params.movements,
   });
+
+  // ------------------------------------------------------
+  // OBSERVED
+  // ------------------------------------------------------
 
   const observed = {
     orders: params.orders ?? [],
@@ -74,7 +99,13 @@ export function buildReality(params: {
     master_bom: normalizeMasterBom(params.masterBom ?? []),
   };
 
-  const planBomResult = inferBomFromOrders((params.movord ?? params.orders ?? []) as any);
+  // ------------------------------------------------------
+  // BOM INFERENCE
+  // ------------------------------------------------------
+
+  const planBomResult = inferBomFromOrders(
+    (params.movord ?? params.orders ?? []) as any
+  );
 
   const realityBomResult = inferBomFromProduction(
     (params.movord ?? []) as any,
@@ -84,6 +115,10 @@ export function buildReality(params: {
   const planBomFlat = flattenPlanBom(planBomResult.bom ?? []);
   const realityBomFlat = flattenRealityBom(realityBomResult.bom ?? []);
   const masterBomFlat = normalizeMasterBom(params.masterBom ?? []);
+
+  // ------------------------------------------------------
+  // PLAN vs REALITY
+  // ------------------------------------------------------
 
   const planRealityDiff = comparePlanReality(
     planBomFlat.map((x) => ({
@@ -98,17 +133,27 @@ export function buildReality(params: {
     }))
   );
 
+  const divergence = computeBomDivergence(planRealityDiff);
+
+  const instability = computeProcessInstability({
+    realityBom: realityBomResult.bom ?? [],
+  });
+
+  // ------------------------------------------------------
+  // FUSION
+  // ------------------------------------------------------
+
   const fusion = fuseReality({
     masterBom: masterBomFlat,
     planBom: planBomFlat,
     realityBom: realityBomFlat,
   });
 
-  // -------------------------------
-  // Assumptions
-  // -------------------------------
+  // ------------------------------------------------------
+  // ASSUMPTIONS
+  // ------------------------------------------------------
 
-  if (!params.orders || params.orders.length === 0) {
+  if (!params.orders?.length) {
     assumptions.add({
       category: "demand",
       value: 100,
@@ -116,7 +161,7 @@ export function buildReality(params: {
     });
   }
 
-  if (!params.inventory || params.inventory.length === 0) {
+  if (!params.inventory?.length) {
     assumptions.add({
       category: "stock",
       value: 0,
@@ -124,7 +169,11 @@ export function buildReality(params: {
     });
   }
 
-  if ((params.movord?.length ?? 0) === 0 && (params.movmag?.length ?? 0) === 0) {
+  const hasBehavioralData =
+    (params.movord?.length ?? 0) > 0 &&
+    (params.movmag?.length ?? 0) > 0;
+
+  if (!hasBehavioralData) {
     assumptions.add({
       category: "bom",
       value: "limited_reconstruction",
@@ -132,28 +181,66 @@ export function buildReality(params: {
     });
   }
 
-  // -------------------------------
-  // Confidence
-  // -------------------------------
+  // ------------------------------------------------------
+  // ASSUMED
+  // ------------------------------------------------------
+
+  const assumed: Record<string, unknown> = {};
+
+  for (const a of assumptions.list()) {
+    assumed[a.category] = a.value;
+  }
+
+  // ------------------------------------------------------
+  // BOM CONFIDENCE
+  // ------------------------------------------------------
+
+  const bomConfidenceFromReality =
+    (realityBomResult.bom ?? []).length > 0
+      ? realityBomResult.bom.reduce(
+          (s, b) => s + (b.confidence ?? 0),
+          0
+        ) / realityBomResult.bom.length
+      : 0;
+
+  const safeBomConfidence = isFinite(bomConfidenceFromReality)
+    ? bomConfidenceFromReality
+    : 0;
+
+  // ------------------------------------------------------
+  // CONFIDENCE MAP
+  // ------------------------------------------------------
 
   const confidence = {
     stock: params.inventory ? 0.9 : 0.3,
     demand: params.orders ? 0.8 : 0.4,
     lead_time: 0.5,
-    bom: fusion.needs_bom_reference_decision ? 0.55 : 0.85,
+    bom: hasBehavioralData
+      ? safeBomConfidence
+      : fusion.needs_bom_reference_decision
+      ? 0.55
+      : 0.85,
   };
 
-  // -------------------------------
-  // Reality Score
-  // -------------------------------
+  // ------------------------------------------------------
+  // REALITY SCORE
+  // ------------------------------------------------------
 
   const realityScore = computeRealityScore({
-  awareness_level: awareness,
-  confidence,
-  assumptions: assumptions.list(),
-  bom_divergence: fusion.divergence,
-  topology_confidence: undefined,//
-});
+    awareness_level: awareness,
+    confidence,
+    assumptions: assumptions.list(),
+    bom_divergence: {
+      master_vs_plan: fusion.divergence.master_vs_plan,
+      plan_vs_reality: divergence,
+      master_vs_reality: fusion.divergence.master_vs_reality,
+    },
+    topology_confidence: undefined,
+  });
+
+  // ------------------------------------------------------
+  // TWIN
+  // ------------------------------------------------------
 
   const twinSnapshot = createTwinSnapshot({
     inventory: params.inventory ?? [],
@@ -165,6 +252,10 @@ export function buildReality(params: {
     awareness_level: awareness,
   });
 
+  // ------------------------------------------------------
+  // SNAPSHOT
+  // ------------------------------------------------------
+
   return createRealitySnapshot({
     observed,
     reconstructed: {
@@ -172,7 +263,7 @@ export function buildReality(params: {
       reality_bom: realityBomResult.bom ?? [],
       plan_reality_diff: planRealityDiff,
     },
-    assumed: {},
+    assumed,
 
     fusion,
     twinSnapshot,
@@ -183,11 +274,22 @@ export function buildReality(params: {
 
     reality_score: realityScore,
 
+    process_instability: instability,
+
+    bom_divergence: {
+      master_vs_plan: fusion.divergence.master_vs_plan,
+      plan_vs_reality: divergence,
+      master_vs_reality: fusion.divergence.master_vs_reality,
+    },
+
     signals: [
       ...(planBomResult.signals ?? []),
       ...(realityBomResult.signals ?? []),
       ...(planRealityDiff.signals ?? []),
       ...(fusion.signals ?? []),
+      ...(instability.unstable_components > 0
+        ? [`process_instability:${instability.overall_instability}`]
+        : []),
     ],
   });
 }

@@ -1,29 +1,16 @@
 // core/src/sandbox/orchestrator.v2.ts
 // ======================================================
 // PlannerAgent — Sandbox Orchestrator V2
-// Canonical Source of Truth
-// Updated with:
-// - Explainer V1
-// - Policy Overlay V1
-// - Policy Resolver V1
-// - Policy Enforcer V1
-// - Decision Memory V1
-// - Outcome Validator V1
-// - Anomaly Guard V2
+// Canonical Source of Truth (CLEAN + COMPLETE + REALITY SCORE)
 // ======================================================
 
 import type {
   SandboxEvaluateRequestV2,
   SandboxEvaluateResponseV2,
-  ScenarioV2,
   GovernanceResult,
   PlanTier,
+  DatasetDescriptor,
 } from "./contracts.v2";
-
-import type {
-  DecisionTraceV2,
-  ExecutionEvidence,
-} from "../decision/decision.trace";
 
 import { authoritySandboxGuard } from "./authority/authoritySandbox.guard";
 import { computeDlEvidenceV2 } from "./dl.v2";
@@ -34,23 +21,18 @@ import { buildOperationalTopology } from "../topology/topology.builder";
 import { computeTopologyConfidence } from "../topology/topology.confidence";
 
 import { runOptimizerV1 } from "../decision/optimizer";
-import { buildOrdDecisionTrace } from "../decision/ord/ord.trace";
-import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
-import { replayDecision } from "../decision/decision.replay.engine";
-import { adaptRealitySnapshot } from "../decision/decision.reality.adapter";
 
 import { explainDecision } from "../decision/explainer/decision.explainer.v1";
 import { applyPolicy } from "../decision/policy/policy.engine.v1";
 import { resolvePolicy } from "../decision/policy/policy.resolver.v1";
 import { applyPolicyConstraints } from "../decision/policy/policy.enforcer.v1";
 
-import { routeActionToExecutionIntent } from "../execution/action.router";
-import { executePlan } from "../execution/execution.bridge";
 import { buildActionsFromRealityV2 } from "../execution/action.builder.v2";
 
-import { persistDecisionTrace } from "../decision-memory/decision.memory.bridge";
-import { D1DecisionStoreAdapter } from "../decision-memory/decision.store";
-import { getDecisionHistory, recordDecision } from "../decision-memory/decision.memory";
+import {
+  getDecisionHistory,
+  recordDecision,
+} from "../decision-memory/decision.memory";
 
 import { validateDecisionOutcome } from "../decision/decision.outcome.validator";
 import { detectDecisionAnomalyV2 } from "../decision/decision.anomaly.guard.v2";
@@ -61,44 +43,10 @@ import {
   normalizeMovements,
 } from "../../datasets/dlci/adapters";
 
-import type { DatasetDescriptor } from "./contracts.v2";
-
-// ======================================================
-// TYPES
-// ======================================================
-
-type OrchestratorEnv = {
-  DB?: D1Database;
-};
-
-type SemanticAction = {
-  id: string;
-  type: string;
-  sku?: string;
-  qty?: number;
-  orderId?: string;
-  shiftDays?: number;
-  source: "OPTIMIZER";
-  raw: any;
-};
-
-type GovernedCandidate = {
-  id?: string;
-  score: number;
-  adjustedScore?: number;
-  actions: any[];
-  feasibleHard?: boolean;
-  softViolations?: string[];
-  kpis?: {
-    serviceShortfall?: number;
-    estimatedCost?: number;
-    planChurn?: number;
-    [key: string]: number | undefined;
-  };
-  evidence?: any;
-  violations?: string[];
-  [key: string]: any;
-};
+import {
+  enrichAnomalyActions,
+  type EnrichedAction,
+} from "../decision/anomaly.action.enricher";
 
 // ======================================================
 // HELPERS
@@ -106,29 +54,76 @@ type GovernedCandidate = {
 
 function executionAllowedByPlan(plan: PlanTier, intent: string): boolean {
   if (intent !== "EXECUTE") return false;
-
   return plan === "JUNIOR" || plan === "SENIOR" || plan === "PRINCIPAL";
-}
-
-function llmAllowed(plan: PlanTier): boolean {
-  return plan !== "CHARTER";
 }
 
 function nowIso(): string {
   return new Date().toISOString();
 }
 
-function buildSemanticActions(bestActions: any[]): SemanticAction[] {
-  return bestActions.map((a: any, index: number) => ({
-    id: `act-${Date.now()}-${index}-${a?.sku ?? a?.orderId ?? "generic"}`,
-    type: String(a?.kind ?? "UNKNOWN_ACTION"),
-    sku: a?.sku,
-    qty: typeof a?.qty === "number" ? a.qty : undefined,
-    orderId: a?.orderId,
-    shiftDays: typeof a?.shiftDays === "number" ? a.shiftDays : undefined,
-    source: "OPTIMIZER",
-    raw: a,
-  }));
+function normalizeDatasetDescriptor(input: unknown): DatasetDescriptor {
+  if (
+    input &&
+    typeof input === "object" &&
+    "hasSnapshot" in input &&
+    "hasBehavioralEvents" in input &&
+    "hasStructuralData" in input
+  ) {
+    return input as DatasetDescriptor;
+  }
+
+  return {
+    hasSnapshot: true,
+    hasBehavioralEvents: false,
+    hasStructuralData: false,
+  };
+}
+
+function deriveReasonsFromActions(actions: any[]): string[] {
+  if (!actions) return [];
+
+  const out: string[] = [];
+
+  for (const a of actions) {
+    const r = a?.reason || "";
+
+    if (r.includes("isolated_topology")) {
+      out.push("VERIFY_TOPOLOGY_NODE");
+    }
+
+    if (r.includes("topology_guided")) {
+      out.push("VERIFY_TOPOLOGY_NODE");
+    }
+
+    if (r.includes("inventory")) {
+      out.push("CHECK_INVENTORY_MISMATCH");
+    }
+
+    if (r.includes("demand")) {
+      out.push("REVIEW_DEMAND_SPIKE");
+    }
+  }
+
+  return Array.from(new Set(out));
+}
+
+function deriveRealityState(params: {
+  realityScore?: number | null;
+  anomaly: boolean;
+  topologyConfidence?: number;
+}) {
+  const score =
+    typeof params.realityScore === "number" ? params.realityScore : null;
+
+  if (score !== null) {
+    if (score < 0.5) return "ASSUMED";
+    if (score < 0.75) return "DRIFTING";
+    return params.anomaly ? "DRIFTING" : "ALIGNED";
+  }
+
+  if ((params.topologyConfidence ?? 1) < 0.5) return "ASSUMED";
+  if (params.anomaly) return "DRIFTING";
+  return "ALIGNED";
 }
 
 // ======================================================
@@ -137,97 +132,99 @@ function buildSemanticActions(bestActions: any[]): SemanticAction[] {
 
 export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2,
-  env?: OrchestratorEnv
+  env?: { DB?: D1Database }
 ): Promise<SandboxEvaluateResponseV2> {
-  console.log("DB_PRESENT", !!env?.DB);
+  void env;
 
-  // --------------------------------------------------
-  // VALIDATION
-  // --------------------------------------------------
+  // ---------------- VALIDATION ----------------
 
-  if (!req.request_id) {
-    return { ok: false, request_id: "unknown", reason: "MISSING_FIELD: request_id" } as any;
-  }
-
-  if (!req.company_id) {
-    return { ok: false, request_id: req.request_id, reason: "MISSING_FIELD: company_id" } as any;
+  if (!req.request_id || !req.company_id) {
+    return {
+      ok: false,
+      request_id: req.request_id ?? "unknown",
+      reason: "MISSING_FIELDS",
+    } as any;
   }
 
   if (!(req as any).baseline_snapshot_id) {
-    return { ok: false, request_id: req.request_id, reason: "MISSING_FIELD: baseline_snapshot_id" } as any;
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "MISSING_SNAPSHOT_ID",
+    } as any;
   }
 
   if (!req.snapshot) {
-    return { ok: false, request_id: req.request_id, reason: "SNAPSHOT_REQUIRED" } as any;
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "SNAPSHOT_REQUIRED",
+    } as any;
   }
 
   const auth = authoritySandboxGuard(req.snapshot);
   if (!auth.ok) {
-    return { ok: false, request_id: req.request_id, reason: auth.reason } as any;
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: auth.reason,
+    } as any;
   }
 
-  // --------------------------------------------------
-  // STORE
-  // --------------------------------------------------
+  // ---------------- NORMALIZATION ----------------
 
-  const store = env?.DB ? new D1DecisionStoreAdapter(env.DB) : null;
+  const orders = normalizeOrders(req.orders ?? []);
+  const inventory = normalizeInventory(req.inventory ?? []);
+  const movements = normalizeMovements(req.movements ?? []);
 
-  // --------------------------------------------------
-  // NORMALIZATION
-  // --------------------------------------------------
-
-  const rawOrders = normalizeOrders(req.orders ?? []);
-  const rawInventory = normalizeInventory(req.inventory ?? []);
-  const rawMovements = normalizeMovements(req.movements ?? []);
-
-  // --------------------------------------------------
-  // REALITY
-  // --------------------------------------------------
+  // ---------------- REALITY ----------------
 
   const reality = buildReality({
-    orders: rawOrders,
-    inventory: rawInventory,
-    movements: rawMovements,
+    orders,
+    inventory,
+    movements,
     movord: (req.movord ?? []) as any[],
     movmag: (req.movmag ?? []) as any[],
     masterBom: (req.masterBom ?? []) as any[],
   });
 
-  const twinOrders = rawOrders;
-  const twinInventory = rawInventory;
-  const twinMovements = rawMovements;
+  const inferredBom =
+    (reality as any)?.reconstructed?.inferred_bom ?? [];
 
-  const inferredBom = (reality as any)?.reconstructed?.inferred_bom ?? [];
+  const realityScore: number | null =
+    typeof (reality as any)?.reality_score === "number"
+      ? (reality as any).reality_score
+      : null;
 
-  // --------------------------------------------------
-  // DL
-  // --------------------------------------------------
+  // ---------------- DL ----------------
 
   const dlResult = await computeDlEvidenceV2(
     { DL_ENABLED: "true" },
     {
       horizonDays: 30,
       baselineMetrics: req.baseline_metrics ?? {},
-      orders: twinOrders as any[],
-      inventory: twinInventory as any[],
-      movements: twinMovements as any[],
+      orders,
+      inventory,
+      movements,
     }
   );
 
   if (dlResult.health !== "ok" || !dlResult.evidence) {
-    return { ok: false, request_id: req.request_id, reason: "DL_LAYER_FAILED" } as any;
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "DL_FAILED",
+    } as any;
   }
 
-  const dlEvidence = dlResult.evidence;
+  const dl = dlResult.evidence;
 
-  // --------------------------------------------------
-  // TOPOLOGY
-  // --------------------------------------------------
+  // ---------------- TOPOLOGY ----------------
 
   const topology = buildOperationalTopology({
-    orders: twinOrders,
-    inventory: twinInventory,
-    movements: twinMovements,
+    orders,
+    inventory,
+    movements,
     inferredBom,
   });
 
@@ -236,69 +233,49 @@ export async function evaluateSandboxV2(
     edges: topology.edges,
   });
 
-  // --------------------------------------------------
-  // SIGNALS
-  // --------------------------------------------------
+  // ---------------- SIGNALS ----------------
 
-  const normalizedDatasetDescriptor: DatasetDescriptor =
-  req.dataset_descriptor &&
-  typeof req.dataset_descriptor === "object" &&
-  "hasSnapshot" in req.dataset_descriptor &&
-  "hasBehavioralEvents" in req.dataset_descriptor &&
-  "hasStructuralData" in req.dataset_descriptor
-    ? (req.dataset_descriptor as DatasetDescriptor)
-    : {
-        hasSnapshot: true,
-        hasBehavioralEvents: false,
-        hasStructuralData: false,
-      };
+  const datasetDescriptor = normalizeDatasetDescriptor(req.dataset_descriptor);
 
-const { signals } = buildUiSignalsV1({
-  dl: dlEvidence,
-  dataset_descriptor: normalizedDatasetDescriptor,
-});
+  const { signals } = buildUiSignalsV1({
+    dl,
+    dataset_descriptor: datasetDescriptor,
+  });
 
-  // ==================================================
-  // BUILDER V2
-  // ==================================================
+  // ---------------- ACTION BUILDER ----------------
 
   const builtActions = buildActionsFromRealityV2({
     requestId: req.request_id,
     plan: req.plan,
     asOf: nowIso(),
-    orders: twinOrders,
-    inventory: twinInventory,
-    movements: twinMovements,
+    orders,
+    inventory,
+    movements,
     baseline_metrics: req.baseline_metrics ?? {},
-    scenario_metrics: {},
-    constraints_hint: (req as any).constraints_hint ?? {},
-    dlSignals: dlEvidence.risk_score ?? {},
+    dlSignals: dl.risk_score ?? {},
     inferredBom,
     realitySnapshot: reality,
     operationalTopology: topology,
     topologyConfidence: topologyConfidence?.confidence ?? 0.5,
   } as any);
 
-  console.log("[BUILDER_ACTIONS]", JSON.stringify(builtActions, null, 2));
+  // ---------------- OPTIMIZER ----------------
 
-  // ==================================================
-  // OPTIMIZER
-  // ==================================================
-
-  let optimizerOutput: any = null;
+  let optimizerOutput: {
+    best?: any;
+    candidates?: any[];
+  } | null = null;
 
   try {
     optimizerOutput = await runOptimizerV1({
       requestId: req.request_id,
       plan: req.plan,
       asOf: nowIso(),
-      orders: twinOrders,
-      inventory: twinInventory,
-      movements: twinMovements,
+      orders,
+      inventory,
+      movements,
       baseline_metrics: req.baseline_metrics ?? {},
-      scenario_metrics: {},
-      constraints_hint: (req as any).constraints_hint ?? {},
-      dlSignals: dlEvidence.risk_score ?? {},
+      dlSignals: dl.risk_score ?? {},
       inferredBom,
       realitySnapshot: reality,
       operationalTopology: topology,
@@ -315,153 +292,203 @@ const { signals } = buildUiSignalsV1({
     optimizerOutput.best.actions = builtActions;
   }
 
-  console.log("[OPTIMIZER_OUTPUT]", JSON.stringify(optimizerOutput, null, 2));
+  // ---------------- POLICY ----------------
 
-  // ==================================================
-  // POLICY RESOLUTION
-  // ==================================================
+  let history: any[] = [];
 
-  const decisionHistory = getDecisionHistory();
+  try {
+    history = getDecisionHistory();
+  } catch {
+    history = [];
+  }
 
-  const effectivePolicy = resolvePolicy({
-    history: decisionHistory,
-  });
+  const policy = resolvePolicy({ history });
 
-  // ==================================================
-  // POLICY OVERLAY
-  // ==================================================
-
-  let selectedBest: GovernedCandidate | null = optimizerOutput?.best ?? null;
-  let selectedCandidates: GovernedCandidate[] = optimizerOutput?.candidates ?? [];
+  let selectedBest = optimizerOutput?.best ?? null;
+  let selectedCandidates = optimizerOutput?.candidates ?? [];
   let policyDebug: any[] = [];
 
   if (optimizerOutput?.candidates?.length) {
-    const policyWeightedCandidates = applyPolicy(
-      optimizerOutput.candidates,
-      effectivePolicy
-    ) as GovernedCandidate[];
+    const weighted = applyPolicy(optimizerOutput.candidates, policy);
 
-    const policyEnforced = applyPolicyConstraints(
-      policyWeightedCandidates,
-      {
-        primary_focus: effectivePolicy.primary_focus,
-        weights: effectivePolicy.weights,
-        prefer_multi_action: effectivePolicy.prefer_multi_action,
-        allow_single_lever: effectivePolicy.allow_single_lever,
-        max_plan_churn: effectivePolicy.max_plan_churn,
-        risk_profile:
-          effectivePolicy.risk_profile === "CONSERVATIVE"
-            ? "LOW"
-            : effectivePolicy.risk_profile === "AGGRESSIVE"
-            ? "HIGH"
-            : "BALANCED",
-      }
-    );
+    const enforced = applyPolicyConstraints(weighted, {
+      primary_focus: policy.primary_focus,
+      weights: policy.weights,
+      prefer_multi_action: policy.prefer_multi_action,
+      allow_single_lever: policy.allow_single_lever,
+      max_plan_churn: policy.max_plan_churn,
+      risk_profile:
+        policy.risk_profile === "CONSERVATIVE"
+          ? "LOW"
+          : policy.risk_profile === "AGGRESSIVE"
+          ? "HIGH"
+          : "BALANCED",
+    });
 
-    policyDebug = policyEnforced.debug ?? [];
+    policyDebug = enforced.debug ?? [];
 
-    selectedCandidates = (policyEnforced.debug ?? [])
+    selectedCandidates = policyDebug
       .filter((c: any) => !c.violations?.includes("HARD_BLOCK"))
-      .sort((a: any, b: any) => {
-        const aScore = typeof a.adjustedScore === "number" ? a.adjustedScore : a.score;
-        const bScore = typeof b.adjustedScore === "number" ? b.adjustedScore : b.score;
-        return bScore - aScore;
-      });
+      .sort(
+        (a: any, b: any) =>
+          (b.adjustedScore ?? b.score) - (a.adjustedScore ?? a.score)
+      );
 
     selectedBest =
-      (policyEnforced.best as GovernedCandidate | null) ??
-      selectedCandidates[0] ??
-      optimizerOutput.best;
+      enforced.best ?? selectedCandidates[0] ?? optimizerOutput.best;
   }
 
-  // ==================================================
-  // DECISION MEMORY / OUTCOME / ANOMALY
-  // ==================================================
+  // ---------------- ANOMALY → ACTION ----------------
 
-  let anomalyResult = {
-    anomaly: false,
-    reasons: [] as string[],
-  };
+  let anomaly = false;
+  let anomalyReasons: string[] = [];
+  let requiredActions: EnrichedAction[] = [];
 
-  let runtimeExecutionAllowed = executionAllowedByPlan(req.plan, req.intent);
-  let runtimeGovernanceReason = runtimeExecutionAllowed
-    ? "DELEGATED_OR_BUDGETED_AUTHORITY"
-    : "ADVISORY_ONLY";
+  let executionAllowed = false;
+  let governanceReason = "ADVISORY_ONLY";
 
   if (selectedBest) {
     const outcome = validateDecisionOutcome(selectedBest);
 
-    anomalyResult = detectDecisionAnomalyV2({
+    const anomalyResult = detectDecisionAnomalyV2({
       candidate: selectedBest,
       dl: {
-        risk_score: dlEvidence?.risk_score?.stockout_risk,
-        anomaly_signals: dlEvidence?.anomaly_signals,
+        risk_score: dl?.risk_score?.stockout_risk,
+        anomaly_signals: dl?.anomaly_signals,
       },
       topologyConfidence: topologyConfidence?.confidence,
       policy: {
-        primary_focus: effectivePolicy.primary_focus,
+        primary_focus: policy.primary_focus,
       },
     });
 
-    console.log("ANOMALY_INPUT_DEBUG", {
-      dlEvidence,
-      topologyConfidence,
+    anomaly = anomalyResult.anomaly;
+
+    // STEP 1 — base reasons (DL / anomaly guard)
+    anomalyReasons = (anomalyResult.reasons ?? []).map((r: string) => {
+      if (r.includes("topology")) return "VERIFY_TOPOLOGY_NODE";
+      if (r.includes("inventory")) return "CHECK_INVENTORY_MISMATCH";
+      if (r.includes("demand")) return "REVIEW_DEMAND_SPIKE";
+      return r;
     });
 
-    if (anomalyResult.anomaly) {
-      console.warn("ANOMALY_DETECTED", anomalyResult.reasons);
+    // STEP 2 — enrich from builder actions
+    if (selectedBest?.actions?.length) {
+      const actionReasons = selectedBest.actions
+        .map((a: any) => a.reason)
+        .filter((r: string) => typeof r === "string");
+
+      for (const r of actionReasons) {
+        if (r.includes("isolated_topology")) {
+          anomalyReasons.push("VERIFY_TOPOLOGY_NODE");
+        }
+
+        if (r.includes("topology_guided")) {
+          anomalyReasons.push("VERIFY_TOPOLOGY_NODE");
+        }
+
+        if (r.includes("inventory_mismatch")) {
+          anomalyReasons.push("CHECK_INVENTORY_MISMATCH");
+        }
+
+        if (r.includes("demand_spike")) {
+          anomalyReasons.push("REVIEW_DEMAND_SPIKE");
+        }
+      }
     }
 
-    if (anomalyResult.anomaly && req.intent === "EXECUTE") {
-      runtimeExecutionAllowed = false;
-      runtimeGovernanceReason =
-        `BLOCKED_BY_ANOMALY:${anomalyResult.reasons.join("|")}`;
+    // STEP 3 — dedupe
+    anomalyReasons = Array.from(new Set(anomalyReasons));
+
+    // STEP 4 — required actions
+    if (anomaly) {
+      if (anomalyReasons.length === 0) {
+        anomalyReasons = deriveReasonsFromActions(selectedBest.actions);
+      }
+
+      requiredActions = enrichAnomalyActions(anomalyReasons);
     }
 
+    // STEP 5 — governance decision
+    const weakReality =
+      typeof realityScore === "number" && realityScore < 0.5;
+
+    if (anomaly || weakReality) {
+      if (weakReality && !anomalyReasons.includes("LOW_REALITY_SCORE")) {
+        anomalyReasons.push("LOW_REALITY_SCORE");
+      }
+
+      if (
+        weakReality &&
+        !requiredActions.some((x) => x.action === "LOW_REALITY_SCORE")
+      ) {
+        requiredActions.push({
+          action: "LOW_REALITY_SCORE",
+          priority: "HIGH",
+          blocking: true,
+          effort: "MEDIUM",
+        });
+      }
+
+      if (req.intent === "EXECUTE") {
+        executionAllowed = false;
+        governanceReason = anomaly
+          ? "BLOCKED_BY_ANOMALY"
+          : "BLOCKED_BY_LOW_REALITY_SCORE";
+      }
+    } else {
+      executionAllowed = executionAllowedByPlan(req.plan, req.intent);
+      governanceReason = executionAllowed
+        ? "DELEGATED_OR_BUDGETED_AUTHORITY"
+        : "ADVISORY_ONLY";
+    }
+
+    // STEP 6 — decision memory
     recordDecision({
       decision_id: req.request_id,
-      policy_used: effectivePolicy,
+      policy_used: policy,
       outcome,
-      anomaly: anomalyResult.anomaly,
+      anomaly,
     });
   }
 
-  // ==================================================
-  // EXPLAINER
-  // ==================================================
+  // ---------------- SIGNAL FINALIZATION ----------------
+
+  if (signals && typeof signals === "object") {
+    (signals as any).reality = deriveRealityState({
+      realityScore,
+      anomaly,
+      topologyConfidence: topologyConfidence?.confidence,
+    });
+  }
+
+  // ---------------- EXPLAINER ----------------
 
   const explanation = selectedBest
-    ? explainDecision(
-        selectedBest as any,
-        selectedCandidates as any
-      )
+    ? explainDecision(selectedBest as any, selectedCandidates as any, {
+        anomaly,
+        anomalyReasons,
+        requiredActions,
+      })
     : null;
 
-  // --------------------------------------------------
-  // SEMANTIC
-  // --------------------------------------------------
-
-  const semanticActions = buildSemanticActions(
-    selectedBest?.actions ?? []
-  );
-
-  // --------------------------------------------------
-  // GOVERNANCE
-  // --------------------------------------------------
+  // ---------------- GOVERNANCE ----------------
 
   const governance: GovernanceResult & {
     anomaly?: boolean;
     anomaly_reasons?: string[];
+    required_actions?: EnrichedAction[];
+    reality_score?: number | null;
   } = {
-    execution_allowed: runtimeExecutionAllowed,
-    reason: runtimeGovernanceReason,
-    anomaly: anomalyResult.anomaly,
-    anomaly_reasons: anomalyResult.reasons,
+    execution_allowed: executionAllowed,
+    reason: governanceReason,
+    anomaly,
+    anomaly_reasons: anomalyReasons,
+    required_actions: requiredActions,
+    reality_score: realityScore,
   };
 
-  // --------------------------------------------------
-  // RESPONSE
-  // --------------------------------------------------
+  // ---------------- RESPONSE ----------------
 
   return {
     ok: true,
@@ -469,27 +496,16 @@ const { signals } = buildUiSignalsV1({
     plan: req.plan,
     intent: req.intent,
     domain: req.domain,
-
     signals,
-
     optimizer: {
-      best_score:
-        typeof selectedBest?.adjustedScore === "number"
-          ? selectedBest.adjustedScore
-          : selectedBest?.score ?? null,
+      best_score: selectedBest?.adjustedScore ?? selectedBest?.score ?? null,
       actions: selectedBest?.actions ?? [],
       candidates: selectedCandidates.length ?? 0,
     },
-
     explanation,
-
     governance,
-
-    executionAllowed: runtimeExecutionAllowed,
-
-    policy_used: effectivePolicy,
+    policy_used: policy,
     policy_debug: policyDebug,
-
     decision_trace: null,
     issued_at: nowIso(),
   } as any;

@@ -176,6 +176,11 @@ export interface ExecutionEvidence {
   external_ref?: string;
 
   details?: Record<string, unknown>;
+
+  // 🔥 AGGIUNTE (non invasive)
+  governance?: "BLOCKED" | "REQUIRES_APPROVAL" | "EXECUTE";
+
+  rationale?: string;
 }
 
 export interface ExecutionBlock {

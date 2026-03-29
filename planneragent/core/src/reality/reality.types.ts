@@ -4,24 +4,41 @@
 // Canonical Source of Truth
 // ======================================================
 
-export type RealitySource =
-  | "observed"
-  | "reconstructed"
-  | "assumed";
+import type { BomDivergenceSignal } from "./planRealityToDivergence.v1";
 
-export type DataAwarenessLevel =
-  | 0
-  | 1
-  | 2
-  | 3;
+// ------------------------------------------------------
+// AWARENESS
+// ------------------------------------------------------
+
+export type DataAwarenessLevel = 0 | 1 | 2 | 3;
+
+// ------------------------------------------------------
+// CONFIDENCE
+// ------------------------------------------------------
+
+export type ConfidenceMap = {
+  stock: number;
+  demand: number;
+  lead_time: number;
+  bom: number;
+};
+
+// ------------------------------------------------------
+// REALITY SOURCES
+// ------------------------------------------------------
+
+export type RealitySource = "observed" | "reconstructed" | "assumed";
+
+// ------------------------------------------------------
+// ASSUMPTIONS
+// ------------------------------------------------------
 
 export type AssumptionCategory =
   | "demand"
-  | "lead_time"
   | "stock"
   | "bom"
-  | "capacity"
-  | "generic";
+  | "lead_time"
+  | "other";
 
 export type AssumptionRecord = {
   id: string;
@@ -33,29 +50,43 @@ export type AssumptionRecord = {
   created_at: string;
 };
 
-export type ConfidenceMap = {
-  stock: number;
-  demand: number;
-  lead_time: number;
-  bom: number;
+// ------------------------------------------------------
+// DIVERGENCE
+// ------------------------------------------------------
+
+export type BomDivergenceMap = {
+  master_vs_plan?: boolean;
+  plan_vs_reality?: BomDivergenceSignal;
+  master_vs_reality?: boolean;
 };
 
-export type ObservedReality = {
-  orders?: unknown[];
-  inventory?: unknown[];
-  movements?: unknown[];
+// ------------------------------------------------------
+// INSTABILITY
+// ------------------------------------------------------
+
+export type ProcessInstabilitySignal = {
+  components: Array<{
+    parent: string;
+    component: string;
+    variance: number;
+    samples: number;
+    instability: number;
+  }>;
+  overall_instability: number;
+  unstable_components: number;
 };
 
-export type ReconstructedReality = {
-  inferred_bom?: unknown;
-  reconstructed_stock?: number;
-  inferred_demand_rate?: number;
-};
+// ------------------------------------------------------
+// REALITY STRUCTURE
+// ------------------------------------------------------
 
-export type AssumedReality = {
-  demand_rate?: number;
-  lead_time_days?: number;
-};
+export type ObservedReality = Record<string, unknown>;
+export type ReconstructedReality = Record<string, unknown>;
+export type AssumedReality = Record<string, unknown>;
+
+// ------------------------------------------------------
+// SNAPSHOT
+// ------------------------------------------------------
 
 export type RealitySnapshot = {
   observed: ObservedReality;
@@ -63,10 +94,19 @@ export type RealitySnapshot = {
   assumed: AssumedReality;
 
   awareness_level: DataAwarenessLevel;
-
   confidence: ConfidenceMap;
 
   assumptions: AssumptionRecord[];
+
+  reality_score?: number | null;
+
+  bom_divergence?: BomDivergenceMap;
+
+  process_instability?: ProcessInstabilitySignal;
+
+  fusion?: unknown;
+  twinSnapshot?: unknown;
+  signals?: unknown[];
 
   created_at: string;
 };

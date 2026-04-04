@@ -1,16 +1,27 @@
 // PATH: core/src/executor/routes.executor.ts
 // ======================================================
-// PlannerAgent — Executor Routes
-// Status: CANONICAL · SAFE ENDPOINTS
+// PlannerAgent — Executor Routes v2
 // ======================================================
 
-import { previewExecution, runExecution } from "./executor.runtime";
-import type { ExecutorRequest } from "../../../contracts/executor/executor.request";
+import { executeRuntimeV1 } from "./executor.runtime.v1";
+import type { ExecutorRequestV2 } from "../../../contracts/executor/executor.request.v2";
 
-export async function handleExecutorPreview(req: ExecutorRequest) {
-  return previewExecution(req);
+export async function handleExecutorPreview(req: ExecutorRequestV2) {
+  return {
+    preview: true,
+    intent: req.intent,
+  };
 }
 
-export async function handleExecutorRun(req: ExecutorRequest) {
-  return runExecution(req);
+export async function handleExecutorRun(req: ExecutorRequestV2) {
+  return executeRuntimeV1(
+    {
+      intents: [req.intent],
+      context: req.context,
+    },
+    {
+      tenantId: req.context.tenantId,
+      approver_id: req.context.approver,
+    }
+  );
 }

@@ -8,18 +8,13 @@
 // - deterministic candidate injection
 // - preserves v6 logic as exploration layer
 // - eliminates semantic mismatch risk
+// - removes legacy double-count shortage logic
 // ======================================================
 
 import type { Action, OptimizerInput } from "./contracts";
 
 import { resolveConstraintsHint } from "./constraints";
 import { mulberry32, pickInt, seedFromRequestId } from "./seeds";
-
-import {
-  normalizeOrders,
-  normalizeInventory,
-  normalizeMovements,
-} from "../../../datasets/dlci/adapters";
 
 import { buildActionsFromRealityV2 } from "../../execution/action.builder.v2";
 
@@ -28,7 +23,6 @@ import { buildActionsFromRealityV2 } from "../../execution/action.builder.v2";
 // ======================================================
 
 export function generateCandidateActions(input: OptimizerInput): Action[][] {
-
   console.log("GENERATOR_V7_ACTIVE");
 
   const hint = resolveConstraintsHint(input.constraints_hint);
@@ -36,16 +30,30 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   const seed = seedFromRequestId(input.requestId);
   const rng = mulberry32(seed);
 
-  const orders = normalizeOrders(input.orders ?? []);
-  const inventory = normalizeInventory(input.inventory ?? []);
-  const movements = normalizeMovements(input.movements ?? []);
+  // --------------------------------------------------
+  // INPUTS
+  // IMPORTANT:
+  // orders / inventory / movements are already normalized
+  // and aligned upstream by orchestrator.
+  // DO NOT re-normalize and DO NOT re-interpret here.
+  // --------------------------------------------------
+
+  const orders = normalizeOrdersForGenerator(input.orders ?? []);
+  const inventory = normalizeInventoryForGenerator(input.inventory ?? []);
+  const movements = normalizeMovementsForGenerator(input.movements ?? []);
 
   const skus = extractSkusFromOrders(orders);
+
+  // --------------------------------------------------
+  // SHORTAGE (light exploration only)
+  // IMPORTANT:
+  // generator must not double count movements into supply,
+  // because inventory in input is already effective inventory.
+  // --------------------------------------------------
 
   const shortageBySku = estimateShortageBySku(
     orders,
     inventory,
-    movements,
     skus
   );
 
@@ -55,7 +63,7 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
 
   console.log(
     "[OPT] ORDERS_SEEN",
-    orders.map(o => ({
+    orders.map((o) => ({
       orderId: o.orderId,
       sku: o.sku,
       qty: o.qty
@@ -64,7 +72,7 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
 
   console.log(
     "[OPT] INVENTORY_SEEN",
-    inventory.map(i => ({
+    inventory.map((i) => ({
       sku: i.sku,
       qty: i.qty
     }))
@@ -72,11 +80,10 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
 
   console.log(
     "[OPT] SHORTAGE_MAP",
-    Array.from(shortageBySku.entries())
-      .map(([sku, shortage]) => ({
-        sku,
-        shortage
-      }))
+    Array.from(shortageBySku.entries()).map(([sku, shortage]) => ({
+      sku,
+      shortage
+    }))
   );
 
   // --------------------------------------------------
@@ -89,7 +96,7 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   const candidates: Action[][] = [];
 
   // ==================================================
-  // 🔥 BUILDER FIRST (CORE CHANGE V7)
+  // BUILDER FIRST (CORE CHANGE V7)
   // ==================================================
 
   const builderActions = buildActionsFromRealityV2(input);
@@ -110,7 +117,6 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   // --------------------------------------------------
 
   for (const o of orders.slice(0, 12)) {
-
     const shift = pickInt(
       rng,
       1,
@@ -125,15 +131,13 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
         reason: "opt_v7_reschedule",
       },
     ]);
-
   }
 
   // --------------------------------------------------
-  // SHORTAGE ACTIONS (V6 preserved)
+  // SHORTAGE ACTIONS (exploration layer)
   // --------------------------------------------------
 
   for (const [sku, shortage] of shortageBySku.entries()) {
-
     if (shortage <= 0) continue;
 
     const degree = topology.get(sku) ?? 0;
@@ -158,7 +162,6 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
     ]);
 
     if (degree > 0) {
-
       const adjustQty = Math.max(
         1,
         Math.floor(shortage * 0.5)
@@ -174,9 +177,7 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
           reason: "opt_v7_prod_adjust",
         },
       ]);
-
     }
-
   }
 
   // --------------------------------------------------
@@ -184,7 +185,6 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   // --------------------------------------------------
 
   for (let i = 0; i < 6; i++) {
-
     const o = orders[
       pickInt(
         rng,
@@ -218,11 +218,9 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
         reason: "opt_v7_mix",
       },
     ]);
-
   }
 
   return dedupe(candidates);
-
 }
 
 // ======================================================
@@ -230,12 +228,10 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
 // ======================================================
 
 function estimateShortageBySku(
-  orders: any[],
-  inventory: any[],
-  movements: any[],
+  orders: Array<{ orderId: string; sku: string; qty: number }>,
+  inventory: Array<{ sku: string; qty: number }>,
   skus: string[]
 ) {
-
   const demand = new Map<string, number>();
   const supply = new Map<string, number>();
 
@@ -243,12 +239,11 @@ function estimateShortageBySku(
     demand.set(o.sku, (demand.get(o.sku) ?? 0) + o.qty);
   }
 
+  // IMPORTANT:
+  // inventory here is already effective inventory
+  // (snapshot + reconstruction handled upstream)
   for (const i of inventory) {
     supply.set(i.sku, (supply.get(i.sku) ?? 0) + i.qty);
-  }
-
-  for (const m of movements) {
-    supply.set(m.sku, (supply.get(m.sku) ?? 0) + m.qty);
   }
 
   const shortage = new Map<string, number>();
@@ -266,8 +261,9 @@ function estimateShortageBySku(
 // LEAD TIMES
 // ======================================================
 
-function extractLeadTimes(movements: any[]) {
-
+function extractLeadTimes(
+  movements: Array<{ sku: string; lead_time?: number }>
+) {
   const map = new Map<string, number>();
 
   for (const m of movements) {
@@ -288,7 +284,6 @@ function extractLeadTimes(movements: any[]) {
 // ======================================================
 
 function buildTopologyDegreeMap(input: OptimizerInput) {
-
   const map = new Map<string, number>();
   const topology = input.operationalTopology;
 
@@ -303,10 +298,55 @@ function buildTopologyDegreeMap(input: OptimizerInput) {
 }
 
 // ======================================================
+// INPUT NORMALIZATION FOR GENERATOR
+// ======================================================
+
+function normalizeOrdersForGenerator(
+  orders: any[]
+): Array<{ orderId: string; sku: string; qty: number }> {
+  return (orders ?? [])
+    .map((o, index) => {
+      const orderId = String(o?.orderId ?? o?.id ?? `AUTO_ORDER_${index + 1}`).trim();
+      const sku = String(o?.sku ?? o?.item ?? o?.code ?? "").trim();
+      const qty = Number(o?.qty ?? o?.quantity ?? 0);
+
+      return { orderId, sku, qty };
+    })
+    .filter((o) => o.sku && Number.isFinite(o.qty) && o.qty > 0);
+}
+
+function normalizeInventoryForGenerator(
+  inventory: any[]
+): Array<{ sku: string; qty: number }> {
+  return (inventory ?? [])
+    .map((i) => {
+      const sku = String(i?.sku ?? i?.item ?? i?.code ?? "").trim();
+      const qty = Number(i?.qty ?? i?.quantity ?? i?.onHand ?? i?.on_hand ?? 0);
+
+      return { sku, qty };
+    })
+    .filter((i) => i.sku && Number.isFinite(i.qty));
+}
+
+function normalizeMovementsForGenerator(
+  movements: any[]
+): Array<{ sku: string; qty: number; type?: string; date?: string; lead_time?: number }> {
+  return (movements ?? [])
+    .map((m) => ({
+      sku: String(m?.sku ?? m?.item ?? m?.code ?? "").trim(),
+      qty: Number(m?.qty ?? m?.quantity ?? 0),
+      type: m?.type,
+      date: m?.date,
+      lead_time: Number(m?.lead_time ?? 0),
+    }))
+    .filter((m) => m.sku && Number.isFinite(m.qty));
+}
+
+// ======================================================
 // HELPERS
 // ======================================================
 
-function extractSkusFromOrders(orders: any[]) {
+function extractSkusFromOrders(orders: Array<{ sku: string }>) {
   const set = new Set<string>();
 
   for (const o of orders) {
@@ -317,7 +357,6 @@ function extractSkusFromOrders(orders: any[]) {
 }
 
 function dedupe(list: Action[][]) {
-
   const seen = new Set<string>();
   const out: Action[][] = [];
 

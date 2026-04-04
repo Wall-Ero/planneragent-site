@@ -1,133 +1,160 @@
 // PATH: core/src/executor/executor.runtime.v1.ts
 // ======================================================
-// PlannerAgent — Executor Runtime V3 (REAL EXECUTION)
+// PlannerAgent — Executor Runtime v1
+// Canonical Source of Truth (ALIGNED TO V1 CONTRACTS)
 // ======================================================
 
-import type { ExecutorRequest } from "../../../contracts/executor/executor.request";
-import type { ExecutorResult } from "./executor.result";
+import type {
+  ExecutionRequest,
+  ExecutionResult,
+} from "../execution/execution.contracts.v1";
 
-import type { ExecutionIntent } from "../execution/execution.contracts.v1";
+import { guardExecutionIntent } from "./executor.guard.v1";
 
-import { assertExecutorAuthority, assertExecutorScope } from "./executor.guard";
-import { generateAuditRef } from "./executor.audit";
+import {
+  resolveAgent,
+  type ExecutionAgent,
+} from "../execution/execution.agent.registry.v1";
 
-import { sendEmailWithResend } from "./providers/email.resend";
+// ======================================================
+// TYPES
+// ======================================================
 
-// ------------------------------------------------------
-// ENV TYPE
-// ------------------------------------------------------
-
-type ExecutorEnv = {
-  RESEND_API_KEY?: string;
-};
-
-// ------------------------------------------------------
-// INTERNAL ADAPTER
-// ------------------------------------------------------
-
-function mapIntentToExecutorRequest(input: {
-  intent: ExecutionIntent;
+export interface ExecutorRuntimeEnv {
   tenantId: string;
-  approver?: string;
-}): ExecutorRequest {
-  return {
-    action: {
-      kind: input.intent.action_kind,
-      payload: input.intent.payload,
-    },
-    tenantId: input.tenantId,
-    approver: input.approver,
-  } as unknown as ExecutorRequest;
+  approver_id?: string;
+  RESEND_API_KEY?: string;
+  [key: string]: unknown;
 }
 
-// ------------------------------------------------------
-// RUN EXECUTOR (INTENT-BASED)
-// ------------------------------------------------------
+export interface ExecutorRuntimeTrace {
+  capability_id: string;
+  agent_id: string;
+  started_at: string;
+  completed_at?: string;
+  success?: boolean;
+  error?: string;
+}
 
-export async function runExecutor(input: {
-  intent: ExecutionIntent;
-  tenantId: string;
-  approver?: string;
-  env?: ExecutorEnv;
-}): Promise<ExecutorResult> {
+// ======================================================
+// HELPERS
+// ======================================================
 
-  try {
-    const req = mapIntentToExecutorRequest(input);
+function nowIso(): string {
+  return new Date().toISOString();
+}
 
-    assertExecutorAuthority(req);
-    assertExecutorScope(req);
+// ======================================================
+// MAIN
+// ======================================================
 
-    const auditRef = generateAuditRef();
+export async function executeRuntimeV1(
+  req: ExecutionRequest,
+  env: ExecutorRuntimeEnv
+): Promise<{
+  results: ExecutionResult[];
+  trace: ExecutorRuntimeTrace[];
+}> {
 
-    // --------------------------------------------------
-    // 🔥 REAL EXECUTION SWITCH
-    // --------------------------------------------------
+  const results: ExecutionResult[] = [];
+  const traces: ExecutorRuntimeTrace[] = [];
 
-    switch (input.intent.capability_id) {
+  for (const intent of req.intents) {
 
-      case "notify_supplier": {
+    const trace: ExecutorRuntimeTrace = {
+      capability_id: intent.capability_id,
+      agent_id: "UNKNOWN",
+      started_at: nowIso(),
+    };
 
-        const payload = input.intent.payload as any;
+    const guard = guardExecutionIntent(intent, {
+      hasAuthority: true,
+      approver_id: env.approver_id,
+    });
 
-        if (!input.env?.RESEND_API_KEY) {
-          throw new Error("MISSING_RESEND_API_KEY");
-        }
+    if (!guard.ok) {
+      trace.completed_at = nowIso();
+      trace.success = false;
+      trace.error = guard.reason;
 
-        const to = payload.email ?? "test@example.com";
-        const sku = payload.sku ?? "UNKNOWN";
-        const qty = payload.qty ?? 0;
+      results.push({
+        capability_id: intent.capability_id,
+        success: false,
+        executed_at: nowIso(),
+        error: guard.reason,
+      });
 
-        const subject = `Supply Alert — ${sku}`;
-        const html = `
-          <h3>Supply Alert</h3>
-          <p>SKU: <b>${sku}</b></p>
-          <p>Required Quantity: <b>${qty}</b></p>
-          <p>Please confirm availability.</p>
-        `;
-
-        const result = await sendEmailWithResend({
-          apiKey: input.env.RESEND_API_KEY,
-          to,
-          subject,
-          html,
-        });
-
-        return {
-          ok: true,
-          audit_ref: auditRef,
-          executed_at: new Date().toISOString(),
-          details: result,
-        };
-      }
-
-      case "adjust_production": {
-        console.log("[EXECUTOR] adjust_production", input.intent.payload);
-
-        return {
-          ok: true,
-          audit_ref: auditRef,
-          executed_at: new Date().toISOString(),
-        };
-      }
-
-      case "update_order": {
-        console.log("[EXECUTOR] update_order", input.intent.payload);
-
-        return {
-          ok: true,
-          audit_ref: auditRef,
-          executed_at: new Date().toISOString(),
-        };
-      }
-
-      default:
-        throw new Error("UNKNOWN_EXECUTION_CAPABILITY");
+      traces.push(trace);
+      continue;
     }
 
-  } catch (err) {
-    return {
-      ok: false,
-      reason: (err as Error).message,
-    };
+    let agent: ExecutionAgent;
+
+    try {
+      agent = resolveAgent(intent);
+      trace.agent_id = agent.id;
+    } catch (err: any) {
+      trace.completed_at = nowIso();
+      trace.success = false;
+      trace.error = err?.message ?? "AGENT_RESOLUTION_FAILED";
+
+      results.push({
+        capability_id: intent.capability_id,
+        success: false,
+        executed_at: nowIso(),
+        error: trace.error,
+      });
+
+      traces.push(trace);
+      continue;
+    }
+
+    try {
+      const res = await agent.execute({
+        intent,
+        env,
+        context: req.context,
+      });
+
+      trace.completed_at = nowIso();
+      trace.success = res.ok;
+
+      if (res.ok) {
+        results.push({
+          capability_id: intent.capability_id,
+          success: true,
+          executed_at: res.executed_at,
+          details: res.details,
+        });
+      } else {
+        trace.error = res.reason;
+
+        results.push({
+          capability_id: intent.capability_id,
+          success: false,
+          executed_at: nowIso(),
+          error: res.reason,
+        });
+      }
+
+    } catch (err: any) {
+      trace.completed_at = nowIso();
+      trace.success = false;
+      trace.error = err?.message ?? "EXECUTION_FAILED";
+
+      results.push({
+        capability_id: intent.capability_id,
+        success: false,
+        executed_at: nowIso(),
+        error: trace.error,
+      });
+    }
+
+    traces.push(trace);
   }
+
+  return {
+    results,
+    trace: traces,
+  };
 }

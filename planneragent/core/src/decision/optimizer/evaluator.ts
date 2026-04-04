@@ -14,6 +14,7 @@ import type {
 
 import { evaluateActionConstraints, resolveConstraintsHint } from "./constraints";
 import { actionsSignature } from "./actions";
+import { computeAllocationV2 } from "../allocation/computeAllocation.v2";
 
 // ------------------------------------------------------
 // Weight resolution
@@ -48,7 +49,15 @@ export function evaluateCandidate(
   const evalSteps: string[] = [];
   evalSteps.push("eval:v2:start");
 
-  const baseSupply = buildBaseSupply(input.inventory, input.movements, evalSteps);
+  // --------------------------------------------------
+  // BASE INVENTORY MODEL
+  // IMPORTANT:
+  // inventory in input is already effective inventory
+  // (potentially merged in orchestrator)
+  // so we MUST NOT add movements again here
+  // --------------------------------------------------
+
+  const baseSupply = buildBaseSupply(input.inventory, evalSteps);
 
   const adjusted = applyActionsToModel(
     input,
@@ -58,26 +67,72 @@ export function evaluateCandidate(
     evalSteps
   );
 
-  const alloc = allocateOrders(adjusted, input.orders, constraintsUsed, evalSteps);
+  // --------------------------------------------------
+  // DETERMINISTIC ALLOCATION V2
+  // --------------------------------------------------
+
+  const normalizedOrders = normalizeOrdersForAllocation(input.orders);
+  const normalizedInventory = mapSupplyModelToInventory(adjusted);
+
+  const allocation = computeAllocationV2(
+    normalizedOrders,
+    normalizedInventory
+  );
+
+  const shortageUnits = Object.values(allocation.shortageMap)
+    .reduce((a, b) => a + b, 0);
+
+  const totalDemand = normalizedOrders.reduce((sum, o) => sum + num(o.qty), 0);
+
+  const serviceShortfall =
+    totalDemand > 0
+      ? shortageUnits / totalDemand
+      : 0;
+
+  const inventoryDeltaUnits = Object.values(allocation.remainingInventory)
+    .reduce((a, b) => a + num(b), 0);
+
+  const totalLatenessDays =
+    shortageUnits > 0 && constraintsUsed.freezeHorizonDays > 0
+      ? constraintsUsed.freezeHorizonDays
+      : 0;
+
+  const hardInfeasible = Object.values(allocation.remainingInventory)
+    .some((v) => !Number.isFinite(v));
+
+  const softViolations: string[] = [];
+
+  if (shortageUnits > 0 && constraintsUsed.freezeHorizonDays > 0) {
+    softViolations.push("SOFT:SHORTAGE_IN_FREEZE_HORIZON");
+  }
+
+  evalSteps.push(`alloc:orders=${normalizedOrders.length}`);
+  evalSteps.push(`kpi:shortage=${shortageUnits}`);
+  evalSteps.push(`kpi:serviceShortfall=${serviceShortfall.toFixed(6)}`);
+  evalSteps.push(`kpi:remainingInventory=${round3(inventoryDeltaUnits)}`);
+
+  console.log("ALLOC_V2_LOG", allocation.allocationLog);
+  console.log("ALLOC_V2_SHORTAGE_MAP", allocation.shortageMap);
+  console.log("ALLOC_V2_REMAINING_INV", allocation.remainingInventory);
 
   const kpis: Record<string, number> = {};
-  kpis.shortageUnits = alloc.totalShortage;
-  kpis.latenessDays = alloc.totalLatenessDays;
+  kpis.shortageUnits = shortageUnits;
+  kpis.latenessDays = totalLatenessDays;
   kpis.planChurn = estimateChurn(actions);
   kpis.estimatedCost = estimateCost(actions);
-  kpis.inventoryDeltaUnits = Math.max(0, adjusted.totalExtraSupply);
-  kpis.serviceShortfall = alloc.serviceShortfall;
+  kpis.inventoryDeltaUnits = Math.max(0, inventoryDeltaUnits);
+  kpis.serviceShortfall = serviceShortfall;
 
   const plannerContext = computePlannerContextMetrics(input, actions, evalSteps);
   kpis.contextPenalty = plannerContext.contextPenalty;
 
   let feasibleHard = cEval.feasibleHard;
-  if (alloc.hardInfeasible) {
+  if (hardInfeasible) {
     feasibleHard = false;
     evalSteps.push("hard:allocation_infeasible");
   }
 
-  const soft = [...cEval.softViolations, ...alloc.softViolations];
+  const soft = [...cEval.softViolations, ...softViolations];
 
   const score = scoreFromKpis(
     kpis,
@@ -191,7 +246,6 @@ function computePlannerContextMetrics(
     const nodeIds = new Set(topology.nodes.map((n) => n.id));
     const edgeIndex = buildEdgeIndex(topology.edges ?? []);
 
-    // ✅ penalizza una sola volta per SKU, non per ogni action
     const uniqueSkus = new Set<string>();
 
     for (const a of actions) {
@@ -293,31 +347,16 @@ type SupplyModel = {
 
 function buildBaseSupply(
   inventory: any[],
-  movements: any[],
   evalSteps: string[]
 ): SupplyModel {
   const supplyBySku = new Map<string, number>();
 
   for (const it of inventory ?? []) {
-    const sku = String(it?.sku ?? it?.item ?? it?.code ?? "");
+    const sku = String(it?.sku ?? it?.item ?? it?.code ?? "").trim();
     if (!sku) continue;
 
     const qty = Number(it?.qty ?? it?.onHand ?? it?.on_hand ?? it?.quantity ?? 0);
     add(supplyBySku, sku, qty);
-  }
-
-  for (const mv of movements ?? []) {
-    const sku = String(mv?.sku ?? mv?.item ?? mv?.code ?? "");
-    if (!sku) continue;
-
-    const type = String(mv?.type ?? mv?.direction ?? "").toUpperCase();
-    const qty = Number(mv?.qty ?? mv?.quantity ?? 0);
-
-    if (!Number.isFinite(qty) || qty === 0) continue;
-
-    if (type === "IN" || type === "RECEIPT") add(supplyBySku, sku, qty);
-    else if (type === "OUT" || type === "ISSUE") add(supplyBySku, sku, -Math.abs(qty));
-    else add(supplyBySku, sku, qty);
   }
 
   evalSteps.push(`model:baseSupply:skus=${supplyBySku.size}`);
@@ -367,22 +406,17 @@ function applyActionsToModel(
 }
 
 // ------------------------------------------------------
-// Allocation
+// Allocation mapping helpers
 // ------------------------------------------------------
 
-function allocateOrders(
-  model: SupplyModel,
-  orders: any[],
-  hint: Required<ConstraintsHint>,
-  evalSteps: string[]
-): {
-  totalShortage: number;
-  totalLatenessDays: number;
-  serviceShortfall: number;
-  hardInfeasible: boolean;
-  softViolations: string[];
-} {
-  const sorted = (orders ?? [])
+function normalizeOrdersForAllocation(orders: any[]): Array<{
+  orderId: string;
+  sku: string;
+  qty: number;
+  dueDate?: string;
+  priority?: number;
+}> {
+  return (orders ?? [])
     .map((o, index) => {
       const orderIdRaw = String(o?.orderId ?? o?.id ?? "").trim();
       const sku = String(o?.sku ?? o?.item ?? o?.code ?? "").trim();
@@ -401,77 +435,20 @@ function allocateOrders(
         orderId: orderIdRaw || `AUTO_ORDER_${index + 1}_${sku || "UNKNOWN"}`,
         sku,
         qty,
-        dueDate,
+        dueDate: dueDate || undefined,
       };
     })
-    .filter((o) => o.sku && Number.isFinite(o.qty) && o.qty > 0)
-    .sort((a, b) => {
-      const aHasDue = a.dueDate.length > 0;
-      const bHasDue = b.dueDate.length > 0;
+    .filter((o) => o.sku && Number.isFinite(o.qty) && o.qty > 0);
+}
 
-      if (aHasDue && bHasDue) {
-        if (a.dueDate < b.dueDate) return -1;
-        if (a.dueDate > b.dueDate) return 1;
-      } else if (aHasDue !== bHasDue) {
-        return aHasDue ? -1 : 1;
-      }
-
-      return a.orderId.localeCompare(b.orderId);
-    });
-
-  let totalShortage = 0;
-  let totalLatenessDays = 0;
-  let served = 0;
-  let demand = 0;
-  let hardInfeasible = false;
-
-  const softViolations: string[] = [];
-
-  for (const o of sorted) {
-    demand += o.qty;
-
-    const avail = model.supplyBySku.get(o.sku) ?? 0;
-
-    if (avail >= o.qty) {
-      model.supplyBySku.set(o.sku, avail - o.qty);
-      served += o.qty;
-      continue;
-    }
-
-    if (avail > 0) {
-      served += avail;
-      model.supplyBySku.set(o.sku, 0);
-    }
-
-    const shortage = o.qty - Math.max(0, avail);
-    totalShortage += shortage;
-
-    if (hint.freezeHorizonDays > 0) {
-      softViolations.push("SOFT:SHORTAGE_IN_FREEZE_HORIZON");
-      totalLatenessDays += hint.freezeHorizonDays;
-    }
-  }
-
-  for (const [_, v] of model.supplyBySku.entries()) {
-    if (!Number.isFinite(v)) {
-      hardInfeasible = true;
-      break;
-    }
-  }
-
-  const serviceShortfall = demand > 0 ? (demand - served) / demand : 0;
-
-  evalSteps.push(`alloc:orders=${sorted.length}`);
-  evalSteps.push(`kpi:shortage=${totalShortage}`);
-  evalSteps.push(`kpi:serviceShortfall=${serviceShortfall.toFixed(6)}`);
-
-  return {
-    totalShortage,
-    totalLatenessDays,
-    serviceShortfall,
-    hardInfeasible,
-    softViolations: uniq(softViolations),
-  };
+function mapSupplyModelToInventory(model: SupplyModel): Array<{
+  sku: string;
+  qty: number;
+}> {
+  return Array.from(model.supplyBySku.entries()).map(([sku, qty]) => ({
+    sku,
+    qty,
+  }));
 }
 
 // ------------------------------------------------------

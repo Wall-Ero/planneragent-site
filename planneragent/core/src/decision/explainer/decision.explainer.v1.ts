@@ -1,12 +1,11 @@
 // core/src/decision/explainer/decision.explainer.v1.ts
 // ======================================================
-// PlannerAgent — Decision Explainer v1 (SEMANTIC)
+// PlannerAgent — Decision Explainer v1.1 (SEMANTIC + GOVERNANCE)
 // Canonical Source of Truth
 // ======================================================
 
 import type { CandidatePlan } from "../optimizer/contracts";
 
-// 🔥 NEW
 import {
   WHY_CODES,
   TRADEOFF_CODES,
@@ -23,6 +22,10 @@ export type DecisionExplanation = {
   whyChosen: string[];
   tradeoffs: string[];
   risks: string[];
+
+  // 🔥 NEW
+  whyBlocked?: string;
+  nextSteps?: string[];
 };
 
 // ------------------------------------------------------
@@ -31,7 +34,12 @@ export type DecisionExplanation = {
 
 export function explainDecision(
   best: CandidatePlan,
-  candidates?: CandidatePlan[]
+  candidates?: CandidatePlan[],
+  options?: {
+    anomaly?: boolean;
+    anomalyReasons?: string[];
+    requiredActions?: any[];
+  }
 ): DecisionExplanation {
   const whyChosen = buildWhy(best);
   const tradeoffs = buildTradeoffs(best, candidates);
@@ -39,11 +47,21 @@ export function explainDecision(
 
   const summary = buildSummary(best, whyChosen);
 
+  let whyBlocked: string | undefined;
+  let nextSteps: string[] | undefined;
+
+  if (options?.anomaly) {
+    whyBlocked = buildWhyBlocked(options.anomalyReasons);
+    nextSteps = buildNextSteps(options.requiredActions);
+  }
+
   return {
     summary,
     whyChosen,
     tradeoffs,
     risks,
+    whyBlocked,
+    nextSteps,
   };
 }
 
@@ -55,13 +73,8 @@ function buildWhy(plan: CandidatePlan): string[] {
   const out: string[] = [];
   const k = plan.kpis ?? {};
 
-  if (k.shortageUnits === 0) {
-    out.push("ELIMINATES_SHORTAGE");
-  }
-
-  if (k.serviceShortfall === 0) {
-    out.push("FULL_SERVICE");
-  }
+  if (k.shortageUnits === 0) out.push("ELIMINATES_SHORTAGE");
+  if (k.serviceShortfall === 0) out.push("FULL_SERVICE");
 
   if (k.planChurn > 0 && k.planChurn <= 3) {
     out.push("LIMITED_CHURN");
@@ -75,7 +88,7 @@ function buildWhy(plan: CandidatePlan): string[] {
 }
 
 // ------------------------------------------------------
-// TRADEOFFS → SEMANTIC
+// TRADEOFFS
 // ------------------------------------------------------
 
 function buildTradeoffs(
@@ -92,17 +105,10 @@ function buildTradeoffs(
   const b = best.kpis;
   const a = alt.kpis;
 
-  if (b.estimatedCost > a.estimatedCost) {
-    out.push("HIGHER_COST");
-  }
-
-  if (b.planChurn > a.planChurn) {
-    out.push("INCREASED_PLAN_CHURN");
-  }
-
-  if (b.inventoryDeltaUnits > a.inventoryDeltaUnits) {
+  if (b.estimatedCost > a.estimatedCost) out.push("HIGHER_COST");
+  if (b.planChurn > a.planChurn) out.push("INCREASED_PLAN_CHURN");
+  if (b.inventoryDeltaUnits > a.inventoryDeltaUnits)
     out.push("INVENTORY_BUILDUP");
-  }
 
   if (best.actions.length > 1) {
     out.push("MULTI_ACTION_COMPLEXITY");
@@ -112,35 +118,73 @@ function buildTradeoffs(
 }
 
 // ------------------------------------------------------
-// RISKS → SEMANTIC
+// RISKS
 // ------------------------------------------------------
 
 function buildRisks(plan: CandidatePlan): string[] {
   const out: string[] = [];
-
   const steps = plan.evidence?.evalSteps ?? [];
 
-  if (steps.some(s => s.includes("isolated_topology_node"))) {
+  if (steps.some(s => s.includes("isolated_topology_node")))
     out.push("ISOLATED_TOPOLOGY");
-  }
 
-  if (steps.some(s => s.includes("assumed_supply_penalty"))) {
+  if (steps.some(s => s.includes("assumed_supply_penalty")))
     out.push("SUPPLY_ASSUMPTION");
-  }
 
-  if (steps.some(s => s.includes("single_action_penalty"))) {
+  if (steps.some(s => s.includes("single_action_penalty")))
     out.push("SINGLE_SUPPLIER_DEPENDENCY");
-  }
 
-  if (steps.some(s => s.includes("SHORTAGE_IN_FREEZE_HORIZON"))) {
+  if (steps.some(s => s.includes("SHORTAGE_IN_FREEZE_HORIZON")))
     out.push("EXECUTION_RISK");
-  }
 
   return dedupe(out);
 }
 
 // ------------------------------------------------------
-// SUMMARY (temporaneo deterministic)
+// WHY BLOCKED (NEW)
+// ------------------------------------------------------
+
+function buildWhyBlocked(reasons?: string[]): string {
+  if (!reasons || reasons.length === 0) {
+    return "Execution is blocked due to detected anomaly.";
+  }
+
+  if (reasons.includes("VERIFY_TOPOLOGY_NODE")) {
+    return "Execution is blocked because topology reliability is not sufficient.";
+  }
+
+  if (reasons.includes("CHECK_INVENTORY_MISMATCH")) {
+    return "Execution is blocked due to inventory inconsistency.";
+  }
+
+  return "Execution is blocked due to unresolved anomaly signals.";
+}
+
+// ------------------------------------------------------
+// NEXT STEPS (NEW)
+// ------------------------------------------------------
+
+function buildNextSteps(actions?: any[]): string[] {
+  if (!actions || actions.length === 0) return [];
+
+  return actions.map((a) => {
+    const action = typeof a === "string" ? a : a.action;
+
+    switch (action) {
+      case "VERIFY_TOPOLOGY_NODE":
+        return "Verify supplier topology and node connections";
+      case "CHECK_INVENTORY_MISMATCH":
+        return "Reconcile inventory discrepancies before execution";
+      case "REVIEW_DEMAND_SPIKE":
+        return "Validate demand spike against real orders";
+      default:
+        return action;
+    }
+  });
+}
+
+// ------------------------------------------------------
+// SUMMARY
 // ------------------------------------------------------
 
 function buildSummary(plan: CandidatePlan, why: string[]): string {

@@ -1,19 +1,15 @@
 // PATH: core/src/executor/executor.guard.ts
-// ======================================================
-// PlannerAgent — Executor Guard
-// Status: CANONICAL · GOVERNANCE ENFORCED
-// ======================================================
 
-import type { ExecutorRequest } from "../../../contracts/executor/executor.request";
+import type { ExecutionIntent } from "../execution/execution.contracts.v1";
 
-export function assertExecutorAuthority(req: ExecutorRequest): void {
-  if (!req.approver_id || !req.approved_at) {
-    throw new Error("[EXECUTOR] Missing human approver");
+export function assertExecutorAuthority(intent: ExecutionIntent): void {
+  if (!intent.capability_id) {
+    throw new Error("MISSING_CAPABILITY_ID");
   }
 }
 
-export function assertExecutorScope(req: ExecutorRequest): void {
-  if (!req.scope?.domain || !req.scope?.action) {
-    throw new Error("[EXECUTOR] Invalid execution scope");
+export function assertExecutorScope(intent: ExecutionIntent): void {
+  if (!intent.payload) {
+    throw new Error("MISSING_PAYLOAD");
   }
 }

@@ -29,7 +29,13 @@ import { runGraphOptimizerV1 } from "./graphOptimizer.v1";
 import { extractCriticalSubgraph } from "./criticalSubgraph.v1";
 import { selectBomByDecision } from "./bomReferenceDecision";
 
-export async function runOptimizerV1(input: OptimizerInput): Promise<OptimizerResult> {
+// ======================================================
+// MAIN
+// ======================================================
+
+export async function runOptimizerV1(
+  input: OptimizerInput
+): Promise<OptimizerResult> {
   const t0 = Date.now();
   const deterministicSeed = String(seedFromRequestId(input.requestId));
 
@@ -85,7 +91,12 @@ export async function runOptimizerV1(input: OptimizerInput): Promise<OptimizerRe
   const selectedBom =
     input.bomReferenceDecision
       ? selectBomByDecision({
-          decision: input.bomReferenceDecision,
+          decision: {
+            ...input.bomReferenceDecision,
+            created_at:
+              (input.bomReferenceDecision as any)?.created_at ??
+              new Date().toISOString(),
+          },
           master_bom: fused?.master_bom ?? [],
           plan_bom: fused?.plan_bom ?? [],
           reality_bom: fused?.reality_bom ?? [],
@@ -96,10 +107,9 @@ export async function runOptimizerV1(input: OptimizerInput): Promise<OptimizerRe
   // MODE SELECTION
   // ---------------------------------------------------
 
-  const topologyConfidence = Number(
-    (input as any).topologyConfidence ??
-    input.operationalTopology?.confidence ??
-    0
+  const topologyConfidence = computeTopologyConfidence(
+    (input as any).topologyConfidence,
+    input.operationalTopology
   );
 
   const mode = selectOptimizerMode({
@@ -130,19 +140,24 @@ export async function runOptimizerV1(input: OptimizerInput): Promise<OptimizerRe
       maxNodes: 80,
     });
 
+    const subgraphTopology = {
+      nodes: subgraph.nodes.map((n) => ({
+        id: n.id,
+        kind: n.kind,
+      })),
+      edges: subgraph.edges.map((e) => ({
+        from: e.from,
+        to: e.to,
+        relation: e.relation,
+        weight: e.weight,
+      })),
+    };
+
     const graphResult = runGraphOptimizerV1({
       orders: input.orders ?? [],
       inventory: input.inventory ?? [],
       inferredBom: selectedBom,
-      operationalTopology: {
-        nodes: subgraph.nodes.map((n) => ({ id: n.id, kind: n.kind })),
-        edges: subgraph.edges.map((e) => ({
-          from: e.from,
-          to: e.to,
-          relation: e.relation,
-          weight: e.weight,
-        })),
-      },
+      operationalTopology: subgraphTopology,
     });
 
     let best = buildCandidateFromGraphResult(input, graphResult, 0);
@@ -223,6 +238,7 @@ export async function runOptimizerV1(input: OptimizerInput): Promise<OptimizerRe
       [],
       0
     );
+
     candidates.push(empty);
     evalCount++;
   }
@@ -264,9 +280,9 @@ export async function runOptimizerV1(input: OptimizerInput): Promise<OptimizerRe
   };
 }
 
-// ------------------------------------------------------
-// Helpers
-// ------------------------------------------------------
+// ======================================================
+// HELPERS
+// ======================================================
 
 function normalizeSelectedBom(
   inferredBom: any
@@ -280,20 +296,58 @@ function normalizeSelectedBom(
         component: String(x?.component ?? "").trim(),
         ratio: Number(x?.ratio ?? x?.median_ratio ?? 0),
       }))
-      .filter((x) => x.parent && x.component && Number.isFinite(x.ratio) && x.ratio > 0);
+      .filter(
+        (x) =>
+          x.parent &&
+          x.component &&
+          Number.isFinite(x.ratio) &&
+          x.ratio > 0
+      );
   }
 
   if (Array.isArray(inferredBom?.bom)) {
-    return inferredBom.bom.flatMap((p: any) =>
-      (p.components ?? []).map((c: any) => ({
-        parent: String(p?.parent ?? "").trim(),
-        component: String(c?.component ?? "").trim(),
-        ratio: Number(c?.median_ratio ?? c?.ratio ?? 0),
-      }))
-    ).filter((x: any) => x.parent && x.component && Number.isFinite(x.ratio) && x.ratio > 0);
+    return inferredBom.bom
+      .flatMap((p: any) =>
+        (p.components ?? []).map((c: any) => ({
+          parent: String(p?.parent ?? "").trim(),
+          component: String(c?.component ?? "").trim(),
+          ratio: Number(c?.median_ratio ?? c?.ratio ?? 0),
+        }))
+      )
+      .filter(
+        (x: any) =>
+          x.parent &&
+          x.component &&
+          Number.isFinite(x.ratio) &&
+          x.ratio > 0
+      );
   }
 
   return [];
+}
+
+function computeTopologyConfidence(
+  explicitConfidence: unknown,
+  topology?: {
+    nodes?: Array<any>;
+    edges?: Array<any>;
+  }
+): number {
+  const explicit = Number(explicitConfidence);
+
+  if (Number.isFinite(explicit) && explicit >= 0) {
+    return explicit;
+  }
+
+  const nodesCount = topology?.nodes?.length ?? 0;
+  const edgesCount = topology?.edges?.length ?? 0;
+
+  if (nodesCount === 0) return 0;
+
+  return Math.max(
+    0,
+    Math.min(1, (edgesCount + 1) / (nodesCount + 1))
+  );
 }
 
 function selectOptimizerMode(params: {
@@ -318,7 +372,9 @@ function selectOptimizerMode(params: {
   return "SKU";
 }
 
-function buildSeedsFromOrders(orders: any[]): Array<{ type: "ORDER"; id: string }> {
+function buildSeedsFromOrders(
+  orders: any[]
+): Array<{ type: "ORDER"; id: string }> {
   return (orders ?? [])
     .map((o) => String(o?.orderId ?? o?.id ?? "").trim())
     .filter(Boolean)

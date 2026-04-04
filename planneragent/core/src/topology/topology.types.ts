@@ -16,7 +16,8 @@ export type EdgeRelation =
   | "consumes"
   | "produces"
   | "supplies"
-  | "depends_on";
+  | "depends_on"
+  | "available";
 
 export type TopologyNode = {
   id: string;

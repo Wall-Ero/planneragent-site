@@ -1,35 +1,30 @@
 // core/src/decision/explainer/decision.explainer.v1.ts
 // ======================================================
-// PlannerAgent — Decision Explainer v1.1 (SEMANTIC + GOVERNANCE)
+// PlannerAgent — Decision Explainer v1.3
 // Canonical Source of Truth
+// SEMANTIC + GOVERNANCE + CORRECTION-AWARE
 // ======================================================
 
 import type { CandidatePlan } from "../optimizer/contracts";
-
-import {
-  WHY_CODES,
-  TRADEOFF_CODES,
-  RISK_CODES,
-  DECISION_CODE_MAP,
-} from "./decision.codes.v1";
+import { DECISION_CODE_MAP } from "./decision.codes.v1";
 
 // ------------------------------------------------------
-// Types
+// TYPES
 // ------------------------------------------------------
+
+export type CorrectionEffect = "FULL" | "PARTIAL" | "NONE";
 
 export type DecisionExplanation = {
   summary: string;
   whyChosen: string[];
   tradeoffs: string[];
   risks: string[];
-
-  // 🔥 NEW
   whyBlocked?: string;
   nextSteps?: string[];
 };
 
 // ------------------------------------------------------
-// Main entry
+// MAIN ENTRY
 // ------------------------------------------------------
 
 export function explainDecision(
@@ -39,8 +34,10 @@ export function explainDecision(
     anomaly?: boolean;
     anomalyReasons?: string[];
     requiredActions?: any[];
+    correctionEffect?: CorrectionEffect;
   }
 ): DecisionExplanation {
+
   const whyChosen = buildWhy(best);
   const tradeoffs = buildTradeoffs(best, candidates);
   const risks = buildRisks(best);
@@ -51,7 +48,11 @@ export function explainDecision(
   let nextSteps: string[] | undefined;
 
   if (options?.anomaly) {
-    whyBlocked = buildWhyBlocked(options.anomalyReasons);
+    whyBlocked = buildWhyBlocked(
+      options.anomalyReasons,
+      options.correctionEffect
+    );
+
     nextSteps = buildNextSteps(options.requiredActions);
   }
 
@@ -66,7 +67,7 @@ export function explainDecision(
 }
 
 // ------------------------------------------------------
-// WHY → SEMANTIC
+// WHY
 // ------------------------------------------------------
 
 function buildWhy(plan: CandidatePlan): string[] {
@@ -80,7 +81,7 @@ function buildWhy(plan: CandidatePlan): string[] {
     out.push("LIMITED_CHURN");
   }
 
-  if (plan.actions.length >= 2) {
+  if ((plan.actions?.length ?? 0) >= 2) {
     out.push("REDUCES_DEPENDENCY");
   }
 
@@ -110,7 +111,7 @@ function buildTradeoffs(
   if (b.inventoryDeltaUnits > a.inventoryDeltaUnits)
     out.push("INVENTORY_BUILDUP");
 
-  if (best.actions.length > 1) {
+  if ((best.actions?.length ?? 0) > 1) {
     out.push("MULTI_ACTION_COMPLEXITY");
   }
 
@@ -141,27 +142,46 @@ function buildRisks(plan: CandidatePlan): string[] {
 }
 
 // ------------------------------------------------------
-// WHY BLOCKED (NEW)
+// WHY BLOCKED / GOVERNANCE MESSAGE
 // ------------------------------------------------------
 
-function buildWhyBlocked(reasons?: string[]): string {
+function buildWhyBlocked(
+  reasons?: string[],
+  correctionEffect: CorrectionEffect = "NONE"
+): string {
+
+  // 🟢 FULL → non è più davvero bloccato
+  if (correctionEffect === "FULL") {
+    return "Execution is currently constrained, but proposed correction actions can fully resolve the issue.";
+  }
+
+  // 🟡 PARTIAL
+  if (correctionEffect === "PARTIAL") {
+    return "Execution remains constrained because correction actions reduce the issue but do not eliminate it.";
+  }
+
+  // 🔴 NONE → vero blocco
   if (!reasons || reasons.length === 0) {
     return "Execution is blocked due to detected anomaly.";
   }
 
-  if (reasons.includes("VERIFY_TOPOLOGY_NODE")) {
-    return "Execution is blocked because topology reliability is not sufficient.";
+  if (reasons.includes("LOW_TOPOLOGY_CONFIDENCE")) {
+    return "Execution is blocked due to low system reliability.";
   }
 
-  if (reasons.includes("CHECK_INVENTORY_MISMATCH")) {
+  if (reasons.includes("INVENTORY_MISMATCH")) {
     return "Execution is blocked due to inventory inconsistency.";
+  }
+
+  if (reasons.includes("EXECUTION_MISMATCH")) {
+    return "Execution is blocked due to mismatch between expected and actual execution.";
   }
 
   return "Execution is blocked due to unresolved anomaly signals.";
 }
 
 // ------------------------------------------------------
-// NEXT STEPS (NEW)
+// NEXT STEPS
 // ------------------------------------------------------
 
 function buildNextSteps(actions?: any[]): string[] {
@@ -171,12 +191,25 @@ function buildNextSteps(actions?: any[]): string[] {
     const action = typeof a === "string" ? a : a.action;
 
     switch (action) {
-      case "VERIFY_TOPOLOGY_NODE":
-        return "Verify supplier topology and node connections";
-      case "CHECK_INVENTORY_MISMATCH":
-        return "Reconcile inventory discrepancies before execution";
-      case "REVIEW_DEMAND_SPIKE":
-        return "Validate demand spike against real orders";
+
+      case "POST_COMPONENT_CONSUMPTION":
+        return "Post missing component consumption";
+
+      case "POST_PRODUCTION_RECEIPT":
+        return "Post missing production receipt";
+
+      case "POST_SUPPLIER_RECEIPT":
+        return "Post missing supplier receipt";
+
+      case "POST_CUSTOMER_SHIPMENT":
+        return "Post missing shipment";
+
+      case "INVESTIGATE_INVENTORY_MISMATCH":
+        return "Investigate inventory discrepancy";
+
+      case "VERIFY_BOM_OR_SCRAP":
+        return "Verify BOM or scrap";
+
       default:
         return action;
     }
@@ -199,7 +232,7 @@ function buildSummary(plan: CandidatePlan, why: string[]): string {
 }
 
 // ------------------------------------------------------
-// Helpers
+// HELPERS
 // ------------------------------------------------------
 
 function findBestAlternative(
@@ -234,7 +267,7 @@ function actionLabel(kind: string): string {
     case "RESCHEDULE_DELIVERY":
       return "delivery reschedule";
     default:
-      return kind.toLowerCase();
+      return String(kind ?? "unknown_action").toLowerCase();
   }
 }
 

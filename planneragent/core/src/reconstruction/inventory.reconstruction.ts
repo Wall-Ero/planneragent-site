@@ -1,6 +1,6 @@
 // core/src/reconstruction/inventory.reconstruction.ts
 // ======================================================
-// PlannerAgent — Inventory Reconstruction Engine v1
+// PlannerAgent — Inventory Reconstruction Engine v2
 // Canonical Source of Truth
 // ======================================================
 
@@ -31,45 +31,45 @@ export function reconstructInventoryFromMovements(
 
   const inventory: InventoryMap = {};
 
-  for (const m of movements) {
+  for (const m of movements ?? []) {
 
-    if (!m.sku) continue;
+    if (!m?.sku) continue;
 
     ensure(inventory, m.sku);
 
+    const qty = Math.abs(Number(m.qty ?? 0));
+
     // --------------------------------------------------
-    // SEMANTIC EVENTS
+    // CANONICAL EVENT ENGINE (NO ERP TYPES HERE)
     // --------------------------------------------------
 
-    const type = m.type?.toUpperCase();
+    switch (m.event) {
 
-    // 🔵 PRODUCTION LOAD → aumenta stock FG
-    if (type === "T") {
-      inventory[m.sku] += m.qty;
-      continue;
-    }
+      // 🔵 INBOUND (aumentano stock)
+      case "PRODUCTION_LOAD":
+      case "SUPPLIER_RECEIPT":
+      case "STOCK_TRANSFER_IN":
+      case "INVENTORY_ADJUSTMENT_POS":
+        inventory[m.sku] += qty;
+        break;
 
-    // 🔴 COMPONENT CONSUMPTION → diminuisce stock componenti
-    if (type === "U") {
-      inventory[m.sku] -= m.qty;
-      continue;
-    }
+      // 🔴 OUTBOUND (diminuiscono stock)
+      case "COMPONENT_CONSUMPTION":
+      case "CUSTOMER_SHIPMENT":
+      case "STOCK_TRANSFER_OUT":
+      case "INVENTORY_ADJUSTMENT_NEG":
+        inventory[m.sku] -= qty;
+        break;
 
-    // 🟡 INBOUND (es. DDT carico)
-    if (type === "M" || type === "IN") {
-      inventory[m.sku] += m.qty;
-      continue;
-    }
-
-    // 🟠 OUTBOUND (es. spedizioni)
-    if (type === "B" || type === "OUT") {
-      inventory[m.sku] -= m.qty;
-      continue;
+      // ⚠️ UNKNOWN → ignorato ma loggato
+      default:
+        console.warn("RECON_UNKNOWN_EVENT", m.event, m);
+        break;
     }
   }
 
   // ------------------------------------------------------
-  // NORMALIZATION OUTPUT
+  // OUTPUT NORMALIZATION
   // ------------------------------------------------------
 
   const result: NormalizedInventory[] = Object.entries(inventory)
@@ -84,7 +84,7 @@ export function reconstructInventoryFromMovements(
 }
 
 // ------------------------------------------------------
-// GUARD (quando usarlo)
+// GUARD — WHEN TO RECONSTRUCT
 // ------------------------------------------------------
 
 export function shouldReconstructInventory(
@@ -98,43 +98,70 @@ export function shouldReconstructInventory(
   return !hasPositive;
 }
 
+// ------------------------------------------------------
+// MERGE — ERP + DELTA DA MOVIMENTI
+// ------------------------------------------------------
+
 export function mergeInventoryWithReconstruction(
   base: NormalizedInventory[],
   movements: NormalizedMovement[]
 ): NormalizedInventory[] {
 
   if (!movements || movements.length === 0) {
-    return base;
+    return base ?? [];
   }
 
-  const reconstructedMap = new Map<string, number>();
+  const deltaMap = new Map<string, number>();
 
   for (const m of movements) {
-    const prev = reconstructedMap.get(m.sku) ?? 0;
 
-    if (m.type === "T") {
-      reconstructedMap.set(m.sku, prev + (m.qty ?? 0));
-    } else if (m.type === "U") {
-      reconstructedMap.set(m.sku, prev - (m.qty ?? 0));
+    if (!m?.sku) continue;
+
+    const prev = deltaMap.get(m.sku) ?? 0;
+   const qty = Math.abs(Number(m.qty ?? 0));
+
+    switch (m.event) {
+
+      // 🔵 INCREMENTO
+      case "PRODUCTION_LOAD":
+      case "SUPPLIER_RECEIPT":
+      case "STOCK_TRANSFER_IN":
+      case "INVENTORY_ADJUSTMENT_POS":
+        deltaMap.set(m.sku, prev + qty);
+        break;
+
+      // 🔴 DECREMENTO
+      case "COMPONENT_CONSUMPTION":
+      case "CUSTOMER_SHIPMENT":
+      case "STOCK_TRANSFER_OUT":
+      case "INVENTORY_ADJUSTMENT_NEG":
+        deltaMap.set(m.sku, prev - qty);
+        break;
+
+      default:
+        console.warn("MERGE_UNKNOWN_EVENT", m.event, m);
+        break;
     }
   }
 
   const baseMap = new Map<string, number>();
 
-  for (const inv of base) {
-    baseMap.set(inv.sku, inv.qty ?? 0);
+  for (const inv of base ?? []) {
+    if (!inv?.sku) continue;
+    baseMap.set(inv.sku, Number(inv.qty ?? 0));
   }
 
   const allSkus = new Set([
     ...Array.from(baseMap.keys()),
-    ...Array.from(reconstructedMap.keys())
+    ...Array.from(deltaMap.keys())
   ]);
 
   const merged: NormalizedInventory[] = [];
 
   for (const sku of allSkus) {
+
     const baseQty = baseMap.get(sku) ?? 0;
-    const deltaQty = reconstructedMap.get(sku) ?? 0;
+    const deltaQty = deltaMap.get(sku) ?? 0;
 
     merged.push({
       sku,

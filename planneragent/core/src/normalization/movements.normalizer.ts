@@ -4,30 +4,30 @@
 // Canonical Source of Truth
 // ======================================================
 
+import { mapMovementType } from "./movement.mapping";
+
 export type NormalizedMovement = {
-  type: string;
   sku: string;
   qty: number;
   date?: string;
+  type: string;
+  event: string;
 };
 
 export function normalizeMovements(input: any[]): NormalizedMovement[] {
-  if (!input || input.length === 0) return [];
+  return (input ?? []).map((m) => {
+    const mappedType = mapMovementType(m.type);
 
-  return input
-    .map((m: any) => {
-      const type = (m.type ?? m.mm_tipork ?? "").toUpperCase();
-      const sku = m.sku ?? m.article;
-      const qty = Number(m.qty ?? m.quantity ?? 0);
+    if (mappedType === "UNKNOWN") {
+      console.warn("UNKNOWN_MOVEMENT_TYPE", m.type);
+    }
 
-      if (!type || !sku) return null;
-
-      return {
-        type,
-        sku,
-        qty,
-        date: m.date
-      };
-    })
-    .filter(Boolean) as NormalizedMovement[];
+    return {
+      sku: m.sku,
+      qty: Number(m.qty ?? 0),
+      date: m.date,
+      type: m.type,
+      event: mappedType,
+    };
+  });
 }

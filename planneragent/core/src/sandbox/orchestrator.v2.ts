@@ -1,7 +1,8 @@
 // core/src/sandbox/orchestrator.v2.ts
 // ======================================================
 // PlannerAgent — Sandbox Orchestrator V2
-// Canonical Source of Truth (CLEAN + STABLE + TOPOLOGY FIX)
+// Canonical Source of Truth
+// CLEAN + STABLE + TOPOLOGY + CORRECTION EFFECT + AUTO-HEAL GOVERNANCE
 // ======================================================
 
 import type {
@@ -38,9 +39,7 @@ import {
 import { validateDecisionOutcome } from "../decision/decision.outcome.validator";
 import { detectDecisionAnomalyV2 } from "../decision/decision.anomaly.guard.v2";
 
-import {
-  normalizeOrders,
-} from "../../datasets/dlci/adapters";
+import { normalizeOrders } from "../../datasets/dlci/adapters";
 
 import {
   enrichAnomalyActions,
@@ -48,20 +47,37 @@ import {
 } from "../decision/anomaly.action.enricher";
 
 import {
-  mergeInventoryWithReconstruction
+  mergeInventoryWithReconstruction,
 } from "../reconstruction/inventory.reconstruction";
 
+import { normalizeInventory } from "../normalization/inventory.normalizer";
 import {
-  normalizeInventory,
-  NormalizedInventory
-} from "../normalization/inventory.normalizer";
-import { normalizeMovements, NormalizedMovement } from "../normalization/movements.normalizer";
+  normalizeMovements,
+} from "../normalization/movements.normalizer";
 
 import {
-  reconcileInventory
+  reconcileInventory,
+  type InventoryReconciliationResult,
 } from "../reality/inventory.reconciliation";
 
 import { detectInventoryAnomalies } from "../reality/anomaly.detector";
+import { generateCorrectionActions } from "../execution/correction.engine";
+import { adaptInventoryReconciliation } from "../reality/reconciliation.adapter";
+
+import { computeExpectedConsumption } from "../decision/expected/expected.consumption.engine";
+import { computeExecutionGap } from "../decision/expected/execution.gap.engine";
+
+import { simulateCorrectionsOnInventory } from "../simulation/correction.simulator.v1";
+
+// ======================================================
+// TYPES / CONSTANTS
+// ======================================================
+
+type CorrectionEffect = "FULL" | "PARTIAL" | "NONE";
+
+const CRITICAL_ANOMALIES = [
+  "LOW_TOPOLOGY_CONFIDENCE",
+] as const;
 
 // ======================================================
 // HELPERS
@@ -134,10 +150,7 @@ function buildTopologyEvidenceFromTopology(topology: {
   const topologyConfidence =
     nodesCount === 0
       ? 0
-      : Math.max(
-          0,
-          Math.min(1, (edgesCount + 1) / (nodesCount + 1))
-        );
+      : Math.max(0, Math.min(1, (edgesCount + 1) / (nodesCount + 1)));
 
   return {
     nodes: nodesCount,
@@ -153,6 +166,57 @@ function buildTopologyEvidenceFromTopology(topology: {
   };
 }
 
+function deriveCorrectionEffect(
+  pre: InventoryReconciliationResult,
+  post: InventoryReconciliationResult
+): CorrectionEffect {
+  if (post.majorMismatchCount === 0) return "FULL";
+
+  if (post.totalAbsoluteDelta < pre.totalAbsoluteDelta) {
+    return "PARTIAL";
+  }
+
+  return "NONE";
+}
+
+function dedupeRequiredActions(actions: EnrichedAction[]): EnrichedAction[] {
+  const map = new Map<string, EnrichedAction>();
+
+  for (const action of actions ?? []) {
+    const key = `${action.action}__${action.priority}__${action.blocking}`;
+
+    if (!map.has(key)) {
+      map.set(key, action);
+      continue;
+    }
+
+    const existing = map.get(key)!;
+    map.set(key, {
+      ...existing,
+      blocking: existing.blocking || action.blocking,
+      priority:
+        existing.priority === "HIGH" || action.priority === "HIGH"
+          ? "HIGH"
+          : existing.priority === "MEDIUM" || action.priority === "MEDIUM"
+          ? "MEDIUM"
+          : "LOW",
+    });
+  }
+
+  return Array.from(map.values());
+}
+
+function hasCriticalAnomaly(anomalyReasons: string[]): boolean {
+  return (
+    Array.isArray(anomalyReasons) &&
+    anomalyReasons.some((r) => CRITICAL_ANOMALIES.includes(r as any))
+  );
+}
+
+function hasRuntimeExecutablePlanActions(selectedBest: any): boolean {
+  return Array.isArray(selectedBest?.actions) && selectedBest.actions.length > 0;
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -163,7 +227,9 @@ export async function evaluateSandboxV2(
 ): Promise<SandboxEvaluateResponseV2> {
   void env;
 
-  // ---------------- VALIDATION ----------------
+  // ----------------------------------------------------
+  // VALIDATION
+  // ----------------------------------------------------
 
   if (!req.request_id || !req.company_id) {
     return {
@@ -198,447 +264,586 @@ export async function evaluateSandboxV2(
     } as any;
   }
 
-// ======================================================
-// NORMALIZATION
-// ======================================================
+  // ----------------------------------------------------
+  // NORMALIZATION
+  // ----------------------------------------------------
 
-const orders = normalizeOrders(req.orders ?? []);
-const movements = normalizeMovements(req.movements ?? []);
-const normalizedInventory = normalizeInventory(req.inventory ?? []);
+  const orders = normalizeOrders(req.orders ?? []);
+  const movements = normalizeMovements(req.movements ?? []);
+  const normalizedInventory = normalizeInventory(req.inventory ?? []);
 
-// ======================================================
-// INVENTORY RECONSTRUCTION
-// ======================================================
+  // ----------------------------------------------------
+  // INVENTORY RECONSTRUCTION
+  // ----------------------------------------------------
 
-const inventory = mergeInventoryWithReconstruction(
-  normalizedInventory,
-  movements
-);
+  const inventory = mergeInventoryWithReconstruction(
+    normalizedInventory,
+    movements
+  );
 
-console.log("ORCH_INVENTORY_NORMALIZED", normalizedInventory);
-console.log("ORCH_INVENTORY_EFFECTIVE", inventory);
-console.log("ORCH_MOVEMENTS", movements);
+  console.log("ORCH_INVENTORY_NORMALIZED", normalizedInventory);
+  console.log("ORCH_INVENTORY_EFFECTIVE", inventory);
+  console.log("ORCH_MOVEMENTS", movements);
 
-// ======================================================
-// RECONCILIATION
-// ======================================================
+  // ----------------------------------------------------
+  // RECONCILIATION
+  // ----------------------------------------------------
 
-const inventoryReconciliation = reconcileInventory(
-  normalizedInventory,
-  inventory
-);
+  const inventoryReconciliation = reconcileInventory(
+    normalizedInventory,
+    inventory
+  );
 
-const hasBlockingMismatch =
-  inventoryReconciliation?.hasBlockingMismatch === true;
+  const hasBlockingMismatch =
+    inventoryReconciliation?.hasBlockingMismatch === true;
 
-console.log("ORCH_INVENTORY_RECONCILIATION", inventoryReconciliation);
+  console.log("ORCH_INVENTORY_RECONCILIATION", inventoryReconciliation);
 
-const anomalyDiagnosis = detectInventoryAnomalies(
-  inventoryReconciliation.rows,
-  movements
-);
+  const anomalyDiagnosis = detectInventoryAnomalies(
+    inventoryReconciliation.rows,
+    movements
+  );
 
-console.log("ORCH_INVENTORY_ANOMALY_DIAGNOSIS", anomalyDiagnosis);
-const correctionActions = (anomalyDiagnosis ?? [])
-  .filter((a: any) => a && a.sku && a.cause)
-  .map((a: any) => {
-    if (a.cause === "PRODUCTION_NOT_POSTED") {
-      return {
-        type: "POST_PRODUCTION_RECEIPT",
-        sku: a.sku,
-        qty: Math.abs(a.delta ?? 0),
-        reason: a.explanation ?? "",
-        priority: "HIGH"
-      };
-    }
+  console.log("ORCH_INVENTORY_ANOMALY_DIAGNOSIS", anomalyDiagnosis);
 
-    if (a.cause === "CONSUMPTION_NOT_REFLECTED") {
-      return {
-        type: "FIX_COMPONENT_CONSUMPTION",
-        sku: a.sku,
-        qty: Math.abs(a.delta ?? 0),
-        reason: a.explanation ?? "",
-        priority: "HIGH"
-      };
-    }
+  const adaptedReconciliation = adaptInventoryReconciliation(
+    inventoryReconciliation
+  );
 
-    return null;
-  })
-  .filter(Boolean);
+  // ----------------------------------------------------
+  // REALITY
+  // ----------------------------------------------------
 
-// ======================================================
-// REALITY
-// ======================================================
-
-const reality = buildReality({
-  orders,
-  inventory,
-  movements,
-  movord: (req.movord ?? []) as any[],
-  movmag: (req.movmag ?? []) as any[],
-  masterBom: (req.masterBom ?? []) as any[],
-});
-
-const inferredBom =
-  (reality as any)?.reconstructed?.inferred_bom ?? [];
-
-const realityScore: number | null =
-  typeof (reality as any)?.reality_score === "number"
-    ? (reality as any).reality_score
-    : null;
-
-// ======================================================
-// DL
-// ======================================================
-
-const dlResult = await computeDlEvidenceV2(
-  { DL_ENABLED: env?.DL_ENABLED ?? "true" },
-  {
-    horizonDays: 30,
-    baselineMetrics: req.baseline_metrics ?? {},
+  const reality = buildReality({
     orders,
     inventory,
     movements,
+    movord: (req.movord ?? []) as any[],
+    movmag: (req.movmag ?? []) as any[],
+    masterBom: (req.masterBom ?? []) as any[],
+  });
+
+  const inferredBom =
+    (reality as any)?.reconstructed?.inferred_bom?.length
+      ? (reality as any).reconstructed.inferred_bom
+      : ((req.masterBom ?? []) as any[]);
+
+  // ----------------------------------------------------
+  // EXPECTED CONSUMPTION
+  // ----------------------------------------------------
+
+  const expectedConsumption = computeExpectedConsumption(
+    orders,
+    inferredBom
+  );
+
+  console.log("EXPECTED_CONSUMPTION", expectedConsumption);
+
+  // ----------------------------------------------------
+  // EXECUTION GAP
+  // ----------------------------------------------------
+
+  const executionGap = computeExecutionGap(
+    expectedConsumption,
+    movements
+  );
+
+  console.log("EXECUTION_GAP", executionGap);
+
+  // ----------------------------------------------------
+  // CORRECTION ENGINE
+  // ----------------------------------------------------
+
+  const correction = generateCorrectionActions(
+    adaptedReconciliation,
+    anomalyDiagnosis,
+    executionGap
+  );
+
+  console.log("ORCH_CORRECTION_ACTIONS", correction);
+
+  // ----------------------------------------------------
+  // CORRECTION SIMULATION
+  // ----------------------------------------------------
+
+  const preCorrectionReconciliation = inventoryReconciliation;
+
+  let simulatedInventory = inventory;
+
+  if (correction.actions?.length) {
+    const simulation = simulateCorrectionsOnInventory(
+      inventory,
+      correction.actions
+    );
+
+    simulatedInventory = simulation.simulatedInventory;
+
+    console.log("SIMULATED_INVENTORY", simulatedInventory);
   }
-);
 
-if (dlResult.health !== "ok" || !dlResult.evidence) {
-  return {
-    ok: false,
-    request_id: req.request_id,
-    reason: "DL_FAILED",
-  } as any;
-}
+  const postCorrectionReconciliation = reconcileInventory(
+    normalizedInventory,
+    simulatedInventory
+  );
 
-const dl = dlResult.evidence;
+  console.log(
+    "POST_CORRECTION_RECONCILIATION",
+    postCorrectionReconciliation
+  );
 
-// ======================================================
-// TOPOLOGY
-// ======================================================
+  const correctionEffect = deriveCorrectionEffect(
+    preCorrectionReconciliation,
+    postCorrectionReconciliation
+  );
 
-const topology = buildOperationalTopology({
-  orders,
-  inventory,
-  movements,
-  movmag: (req.movmag ?? []) as any[],
-  inferredBom,
-});
+  console.log("CORRECTION_EFFECTIVENESS", {
+    effect: correctionEffect,
+  });
 
-const topologyEvidence = buildTopologyEvidenceFromTopology(topology);
-const topologyConfidence = topologyEvidence.topologyConfidence ?? 0.5;
+  const realityScore: number | null =
+    typeof (reality as any)?.reality_score === "number"
+      ? (reality as any).reality_score
+      : null;
 
-// ======================================================
-// SIGNALS
-// ======================================================
+  // ----------------------------------------------------
+  // DL
+  // ----------------------------------------------------
 
-const datasetDescriptor = normalizeDatasetDescriptor(req.dataset_descriptor);
-
-const { signals } = buildUiSignalsV1({
-  dl,
-  dataset_descriptor: datasetDescriptor,
-});
-
-// ======================================================
-// ACTION BUILDER
-// ======================================================
-
-const builtActions = buildActionsFromRealityV2({
-  requestId: req.request_id,
-  plan: req.plan,
-  asOf: nowIso(),
-  orders,
-  inventory,
-  movements,
-  baseline_metrics: req.baseline_metrics ?? {},
-  dlSignals: dl.risk_score ?? {},
-  inferredBom,
-  realitySnapshot: reality,
-  operationalTopology: topology,
-  topologyConfidence,
-} as any);
-
-// ======================================================
-// OPTIMIZER (WITH MISMATCH GUARD)
-// ======================================================
-
-let optimizerOutput: any = null;
-
-if (!hasBlockingMismatch) {
-  try {
-    optimizerOutput = await runOptimizerV1({
-      requestId: req.request_id,
-      plan: req.plan,
-      asOf: nowIso(),
+  const dlResult = await computeDlEvidenceV2(
+    { DL_ENABLED: env?.DL_ENABLED ?? "true" },
+    {
+      horizonDays: 30,
+      baselineMetrics: req.baseline_metrics ?? {},
       orders,
       inventory,
       movements,
-      baseline_metrics: req.baseline_metrics ?? {},
-      dlSignals: dl.risk_score ?? {},
-      inferredBom,
-      realitySnapshot: reality,
-      operationalTopology: topology,
-      topologyConfidence,
-    } as any);
-  } catch {
-    optimizerOutput = null;
-  }
-} else {
-  console.log("OPTIMIZER_SKIPPED_DUE_TO_INVENTORY_MISMATCH");
-}
-
-// fallback se optimizer non gira
-if (!optimizerOutput && hasBlockingMismatch) {
-  optimizerOutput = {
-    best: {
-      actions: builtActions,
-      score: 0,
-    },
-    candidates: [],
-  };
-}
-
-// sicurezza: sempre almeno un set di azioni
-if (
-  optimizerOutput &&
-  (!optimizerOutput.best?.actions ||
-    optimizerOutput.best.actions.length === 0)
-) {
-  optimizerOutput.best.actions = builtActions;
-}
-
-// ======================================================
-// POLICY
-// ======================================================
-
-let history: any[] = [];
-
-try {
-  history = getDecisionHistory();
-} catch {
-  history = [];
-}
-
-const policy = resolvePolicy({ history });
-
-let selectedBest = optimizerOutput?.best ?? null;
-let selectedCandidates = optimizerOutput?.candidates ?? [];
-let policyDebug: any[] = [];
-
-if (optimizerOutput?.candidates?.length) {
-  const weighted = applyPolicy(optimizerOutput.candidates, policy);
-
-  const enforced = applyPolicyConstraints(weighted, {
-    primary_focus: policy.primary_focus,
-    weights: policy.weights,
-    prefer_multi_action: policy.prefer_multi_action,
-    allow_single_lever: policy.allow_single_lever,
-    max_plan_churn: policy.max_plan_churn,
-    risk_profile:
-      policy.risk_profile === "CONSERVATIVE"
-        ? "LOW"
-        : policy.risk_profile === "AGGRESSIVE"
-        ? "HIGH"
-        : "BALANCED",
-  });
-
-  policyDebug = enforced.debug ?? [];
-
-  selectedCandidates = policyDebug
-    .filter((c: any) => !c.violations?.includes("HARD_BLOCK"))
-    .sort(
-      (a: any, b: any) =>
-        (b.adjustedScore ?? b.score) - (a.adjustedScore ?? a.score)
-    );
-
-  selectedBest =
-    enforced.best ?? selectedCandidates[0] ?? optimizerOutput.best;
-}
-
-// ======================================================
-// ANOMALY (ORA NEL POSTO GIUSTO)
-// ======================================================
-
-let anomaly = false;
-let anomalyReasons: string[] = [];
-let requiredActions: EnrichedAction[] = [];
-
-let executionAllowed = false;
-let governanceReason = "ADVISORY_ONLY";
-
-if (selectedBest) {
-  const outcome = validateDecisionOutcome(selectedBest);
-
-  const anomalyResult = detectDecisionAnomalyV2({
-    candidate: selectedBest,
-    dl: {
-      risk_score: dl?.risk_score?.stockout_risk,
-      anomaly_signals: dl?.anomaly_signals,
-    },
-    topologyConfidence,
-    policy: {
-      primary_focus: policy.primary_focus,
-    },
-  });
-
-  anomaly = anomalyResult.anomaly;
-
-  anomalyReasons = Array.from(
-    new Set(anomalyResult.reasons ?? [])
+    }
   );
 
-  if (anomaly) {
-    requiredActions = enrichAnomalyActions(anomalyReasons);
+  if (dlResult.health !== "ok" || !dlResult.evidence) {
+    return {
+      ok: false,
+      request_id: req.request_id,
+      reason: "DL_FAILED",
+    } as any;
   }
 
-  const weakReality =
-    typeof realityScore === "number" && realityScore < 0.5;
+  const dl = dlResult.evidence;
 
-  if (anomaly || weakReality) {
-    executionAllowed = false;
-    governanceReason = anomaly
-      ? "BLOCKED_BY_ANOMALY"
-      : "BLOCKED_BY_LOW_REALITY_SCORE";
-  } else {
-    executionAllowed = executionAllowedByPlan(req.plan, req.intent);
-    governanceReason = executionAllowed
-      ? "DELEGATED_OR_BUDGETED_AUTHORITY"
-      : "ADVISORY_ONLY";
-  }
+  // ----------------------------------------------------
+  // TOPOLOGY
+  // ----------------------------------------------------
 
-  recordDecision({
-    decision_id: req.request_id,
-    policy_used: policy,
-    outcome,
-    anomaly,
+  const topology = buildOperationalTopology({
+    orders,
+    inventory,
+    movements,
+    movmag: (req.movmag ?? []) as any[],
+    inferredBom,
   });
-}
 
-// ======================================================
-// SIGNAL FINALIZATION
-// ======================================================
+  const topologyEvidence = buildTopologyEvidenceFromTopology(topology);
+  const topologyConfidence = topologyEvidence.topologyConfidence ?? 0.5;
 
-if (signals && typeof signals === "object") {
-  (signals as any).reality = deriveRealityState({
-    realityScore,
-    anomaly,
+  // ----------------------------------------------------
+  // SIGNALS
+  // ----------------------------------------------------
+
+  const datasetDescriptor = normalizeDatasetDescriptor(req.dataset_descriptor);
+
+  const { signals } = buildUiSignalsV1({
+    dl,
+    dataset_descriptor: datasetDescriptor,
+  });
+
+  // ----------------------------------------------------
+  // ACTION BUILDER
+  // ----------------------------------------------------
+
+  const builtActions = buildActionsFromRealityV2({
+    requestId: req.request_id,
+    plan: req.plan,
+    asOf: nowIso(),
+    orders,
+    inventory,
+    movements,
+    baseline_metrics: req.baseline_metrics ?? {},
+    dlSignals: dl.risk_score ?? {},
+    inferredBom,
+    realitySnapshot: reality,
+    operationalTopology: topology,
     topologyConfidence,
-  });
-}
+  } as any);
 
-// ======================================================
-// EXPLAINER
-// ======================================================
+  // ----------------------------------------------------
+  // OPTIMIZER
+  // ----------------------------------------------------
 
-const explanation = selectedBest
-  ? explainDecision(selectedBest as any, selectedCandidates as any, {
-      anomaly,
-      anomalyReasons,
-      requiredActions,
-    })
-  : null;
+  let optimizerOutput: any = null;
 
-  const safeActions = (selectedBest?.actions ?? []).map((a: any) => ({
-  type: a?.type ?? "UNKNOWN",
-  sku: a?.sku ?? "",
-  qty: a?.qty ?? 0,
-  reason: a?.reason ?? "",
-}));
+  if (!hasBlockingMismatch) {
+    try {
+      optimizerOutput = await runOptimizerV1({
+        requestId: req.request_id,
+        plan: req.plan,
+        asOf: nowIso(),
+        orders,
+        inventory,
+        movements,
+        baseline_metrics: req.baseline_metrics ?? {},
+        dlSignals: dl.risk_score ?? {},
+        inferredBom,
+        realitySnapshot: reality,
+        operationalTopology: topology,
+        topologyConfidence,
+      } as any);
+    } catch {
+      optimizerOutput = null;
+    }
+  } else {
+    console.log("OPTIMIZER_SKIPPED_DUE_TO_INVENTORY_MISMATCH");
+  }
 
-// ==================================
-//====================
-// EXECUTION
-// ======================================================
+  if (!optimizerOutput && hasBlockingMismatch) {
+    optimizerOutput = {
+      best: {
+        actions: builtActions,
+        score: 0,
+      },
+      candidates: [],
+    };
+  }
 
-let execution = null;
+  if (
+    optimizerOutput &&
+    (!optimizerOutput.best?.actions ||
+      optimizerOutput.best.actions.length === 0)
+  ) {
+    optimizerOutput.best.actions = builtActions;
+  }
 
-if (executionAllowed && selectedBest?.actions?.length) {
+  // ----------------------------------------------------
+  // POLICY
+  // ----------------------------------------------------
+
+  let history: any[] = [];
+
   try {
-    const intents = selectedBest.actions.map((action: any) =>
-      mapActionToExecutionIntent(action, {
-        tenantId: req.company_id,
-        approver: req.actor_id,
-      })
+    history = getDecisionHistory();
+  } catch {
+    history = [];
+  }
+
+  const policy = resolvePolicy({ history });
+
+  let selectedBest = optimizerOutput?.best ?? null;
+  let selectedCandidates = optimizerOutput?.candidates ?? [];
+  let policyDebug: any[] = [];
+
+  if (optimizerOutput?.candidates?.length) {
+    const weighted = applyPolicy(optimizerOutput.candidates, policy);
+
+    const enforced = applyPolicyConstraints(weighted, {
+      primary_focus: policy.primary_focus,
+      weights: policy.weights,
+      prefer_multi_action: policy.prefer_multi_action,
+      allow_single_lever: policy.allow_single_lever,
+      max_plan_churn: policy.max_plan_churn,
+      risk_profile:
+        policy.risk_profile === "CONSERVATIVE"
+          ? "LOW"
+          : policy.risk_profile === "AGGRESSIVE"
+          ? "HIGH"
+          : "BALANCED",
+    });
+
+    policyDebug = enforced.debug ?? [];
+
+    selectedCandidates = policyDebug
+      .filter((c: any) => !c.violations?.includes("HARD_BLOCK"))
+      .sort(
+        (a: any, b: any) =>
+          (b.adjustedScore ?? b.score) - (a.adjustedScore ?? a.score)
+      );
+
+    selectedBest =
+      enforced.best ?? selectedCandidates[0] ?? optimizerOutput.best;
+  }
+
+  // ----------------------------------------------------
+  // ANOMALY + GOVERNANCE
+  // ----------------------------------------------------
+
+  let anomaly = false;
+  let anomalyReasons: string[] = [];
+  let requiredActions: EnrichedAction[] = [];
+
+  let executionAllowed = false;
+  let governanceReason = "ADVISORY_ONLY";
+
+  if (selectedBest) {
+    const hasInventoryBlocking =
+      correction.actions?.some((a) => a.blocking) ?? false;
+
+    const hasExecutionGap =
+      executionGap.some((g) => g.type !== "OK");
+
+    if (hasExecutionGap) {
+      anomaly = true;
+      anomalyReasons = Array.from(
+        new Set([...anomalyReasons, "EXECUTION_MISMATCH"])
+      );
+    }
+
+    const outcome = validateDecisionOutcome(selectedBest);
+
+    const anomalyResult = detectDecisionAnomalyV2({
+      candidate: selectedBest,
+      dl: {
+        risk_score: dl?.risk_score?.stockout_risk,
+        anomaly_signals: dl?.anomaly_signals,
+      },
+      topologyConfidence,
+      policy: {
+        primary_focus: policy.primary_focus,
+      },
+    });
+
+    anomaly = anomaly || anomalyResult.anomaly;
+
+    anomalyReasons = Array.from(
+      new Set([
+        ...anomalyReasons,
+        ...(anomalyResult.reasons ?? []),
+      ])
     );
 
-    const runtimeResult = await executeRuntimeV1(
-      {
-        intents,
-        context: {
+    if (anomaly) {
+      requiredActions = enrichAnomalyActions(anomalyReasons);
+    }
+
+    if (correction.actions?.length) {
+      const correctionEnriched: EnrichedAction[] = correction.actions.map((a) => {
+        const priority: "HIGH" | "MEDIUM" | "LOW" =
+          a.blocking ? "HIGH" : "MEDIUM";
+
+        return {
+          action: a.action,
+          priority,
+          blocking: a.blocking,
+          effort: "MEDIUM",
+        };
+      });
+
+      requiredActions = [
+        ...requiredActions,
+        ...correctionEnriched,
+      ];
+    }
+
+    requiredActions = dedupeRequiredActions(requiredActions);
+
+    const weakReality =
+      typeof realityScore === "number" && realityScore < 0.5;
+
+    const criticalAnomaly = hasCriticalAnomaly(anomalyReasons);
+    const runtimeExecutablePlanActions =
+      hasRuntimeExecutablePlanActions(selectedBest);
+
+    // --------------------------------------------------
+    // AUTO-HEAL GOVERNANCE
+    // --------------------------------------------------
+    //
+    // JUNIOR:
+    // - correction enters governance and can resolve/block the issue
+    // - execution still depends on explicit EXECUTE mode + runtime-executable plan actions
+    //
+    // SENIOR / PRINCIPAL:
+    // - if correctionEffect === FULL and there are no critical blockers,
+    //   the issue is considered healed at governance level
+    // - real auto-execution of correction actions still requires runtime bridge support
+    // --------------------------------------------------
+
+    if (hasInventoryBlocking && correctionEffect === "NONE") {
+      executionAllowed = false;
+      governanceReason = "BLOCKED_BY_INVENTORY_MISMATCH";
+
+    } else if (criticalAnomaly) {
+      executionAllowed = false;
+      governanceReason = "BLOCKED_BY_SYSTEM_UNCERTAINTY";
+
+    } else if (weakReality && correctionEffect === "NONE") {
+      executionAllowed = false;
+      governanceReason = "BLOCKED_BY_LOW_REALITY_SCORE";
+
+    } else if (correctionEffect === "FULL") {
+      const basePlanExecutionAllowed =
+        executionAllowedByPlan(req.plan, req.intent);
+
+      // Technical note:
+      // correction actions are already simulated/governed here,
+      // but runtime auto-execution currently exists only for selectedBest.actions
+      executionAllowed =
+        basePlanExecutionAllowed && runtimeExecutablePlanActions;
+
+      if (req.plan === "SENIOR" || req.plan === "PRINCIPAL") {
+        governanceReason = executionAllowed
+          ? "AUTO_HEALED_EXECUTION"
+          : "AUTO_HEALED_RUNTIME_PENDING";
+      } else {
+        governanceReason = executionAllowed
+          ? "CORRECTION_RESOLVED_APPROVED_EXECUTION"
+          : "CORRECTION_RESOLVED_RUNTIME_PENDING";
+      }
+
+    } else if (correctionEffect === "PARTIAL") {
+      executionAllowed = false;
+      governanceReason = "EXECUTION_WITH_WARNINGS";
+
+    } else {
+      executionAllowed = executionAllowedByPlan(req.plan, req.intent);
+      governanceReason = executionAllowed
+        ? "DELEGATED_OR_BUDGETED_AUTHORITY"
+        : "ADVISORY_ONLY";
+    }
+
+    recordDecision({
+      decision_id: req.request_id,
+      policy_used: policy,
+      outcome,
+      anomaly,
+    });
+  }
+
+  // ----------------------------------------------------
+  // SIGNAL FINALIZATION
+  // ----------------------------------------------------
+
+  if (signals && typeof signals === "object") {
+    (signals as any).reality = deriveRealityState({
+      realityScore,
+      anomaly,
+      topologyConfidence,
+    });
+
+    (signals as any).correction_effect = correctionEffect;
+  }
+
+  // ----------------------------------------------------
+  // EXPLAINER
+  // ----------------------------------------------------
+
+  const explanation = selectedBest
+    ? explainDecision(selectedBest as any, selectedCandidates as any, {
+        anomaly,
+        anomalyReasons,
+        requiredActions,
+        correctionEffect,
+      })
+    : null;
+
+  // ----------------------------------------------------
+  // EXECUTION
+  // ----------------------------------------------------
+
+  let execution: {
+    intents: any[];
+    results: any[];
+    trace: any[];
+  } | null = null;
+
+  if (executionAllowed && selectedBest?.actions?.length) {
+    try {
+      const intents = selectedBest.actions.map((action: any) =>
+        mapActionToExecutionIntent(action, {
           tenantId: req.company_id,
           approver: req.actor_id,
-        },
-      },
-      {
-        tenantId: req.company_id,
-        approver_id: req.actor_id,
-        RESEND_API_KEY: env?.RESEND_API_KEY,
-      }
-    );
+        })
+      );
 
-    execution = {
-      intents,
-      results: runtimeResult.results,
-      trace: runtimeResult.trace,
-    };
-  } catch (err: any) {
-    execution = {
-      intents: [],
-      results: [],
-      trace: [
+      const runtimeResult = await executeRuntimeV1(
         {
-          error: err?.message ?? "EXECUTION_INTEGRATION_FAILED",
-          started_at: nowIso(),
+          intents,
+          context: {
+            tenantId: req.company_id,
+            approver: req.actor_id,
+          },
         },
-      ],
-    };
+        {
+          tenantId: req.company_id,
+          approver_id: req.actor_id,
+          RESEND_API_KEY: env?.RESEND_API_KEY,
+        }
+      );
+
+      execution = {
+        intents,
+        results: runtimeResult.results,
+        trace: runtimeResult.trace,
+      };
+    } catch (err: any) {
+      execution = {
+        intents: [],
+        results: [],
+        trace: [
+          {
+            error: err?.message ?? "EXECUTION_INTEGRATION_FAILED",
+            started_at: nowIso(),
+          },
+        ],
+      };
+    }
   }
-}
 
-// ======================================================
-// GOVERNANCE
-// ======================================================
+  // ----------------------------------------------------
+  // GOVERNANCE PAYLOAD
+  // ----------------------------------------------------
 
-const governance: GovernanceResult & {
-  anomaly?: boolean;
-  anomaly_reasons?: string[];
-  required_actions?: EnrichedAction[];
-  reality_score?: number | null;
-  inventory_reconciliation?: any;
-  inventory_anomaly_diagnosis?: any;
-} = {
-  execution_allowed: executionAllowed,
-  reason: governanceReason,
-  anomaly,
-  anomaly_reasons: anomalyReasons,
-  required_actions: requiredActions,
-  reality_score: realityScore,
-  inventory_reconciliation: inventoryReconciliation,
-  inventory_anomaly_diagnosis:anomalyDiagnosis,
-};
+  const governance: GovernanceResult & {
+    anomaly?: boolean;
+    anomaly_reasons?: string[];
+    required_actions?: EnrichedAction[];
+    reality_score?: number | null;
+    inventory_reconciliation?: any;
+    inventory_anomaly_diagnosis?: any;
+    correction_effect?: CorrectionEffect;
+    post_correction_reconciliation?: any;
+  } = {
+    execution_allowed: executionAllowed,
+    reason: governanceReason,
+    anomaly,
+    anomaly_reasons: anomalyReasons,
+    required_actions: requiredActions,
+    reality_score: realityScore,
+    inventory_reconciliation: inventoryReconciliation,
+    inventory_anomaly_diagnosis: anomalyDiagnosis,
+    correction_effect: correctionEffect,
+    post_correction_reconciliation: postCorrectionReconciliation,
+  };
 
-// ======================================================
-// RESPONSE
-// ======================================================
+  // ----------------------------------------------------
+  // RESPONSE
+  // ----------------------------------------------------
 
-return {
-  ok: true,
-  request_id: req.request_id,
-  plan: req.plan,
-  intent: req.intent,
-  domain: req.domain,
-  signals,
-  optimizer: {
-    best_score: selectedBest?.adjustedScore ?? selectedBest?.score ?? null,
-    actions: selectedBest?.actions ?? [],
-    candidates: selectedCandidates.length ?? 0,
-  },
-  explanation,
-  governance,
-  execution,
-  policy_used: policy,
-  policy_debug: policyDebug,
-  topology_debug: topologyEvidence,
-  decision_trace: null,
-  issued_at: nowIso(),
-} as any;
+  return {
+    ok: true,
+    request_id: req.request_id,
+    plan: req.plan,
+    intent: req.intent,
+    domain: req.domain,
+    signals,
+    optimizer: {
+      best_score: selectedBest?.adjustedScore ?? selectedBest?.score ?? null,
+      actions: selectedBest?.actions ?? [],
+      candidates: selectedCandidates.length ?? 0,
+    },
+    explanation,
+    governance,
+    execution,
+    policy_used: policy,
+    policy_debug: policyDebug,
+    topology_debug: topologyEvidence,
+    decision_trace: null,
+    issued_at: nowIso(),
+  } as any;
 }

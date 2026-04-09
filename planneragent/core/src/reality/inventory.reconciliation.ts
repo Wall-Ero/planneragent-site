@@ -22,6 +22,8 @@ export type InventoryReconciliationRow = {
   delta: number;
   absDelta: number;
   status: InventoryReconciliationStatus;
+  explainedByMovements?: boolean;
+  explanation?: string;
 };
 
 export type InventoryReconciliationResult = {

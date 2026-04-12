@@ -2,6 +2,7 @@
 // ======================================================
 // PlannerAgent — Sandbox Contracts V2
 // Canonical Source of Truth (EXTENDED, NOT REDUCED)
+// + IMPROVE + CAPABILITY GOVERNANCE
 // ======================================================
 
 import type { DataAwarenessLevel } from "../reality/reality.types";
@@ -19,7 +20,7 @@ export type PlanTier =
   | "CHARTER";
 
 /* =====================================================
- DOMAIN (🔥 aggiunto, NON rompe nulla)
+ DOMAIN
 ===================================================== */
 
 export type PlanningDomain =
@@ -29,11 +30,20 @@ export type PlanningDomain =
   | "general";
 
 /* =====================================================
+ 🔥 INTENT (NUOVO BLOCCO FORTE)
+===================================================== */
+
+export type Intent =
+  | "INFORM"
+  | "ADVISE"
+  | "EXECUTE"
+  | "IMPROVE"; // 🔥 fondamentale
+
+/* =====================================================
  SIGNAL UI
 ===================================================== */
 
-
-  export type DataAwarenessState = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
+export type DataAwarenessState = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
 
 export type PlanState = "COHERENT" | "SOME_GAPS" | "INCOHERENT";
 
@@ -41,7 +51,7 @@ export type RealityState =
   | "ALIGNED"
   | "DRIFTING"
   | "MISALIGNED"
-  | "ASSUMED"; // 👈 nuovo
+  | "ASSUMED";
 
 export type DecisionPressureState = "LOW" | "MEDIUM" | "HIGH";
 
@@ -61,7 +71,6 @@ export interface DatasetDescriptor {
 export interface DatasetClassificationResult {
   level: "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
 }
-
 
 /* =====================================================
  HEALTH
@@ -86,7 +95,7 @@ export interface SandboxEvaluateRequestV2 {
 
   plan: PlanTier;
 
-  intent: string;
+  intent: string; // 🔥 lasciato compatibile (non rompiamo runtime)
 
   domain: PlanningDomain;
 
@@ -96,15 +105,13 @@ export interface SandboxEvaluateRequestV2 {
 
   baseline_metrics?: Record<string, number>;
 
-  scenario_metrics?: Record<string, number>; // 🔥 aggiunto
+  scenario_metrics?: Record<string, number>;
 
   snapshot?: unknown;
 
-  baseline_snapshot_id?: string; // 🔥 aggiunto
+  baseline_snapshot_id?: string;
 
-  constraints_hint?: Record<string, unknown>; // 🔥 aggiunto
-
-  /* optional raw datasets */
+  constraints_hint?: Record<string, unknown>;
 
   orders?: unknown[];
 
@@ -118,15 +125,13 @@ export interface SandboxEvaluateRequestV2 {
 
   masterBom?: unknown[];
 
-  /* SCM manual choice */
-
   bom_reference?: "MASTER" | "PLAN" | "REALITY";
 
   selected_bom_reference?: "MASTER" | "PLAN" | "REALITY";
 }
 
 /* =====================================================
- SCENARIOS (🔥 RIAGGIUNTO)
+ SCENARIOS
 ===================================================== */
 
 export type ScenarioV2 = {
@@ -142,7 +147,7 @@ export type ScenarioV2 = {
 };
 
 /* =====================================================
- ADVISORY (intatto)
+ ADVISORY
 ===================================================== */
 
 export type ScenarioAdvisoryV2 = {
@@ -158,7 +163,7 @@ export type ScenarioAdvisoryV2 = {
 };
 
 /* =====================================================
- DL EVIDENCE (intatto)
+ DL EVIDENCE
 ===================================================== */
 
 export type DlEvidenceV2 = {
@@ -175,17 +180,17 @@ export type DlEvidenceV2 = {
 
   assumptions?: number;
 
-topologyConfidence?: {
-  confidence: number;
-  signals?: string[];
-};
+  topologyConfidence?: {
+    confidence: number;
+    signals?: string[];
+  };
 
   anomaly_signals: string[];
 
 };
 
 /* =====================================================
- PRESSURE (intatto)
+ PRESSURE
 ===================================================== */
 
 export type DecisionPressureLevel =
@@ -205,7 +210,7 @@ export type DecisionPressure = {
 };
 
 /* =====================================================
- OPTIMIZER (intatto)
+ OPTIMIZER
 ===================================================== */
 
 export type OptimizerResultV2 = {
@@ -219,7 +224,41 @@ export type OptimizerResultV2 = {
 };
 
 /* =====================================================
- EXECUTION PREVIEW (intatto)
+ 🔥 CAPABILITY EXECUTION (NUOVO BLOCCO)
+===================================================== */
+
+export type CapabilityExecutionStatus =
+  | "EXECUTED"
+  | "PENDING_APPROVAL"
+  | "SKIPPED"
+  | "FALLBACK_TO_RUNTIME"
+  | "FAILED";
+
+export type CapabilityExecutionRecord = {
+
+  action_index: number;
+
+  action_type: string;
+
+  capability_id?: string;
+
+  status: CapabilityExecutionStatus;
+
+  provider?: string;
+
+  result?: unknown;
+
+  error?: string;
+
+};
+
+export type ExecutionEngine =
+  | "CAPABILITY"
+  | "RUNTIME"
+  | "HYBRID";
+
+/* =====================================================
+ EXECUTION PREVIEW (esteso)
 ===================================================== */
 
 export type ExecutionMode =
@@ -241,7 +280,7 @@ export type ExecutionIntentPreview = {
 };
 
 /* =====================================================
- GOVERNANCE (intatto)
+ GOVERNANCE (esteso)
 ===================================================== */
 
 export type GovernanceResult = {
@@ -250,10 +289,27 @@ export type GovernanceResult = {
 
   reason: string;
 
+  // 🔥 NEW — audit layer
+  anomaly?: boolean;
+
+  anomaly_reasons?: string[];
+
+  required_actions?: unknown[];
+
+  reality_score?: number | null;
+
+  correction_effect?: "FULL" | "PARTIAL" | "NONE";
+
+  // 🔥 NEW — IMPROVE
+  improvement_mode?: boolean;
+
+  // 🔥 NEW — execution engine visibility
+  capability_mode?: ExecutionEngine | "DISABLED";
+
 };
 
 /* =====================================================
- 🔥 EXPLANATION (NUOVO BLOCCO)
+ 🔥 EXPLANATION
 ===================================================== */
 
 export type DecisionExplanation = {
@@ -261,6 +317,24 @@ export type DecisionExplanation = {
   whyChosen: string[];
   tradeoffs: string[];
   risks: string[];
+};
+
+/* =====================================================
+ 🔥 EXECUTION RESULT (NUOVO BLOCCO)
+===================================================== */
+
+export type ExecutionResultV2 = {
+
+  capabilities?: CapabilityExecutionRecord[];
+
+  intents?: unknown[];
+
+  results?: unknown[];
+
+  trace?: unknown[];
+
+  engine?: ExecutionEngine;
+
 };
 
 /* =====================================================
@@ -293,12 +367,13 @@ export interface SandboxEvaluateResponseV2 {
 
   governance?: GovernanceResult;
 
-  explanation?: DecisionExplanation; // 🔥 aggiunto
+  execution?: ExecutionResultV2; // 🔥 NEW
+
+  explanation?: DecisionExplanation;
 
   issued_at?: string;
 
   reason?: string;
 
   policy_used?: import("../decision/policy/policy.schema.v1").PolicyRules;
-  
 }

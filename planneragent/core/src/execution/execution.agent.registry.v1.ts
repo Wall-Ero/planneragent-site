@@ -1,4 +1,4 @@
-// PATH: core/src/execution/execution.agent.registry.v1.ts
+// core/src/execution/execution.agent.registry.v1.ts
 // ======================================================
 // PlannerAgent — Execution Agent Registry v1
 // Canonical Source of Truth
@@ -7,9 +7,8 @@
 import type {
   ExecutionIntent,
   ExecutionCapabilityId,
+  ExecutionResult,
 } from "./execution.contracts.v1";
-
-import type { ExecutorResult } from "../executor/executor.result";
 
 // ------------------------------------------------------
 // AGENT CONTRACT
@@ -29,7 +28,7 @@ export interface ExecutionAgent {
       approver?: string;
     };
     env?: Record<string, unknown>;
-  }): Promise<ExecutorResult>;
+  }): Promise<ExecutionResult>;
 }
 
 // ------------------------------------------------------
@@ -51,11 +50,8 @@ export function registerAgent(agent: ExecutionAgent) {
 // ------------------------------------------------------
 
 export function resolveAgent(intent: ExecutionIntent): ExecutionAgent {
-
   const candidates = registry
-    .filter(agent =>
-      agent.capabilities.includes(intent.capability_id)
-    )
+    .filter((agent) => agent.capabilities.includes(intent.capability_id))
     .sort((a, b) => b.priority - a.priority);
 
   if (candidates.length === 0) {
@@ -76,8 +72,7 @@ export async function executeViaAgentRegistry(input: {
     approver?: string;
   };
   env?: Record<string, unknown>;
-}): Promise<ExecutorResult> {
-
+}): Promise<ExecutionResult> {
   const agent = resolveAgent(input.intent);
 
   return agent.execute(input);

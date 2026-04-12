@@ -1,4 +1,4 @@
-// PATH: core/src/executor/executor.runtime.v1.ts
+// core/src/executor/executor.runtime.v1.ts
 // ======================================================
 // PlannerAgent — Executor Runtime v1
 // Canonical Source of Truth (ALIGNED TO V1 CONTRACTS)
@@ -15,6 +15,8 @@ import {
   resolveAgent,
   type ExecutionAgent,
 } from "../execution/execution.agent.registry.v1";
+
+import "./agents/index";
 
 // ======================================================
 // TYPES
@@ -55,12 +57,10 @@ export async function executeRuntimeV1(
   results: ExecutionResult[];
   trace: ExecutorRuntimeTrace[];
 }> {
-
   const results: ExecutionResult[] = [];
   const traces: ExecutorRuntimeTrace[] = [];
 
   for (const intent of req.intents) {
-
     const trace: ExecutorRuntimeTrace = {
       capability_id: intent.capability_id,
       agent_id: "UNKNOWN",
@@ -117,26 +117,13 @@ export async function executeRuntimeV1(
       });
 
       trace.completed_at = nowIso();
-      trace.success = res.ok;
+      trace.success = res.success;
 
-      if (res.ok) {
-        results.push({
-          capability_id: intent.capability_id,
-          success: true,
-          executed_at: res.executed_at,
-          details: res.details,
-        });
-      } else {
-        trace.error = res.reason;
-
-        results.push({
-          capability_id: intent.capability_id,
-          success: false,
-          executed_at: nowIso(),
-          error: res.reason,
-        });
+      if (!res.success) {
+        trace.error = res.error;
       }
 
+      results.push(res);
     } catch (err: any) {
       trace.completed_at = nowIso();
       trace.success = false;

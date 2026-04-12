@@ -1,4 +1,4 @@
-// core/src/executor/agents/email.agent.v1.ts
+// core/src/executor/agents/production.agent.v1.ts
 
 import {
   registerAgent,
@@ -9,27 +9,27 @@ import type {
   ExecutionResult,
 } from "../../execution/execution.contracts.v1";
 
-const emailAgent: ExecutionAgent = {
-  id: "email-agent-v1",
+const productionAgent: ExecutionAgent = {
+  id: "production-agent-v1",
 
   priority: 10,
 
-  capabilities: ["notify_supplier"],
+  capabilities: ["adjust_production"],
 
   async execute({ intent }): Promise<ExecutionResult> {
-    console.log("EMAIL_AGENT_EXECUTE", intent.payload);
+    console.log("PRODUCTION_AGENT_EXECUTE", intent.payload);
 
     return {
       capability_id: intent.capability_id,
       success: true,
       executed_at: new Date().toISOString(),
       details: {
-        channel: "email",
+        system: "production",
       },
     };
   },
 };
 
-registerAgent(emailAgent);
+registerAgent(productionAgent);
 
 export {};

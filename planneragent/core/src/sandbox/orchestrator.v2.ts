@@ -3,6 +3,8 @@
 // PlannerAgent — Sandbox Orchestrator V2
 // Canonical Source of Truth
 // CLEAN + STABLE + TOPOLOGY + CORRECTION EFFECT + AUTO-HEAL GOVERNANCE
+// + IMPROVE INTENT (PRINCIPAL)
+// + CAPABILITY PLAYER BRIDGE (capability-first, runtime-fallback)
 // ======================================================
 
 import type {
@@ -30,6 +32,10 @@ import { applyPolicyConstraints } from "../decision/policy/policy.enforcer.v1";
 import { buildActionsFromRealityV2 } from "../execution/action.builder.v2";
 import { mapActionToExecutionIntent } from "../execution/execution.bridge.v1";
 import { executeRuntimeV1 } from "../executor/executor.runtime.v1";
+
+// 🔥 NEW — capability player bridge
+import { mapActionToCapability } from "../execution/action.capability.mapper";
+import { executeCapability } from "../execution/execution.orchestrator";
 
 import {
   getDecisionHistory,
@@ -75,6 +81,21 @@ import { simulateCorrectionsOnInventory } from "../simulation/correction.simulat
 
 type CorrectionEffect = "FULL" | "PARTIAL" | "NONE";
 
+type CapabilityExecutionRecord = {
+  action_index: number;
+  action_type: string;
+  capability_id?: string;
+  status:
+    | "EXECUTED"
+    | "PENDING_APPROVAL"
+    | "SKIPPED"
+    | "FALLBACK_TO_RUNTIME"
+    | "FAILED";
+  provider?: string;
+  result?: unknown;
+  error?: string;
+};
+
 const CRITICAL_ANOMALIES = [
   "LOW_TOPOLOGY_CONFIDENCE",
 ] as const;
@@ -86,6 +107,10 @@ const CRITICAL_ANOMALIES = [
 function executionAllowedByPlan(plan: PlanTier, intent: string): boolean {
   if (intent !== "EXECUTE") return false;
   return plan === "JUNIOR" || plan === "SENIOR" || plan === "PRINCIPAL";
+}
+
+function isImprove(intent: string): boolean {
+  return intent === "IMPROVE";
 }
 
 function nowIso(): string {
@@ -217,6 +242,38 @@ function hasRuntimeExecutablePlanActions(selectedBest: any): boolean {
   return Array.isArray(selectedBest?.actions) && selectedBest.actions.length > 0;
 }
 
+function normalizeGovernanceReason(
+  executionAllowed: boolean,
+  req: SandboxEvaluateRequestV2
+): string {
+  if (isImprove(req.intent)) {
+    if (req.plan !== "PRINCIPAL") return "PRINCIPAL_REQUIRED_FOR_IMPROVEMENT";
+    return "IMPROVEMENT_AUTHORITY";
+  }
+
+  return executionAllowed
+    ? "DELEGATED_OR_BUDGETED_AUTHORITY"
+    : "ADVISORY_ONLY";
+}
+
+function safeActionType(action: any): string {
+  return (
+    action?.type ??
+    action?.action ??
+    action?.kind ??
+    "UNKNOWN_ACTION"
+  );
+}
+
+function capabilityEngineEnabledForAction(action: any): boolean {
+  try {
+    const capability = mapActionToCapability(action);
+    return Boolean(capability?.id);
+  } catch {
+    return false;
+  }
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -225,8 +282,6 @@ export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2,
   env?: { DB?: D1Database; DL_ENABLED?: string; RESEND_API_KEY?: string }
 ): Promise<SandboxEvaluateResponseV2> {
-  void env;
-
   // ----------------------------------------------------
   // VALIDATION
   // ----------------------------------------------------
@@ -580,6 +635,32 @@ export async function evaluateSandboxV2(
 
   let executionAllowed = false;
   let governanceReason = "ADVISORY_ONLY";
+  let improvementMode = false;
+
+  // 🔥 NEW
+  // governanceLocked prevents later branches from overwriting IMPROVE authority
+  let governanceLocked = false;
+
+  // --------------------------------------------------
+  // 🔥 IMPROVE INTENT (PRINCIPAL ONLY)
+  // --------------------------------------------------
+  // Applied BEFORE downstream governance logic and never overwritten.
+  // IMPROVE produces governed recommendations / improvement authority,
+  // but does not auto-execute runtime actions here.
+  // --------------------------------------------------
+
+  if (isImprove(req.intent)) {
+    governanceLocked = true;
+    executionAllowed = false;
+
+    if (req.plan !== "PRINCIPAL") {
+      improvementMode = false;
+      governanceReason = "PRINCIPAL_REQUIRED_FOR_IMPROVEMENT";
+    } else {
+      improvementMode = true;
+      governanceReason = "IMPROVEMENT_AUTHORITY";
+    }
+  }
 
   if (selectedBest) {
     const hasInventoryBlocking =
@@ -662,49 +743,53 @@ export async function evaluateSandboxV2(
     // - if correctionEffect === FULL and there are no critical blockers,
     //   the issue is considered healed at governance level
     // - real auto-execution of correction actions still requires runtime bridge support
+    //
+    // IMPORTANT:
+    // If governance is already locked by IMPROVE, none of the branches below
+    // may overwrite reason/executionAllowed/improvementMode.
     // --------------------------------------------------
 
-    if (hasInventoryBlocking && correctionEffect === "NONE") {
-      executionAllowed = false;
-      governanceReason = "BLOCKED_BY_INVENTORY_MISMATCH";
+    if (!governanceLocked) {
+      if (hasInventoryBlocking && correctionEffect === "NONE") {
+        executionAllowed = false;
+        governanceReason = "BLOCKED_BY_INVENTORY_MISMATCH";
 
-    } else if (criticalAnomaly) {
-      executionAllowed = false;
-      governanceReason = "BLOCKED_BY_SYSTEM_UNCERTAINTY";
+      } else if (criticalAnomaly) {
+        executionAllowed = false;
+        governanceReason = "BLOCKED_BY_SYSTEM_UNCERTAINTY";
 
-    } else if (weakReality && correctionEffect === "NONE") {
-      executionAllowed = false;
-      governanceReason = "BLOCKED_BY_LOW_REALITY_SCORE";
+      } else if (weakReality && correctionEffect === "NONE") {
+        executionAllowed = false;
+        governanceReason = "BLOCKED_BY_LOW_REALITY_SCORE";
 
-    } else if (correctionEffect === "FULL") {
-      const basePlanExecutionAllowed =
-        executionAllowedByPlan(req.plan, req.intent);
+      } else if (correctionEffect === "FULL") {
+        const basePlanExecutionAllowed =
+          executionAllowedByPlan(req.plan, req.intent);
 
-      // Technical note:
-      // correction actions are already simulated/governed here,
-      // but runtime auto-execution currently exists only for selectedBest.actions
-      executionAllowed =
-        basePlanExecutionAllowed && runtimeExecutablePlanActions;
+        // Technical note:
+        // correction actions are already simulated/governed here,
+        // but runtime auto-execution currently exists only for selectedBest.actions
+        executionAllowed =
+          basePlanExecutionAllowed && runtimeExecutablePlanActions;
 
-      if (req.plan === "SENIOR" || req.plan === "PRINCIPAL") {
-        governanceReason = executionAllowed
-          ? "AUTO_HEALED_EXECUTION"
-          : "AUTO_HEALED_RUNTIME_PENDING";
+        if (req.plan === "SENIOR" || req.plan === "PRINCIPAL") {
+          governanceReason = executionAllowed
+            ? "AUTO_HEALED_EXECUTION"
+            : "AUTO_HEALED_RUNTIME_PENDING";
+        } else {
+          governanceReason = executionAllowed
+            ? "CORRECTION_RESOLVED_APPROVED_EXECUTION"
+            : "CORRECTION_RESOLVED_RUNTIME_PENDING";
+        }
+
+      } else if (correctionEffect === "PARTIAL") {
+        executionAllowed = false;
+        governanceReason = "EXECUTION_WITH_WARNINGS";
+
       } else {
-        governanceReason = executionAllowed
-          ? "CORRECTION_RESOLVED_APPROVED_EXECUTION"
-          : "CORRECTION_RESOLVED_RUNTIME_PENDING";
+        executionAllowed = executionAllowedByPlan(req.plan, req.intent);
+        governanceReason = normalizeGovernanceReason(executionAllowed, req);
       }
-
-    } else if (correctionEffect === "PARTIAL") {
-      executionAllowed = false;
-      governanceReason = "EXECUTION_WITH_WARNINGS";
-
-    } else {
-      executionAllowed = executionAllowedByPlan(req.plan, req.intent);
-      governanceReason = executionAllowed
-        ? "DELEGATED_OR_BUDGETED_AUTHORITY"
-        : "ADVISORY_ONLY";
     }
 
     recordDecision({
@@ -713,6 +798,10 @@ export async function evaluateSandboxV2(
       outcome,
       anomaly,
     });
+  } else if (!governanceLocked) {
+    // selectedBest missing: preserve explicit governance semantics
+    executionAllowed = false;
+    governanceReason = "NO_ACTIONABLE_PLAN";
   }
 
   // ----------------------------------------------------
@@ -745,54 +834,161 @@ export async function evaluateSandboxV2(
   // ----------------------------------------------------
   // EXECUTION
   // ----------------------------------------------------
+  //
+  // New canonical behavior:
+  // 1) capability layer tries to execute mapped actions first
+  // 2) unmapped / failed capability actions fall back to legacy runtime
+  // 3) IMPROVE never executes here
+  // ----------------------------------------------------
 
   let execution: {
+    capabilities?: CapabilityExecutionRecord[];
     intents: any[];
     results: any[];
     trace: any[];
+    engine?: "CAPABILITY" | "RUNTIME" | "HYBRID";
   } | null = null;
 
-  if (executionAllowed && selectedBest?.actions?.length) {
-    try {
-      const intents = selectedBest.actions.map((action: any) =>
-        mapActionToExecutionIntent(action, {
-          tenantId: req.company_id,
-          approver: req.actor_id,
-        })
-      );
+  if (!improvementMode && executionAllowed && selectedBest?.actions?.length) {
+    const capabilityTrace: CapabilityExecutionRecord[] = [];
+    const fallbackActions: any[] = [];
 
-      const runtimeResult = await executeRuntimeV1(
-        {
-          intents,
-          context: {
+    for (let i = 0; i < selectedBest.actions.length; i++) {
+      const action = selectedBest.actions[i];
+      const actionType = safeActionType(action);
+
+      if (!capabilityEngineEnabledForAction(action)) {
+        capabilityTrace.push({
+          action_index: i,
+          action_type: actionType,
+          status: "FALLBACK_TO_RUNTIME",
+          error: "CAPABILITY_NOT_MAPPED",
+        });
+        fallbackActions.push(action);
+        continue;
+      }
+
+      try {
+        const capability = mapActionToCapability(action);
+
+        if (!capability?.id) {
+          capabilityTrace.push({
+            action_index: i,
+            action_type: actionType,
+            status: "FALLBACK_TO_RUNTIME",
+            error: "CAPABILITY_ID_MISSING",
+          });
+          fallbackActions.push(action);
+          continue;
+        }
+
+        const capabilityResult = await executeCapability({
+          capabilityId: capability.id,
+          plan: req.plan,
+          payload: {
+            action,
+            company_id: req.company_id,
+            actor_id: req.actor_id,
+            request_id: req.request_id,
+            baseline_snapshot_id: (req as any).baseline_snapshot_id,
+            context: {
+              tenantId: req.company_id,
+              approver: req.actor_id,
+              issued_at: nowIso(),
+            },
+          },
+        });
+
+        const capabilityStatus = capabilityResult.status;
+
+        capabilityTrace.push({
+          action_index: i,
+          action_type: actionType,
+          capability_id: capability.id,
+          status: capabilityStatus,
+          provider: capabilityResult?.provider,
+          result: capabilityResult,
+        });
+      } catch (err: any) {
+        capabilityTrace.push({
+          action_index: i,
+          action_type: actionType,
+          status: "FALLBACK_TO_RUNTIME",
+          error: err?.message ?? "CAPABILITY_EXECUTION_FAILED",
+        });
+        fallbackActions.push(action);
+      }
+    }
+
+    let runtimeIntents: any[] = [];
+    let runtimeResults: any[] = [];
+    let runtimeTrace: any[] = [];
+
+    if (fallbackActions.length > 0) {
+      try {
+        runtimeIntents = fallbackActions.map((action: any) =>
+          mapActionToExecutionIntent(action, {
             tenantId: req.company_id,
             approver: req.actor_id,
-          },
-        },
-        {
-          tenantId: req.company_id,
-          approver_id: req.actor_id,
-          RESEND_API_KEY: env?.RESEND_API_KEY,
-        }
-      );
+          })
+        );
 
-      execution = {
-        intents,
-        results: runtimeResult.results,
-        trace: runtimeResult.trace,
-      };
-    } catch (err: any) {
-      execution = {
-        intents: [],
-        results: [],
-        trace: [
+        const runtimeResult = await executeRuntimeV1(
+          {
+            intents: runtimeIntents,
+            context: {
+              tenantId: req.company_id,
+              approver: req.actor_id,
+            },
+          },
+          {
+            tenantId: req.company_id,
+            approver_id: req.actor_id,
+            RESEND_API_KEY: env?.RESEND_API_KEY,
+          }
+        );
+
+        runtimeResults = runtimeResult.results;
+        runtimeTrace = runtimeResult.trace;
+      } catch (err: any) {
+        runtimeIntents = [];
+        runtimeResults = [];
+        runtimeTrace = [
           {
             error: err?.message ?? "EXECUTION_INTEGRATION_FAILED",
             started_at: nowIso(),
           },
-        ],
-      };
+        ];
+
+        // mark capability fallback failures as failed when runtime also fails
+        for (const entry of capabilityTrace) {
+          if (entry.status === "FALLBACK_TO_RUNTIME") {
+            entry.status = "FAILED";
+          }
+        }
+      }
     }
+
+    const capabilityExecutedCount = capabilityTrace.filter(
+      (x) => x.status === "EXECUTED" || x.status === "PENDING_APPROVAL" || x.status === "SKIPPED"
+    ).length;
+
+    const runtimeUsed = runtimeIntents.length > 0 || runtimeTrace.length > 0;
+
+    const engine: "CAPABILITY" | "RUNTIME" | "HYBRID" =
+      capabilityExecutedCount > 0 && runtimeUsed
+        ? "HYBRID"
+        : capabilityExecutedCount > 0
+        ? "CAPABILITY"
+        : "RUNTIME";
+
+    execution = {
+      capabilities: capabilityTrace,
+      intents: runtimeIntents,
+      results: runtimeResults,
+      trace: runtimeTrace,
+      engine,
+    };
   }
 
   // ----------------------------------------------------
@@ -808,6 +1004,8 @@ export async function evaluateSandboxV2(
     inventory_anomaly_diagnosis?: any;
     correction_effect?: CorrectionEffect;
     post_correction_reconciliation?: any;
+    improvement_mode?: boolean;
+    capability_mode?: "DISABLED" | "CAPABILITY" | "RUNTIME" | "HYBRID";
   } = {
     execution_allowed: executionAllowed,
     reason: governanceReason,
@@ -819,6 +1017,8 @@ export async function evaluateSandboxV2(
     inventory_anomaly_diagnosis: anomalyDiagnosis,
     correction_effect: correctionEffect,
     post_correction_reconciliation: postCorrectionReconciliation,
+    improvement_mode: improvementMode,
+    capability_mode: execution?.engine ?? "DISABLED",
   };
 
   // ----------------------------------------------------

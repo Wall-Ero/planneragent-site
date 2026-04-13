@@ -34,7 +34,7 @@ import { mapActionToExecutionIntent } from "../execution/execution.bridge.v1";
 import { executeRuntimeV1 } from "../executor/executor.runtime.v1";
 
 // 🔥 NEW — capability player bridge
-import { mapActionToCapability } from "../execution/action.capability.mapper";
+
 import { executeCapability } from "../execution/execution.orchestrator";
 
 import {
@@ -74,6 +74,10 @@ import { computeExpectedConsumption } from "../decision/expected/expected.consum
 import { computeExecutionGap } from "../decision/expected/execution.gap.engine";
 
 import { simulateCorrectionsOnInventory } from "../simulation/correction.simulator.v1";
+
+import type { CapabilityLevel } from "../execution/capability.types";
+import type { ResolutionContext } from "../execution/resolveCapability.final";
+import { resolveCapabilityFinal } from "../execution/resolveCapability.final";
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -265,14 +269,6 @@ function safeActionType(action: any): string {
   );
 }
 
-function capabilityEngineEnabledForAction(action: any): boolean {
-  try {
-    const capability = mapActionToCapability(action);
-    return Boolean(capability?.id);
-  } catch {
-    return false;
-  }
-}
 
 // ======================================================
 // MAIN
@@ -832,164 +828,189 @@ export async function evaluateSandboxV2(
     : null;
 
   // ----------------------------------------------------
-  // EXECUTION
-  // ----------------------------------------------------
-  //
-  // New canonical behavior:
-  // 1) capability layer tries to execute mapped actions first
-  // 2) unmapped / failed capability actions fall back to legacy runtime
-  // 3) IMPROVE never executes here
-  // ----------------------------------------------------
+// EXECUTION
+// ----------------------------------------------------
+//
+// Canonical behavior:
+// 1) resolve capability from action through decision engine
+// 2) execute capability first
+// 3) fallback to legacy runtime only if capability resolution/execution fails
+// 4) IMPROVE never executes here
+// ----------------------------------------------------
 
-  let execution: {
-    capabilities?: CapabilityExecutionRecord[];
-    intents: any[];
-    results: any[];
-    trace: any[];
-    engine?: "CAPABILITY" | "RUNTIME" | "HYBRID";
-  } | null = null;
+let execution: {
+  capabilities?: CapabilityExecutionRecord[];
+  intents: any[];
+  results: any[];
+  trace: any[];
+  engine?: "CAPABILITY" | "RUNTIME" | "HYBRID";
+} | null = null;
 
-  if (!improvementMode && executionAllowed && selectedBest?.actions?.length) {
-    const capabilityTrace: CapabilityExecutionRecord[] = [];
-    const fallbackActions: any[] = [];
+if (!improvementMode && executionAllowed && selectedBest?.actions?.length) {
+  const capabilityTrace: CapabilityExecutionRecord[] = [];
+  const fallbackActions: any[] = [];
 
-    for (let i = 0; i < selectedBest.actions.length; i++) {
-      const action = selectedBest.actions[i];
-      const actionType = safeActionType(action);
+  const resolutionContext: ResolutionContext = {
+    decisionPressure: (signals as any)?.decision_pressure ?? "MEDIUM",
+    riskScore:
+      typeof dl?.risk_score?.stockout_risk === "number"
+        ? dl.risk_score.stockout_risk
+        : 0.5,
+    topologyConfidence:
+      typeof topologyConfidence === "number" ? topologyConfidence : 0.7,
+    correctionEffect,
+    anomaly,
+  };
 
-      if (!capabilityEngineEnabledForAction(action)) {
+  for (let i = 0; i < selectedBest.actions.length; i++) {
+    const action = selectedBest.actions[i];
+    const actionType = safeActionType(action);
+
+    try {
+      const resolution = resolveCapabilityFinal({
+        action: {
+          ...action,
+          type: action?.type ?? action?.action ?? action?.kind ?? "UNKNOWN",
+        },
+        plan: req.plan as CapabilityLevel,
+        context: resolutionContext,
+      });
+
+      if (!resolution.capabilityId) {
         capabilityTrace.push({
           action_index: i,
           action_type: actionType,
           status: "FALLBACK_TO_RUNTIME",
-          error: "CAPABILITY_NOT_MAPPED",
+          error: "CAPABILITY_NOT_RESOLVED",
         });
+
         fallbackActions.push(action);
         continue;
       }
 
-      try {
-        const capability = mapActionToCapability(action);
-
-        if (!capability?.id) {
-          capabilityTrace.push({
-            action_index: i,
-            action_type: actionType,
-            status: "FALLBACK_TO_RUNTIME",
-            error: "CAPABILITY_ID_MISSING",
-          });
-          fallbackActions.push(action);
-          continue;
-        }
-
-        const capabilityResult = await executeCapability({
-          capabilityId: capability.id,
-          plan: req.plan,
-          payload: {
-            action,
-            company_id: req.company_id,
-            actor_id: req.actor_id,
-            request_id: req.request_id,
-            baseline_snapshot_id: (req as any).baseline_snapshot_id,
-            context: {
-              tenantId: req.company_id,
-              approver: req.actor_id,
-              issued_at: nowIso(),
-            },
-          },
-        });
-
-        const capabilityStatus = capabilityResult.status;
-
-        capabilityTrace.push({
-          action_index: i,
-          action_type: actionType,
-          capability_id: capability.id,
-          status: capabilityStatus,
-          provider: capabilityResult?.provider,
-          result: capabilityResult,
-        });
-      } catch (err: any) {
-        capabilityTrace.push({
-          action_index: i,
-          action_type: actionType,
-          status: "FALLBACK_TO_RUNTIME",
-          error: err?.message ?? "CAPABILITY_EXECUTION_FAILED",
-        });
-        fallbackActions.push(action);
-      }
-    }
-
-    let runtimeIntents: any[] = [];
-    let runtimeResults: any[] = [];
-    let runtimeTrace: any[] = [];
-
-    if (fallbackActions.length > 0) {
-      try {
-        runtimeIntents = fallbackActions.map((action: any) =>
-          mapActionToExecutionIntent(action, {
+      const capabilityResult = await executeCapability({
+        capabilityId: resolution.capabilityId,
+        plan: req.plan,
+        payload: {
+          action,
+          company_id: req.company_id,
+          actor_id: req.actor_id,
+          request_id: req.request_id,
+          baseline_snapshot_id: (req as any).baseline_snapshot_id,
+          context: {
             tenantId: req.company_id,
             approver: req.actor_id,
-          })
-        );
-
-        const runtimeResult = await executeRuntimeV1(
-          {
-            intents: runtimeIntents,
-            context: {
-              tenantId: req.company_id,
-              approver: req.actor_id,
-            },
+            issued_at: nowIso(),
           },
-          {
+          resolution: {
+            candidates: resolution.candidates,
+            scoring: resolution.scoring,
+          },
+        },
+      });
+
+      capabilityTrace.push({
+        action_index: i,
+        action_type: actionType,
+        capability_id: resolution.capabilityId,
+        status: capabilityResult.status,
+        provider: capabilityResult?.provider,
+        result: capabilityResult,
+      });
+
+      // Only true execution success stays in capability lane.
+      // Pending approval / skipped are governed states, not runtime fallbacks.
+      if (
+        capabilityResult.status !== "EXECUTED" &&
+        capabilityResult.status !== "PENDING_APPROVAL" &&
+        capabilityResult.status !== "SKIPPED"
+      ) {
+        fallbackActions.push(action);
+      }
+    } catch (err: any) {
+      capabilityTrace.push({
+        action_index: i,
+        action_type: actionType,
+        status: "FALLBACK_TO_RUNTIME",
+        error: err?.message ?? "CAPABILITY_EXECUTION_FAILED",
+      });
+
+      fallbackActions.push(action);
+    }
+  }
+
+  let runtimeIntents: any[] = [];
+  let runtimeResults: any[] = [];
+  let runtimeTrace: any[] = [];
+
+  if (fallbackActions.length > 0) {
+    try {
+      runtimeIntents = fallbackActions.map((action: any) =>
+        mapActionToExecutionIntent(action, {
+          tenantId: req.company_id,
+          approver: req.actor_id,
+        })
+      );
+
+      const runtimeResult = await executeRuntimeV1(
+        {
+          intents: runtimeIntents,
+          context: {
             tenantId: req.company_id,
-            approver_id: req.actor_id,
-            RESEND_API_KEY: env?.RESEND_API_KEY,
-          }
-        );
-
-        runtimeResults = runtimeResult.results;
-        runtimeTrace = runtimeResult.trace;
-      } catch (err: any) {
-        runtimeIntents = [];
-        runtimeResults = [];
-        runtimeTrace = [
-          {
-            error: err?.message ?? "EXECUTION_INTEGRATION_FAILED",
-            started_at: nowIso(),
+            approver: req.actor_id,
           },
-        ];
+        },
+        {
+          tenantId: req.company_id,
+          approver_id: req.actor_id,
+          RESEND_API_KEY: env?.RESEND_API_KEY,
+        }
+      );
 
-        // mark capability fallback failures as failed when runtime also fails
-        for (const entry of capabilityTrace) {
-          if (entry.status === "FALLBACK_TO_RUNTIME") {
-            entry.status = "FAILED";
-          }
+      runtimeResults = runtimeResult.results;
+      runtimeTrace = runtimeResult.trace;
+    } catch (err: any) {
+      runtimeIntents = [];
+      runtimeResults = [];
+      runtimeTrace = [
+        {
+          error: err?.message ?? "EXECUTION_INTEGRATION_FAILED",
+          started_at: nowIso(),
+        },
+      ];
+
+      for (const entry of capabilityTrace) {
+        if (entry.status === "FALLBACK_TO_RUNTIME") {
+          entry.status = "FAILED";
         }
       }
     }
-
-    const capabilityExecutedCount = capabilityTrace.filter(
-      (x) => x.status === "EXECUTED" || x.status === "PENDING_APPROVAL" || x.status === "SKIPPED"
-    ).length;
-
-    const runtimeUsed = runtimeIntents.length > 0 || runtimeTrace.length > 0;
-
-    const engine: "CAPABILITY" | "RUNTIME" | "HYBRID" =
-      capabilityExecutedCount > 0 && runtimeUsed
-        ? "HYBRID"
-        : capabilityExecutedCount > 0
-        ? "CAPABILITY"
-        : "RUNTIME";
-
-    execution = {
-      capabilities: capabilityTrace,
-      intents: runtimeIntents,
-      results: runtimeResults,
-      trace: runtimeTrace,
-      engine,
-    };
   }
+
+  const capabilityHandledCount = capabilityTrace.filter(
+    (x) =>
+      x.status === "EXECUTED" ||
+      x.status === "PENDING_APPROVAL" ||
+      x.status === "SKIPPED"
+  ).length;
+
+  const runtimeUsed = runtimeIntents.length > 0 || runtimeTrace.length > 0;
+
+  const engine: "CAPABILITY" | "RUNTIME" | "HYBRID" =
+    capabilityHandledCount > 0 && runtimeUsed
+      ? "HYBRID"
+      : capabilityHandledCount > 0
+      ? "CAPABILITY"
+      : "RUNTIME";
+
+  execution = {
+    capabilities: capabilityTrace,
+    intents: runtimeIntents,
+    results: runtimeResults,
+    trace: runtimeTrace,
+    engine,
+  };
+}
 
   // ----------------------------------------------------
   // GOVERNANCE PAYLOAD

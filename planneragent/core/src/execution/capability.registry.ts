@@ -1,304 +1,437 @@
 // core/src/execution/capability.registry.ts
 
+/* =====================================================
+ PATH: core/src/execution/capability.registry.ts
+ CANONICAL SNAPSHOT — SOURCE OF TRUTH
+ DOMAIN: FULL SCM DECISION SPACE
+ VERSION: v1.0 (PlannerAgent Operational Coverage)
+===================================================== */
+
 import type { CapabilityDefinition } from "./capability.types";
 
 export const CAPABILITY_REGISTRY = [
-  {
-    id: "EXPEDITE_SINGLE_ORDER",
-    description: "Expedite a single order from supplier",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "API", fallback: ["INTERNAL"] },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "EXPEDITE_SUPPLIER_SYSTEM",
-    description: "Expedite supplier across multiple orders",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "API", fallback: ["ERP"] },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "CREATE_PURCHASE_ORDER",
-    description: "Create a purchase order",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "ERP" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "MANAGE_SUPPLIER_PORTFOLIO",
-    description: "Manage supplier allocation and sourcing strategy",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR", "PRINCIPAL"],
-    providers: { primary: "INTERNAL" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SHORT_TERM_PRODUCTION_ADJUST",
-    description: "Adjust production for a single order",
-    domain: "PRODUCTION",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "ERP" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "RESCHEDULE_SINGLE_ORDER",
-    description: "Reschedule a single production order",
-    domain: "PRODUCTION",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "ERP" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "RESCHEDULE_PRODUCTION_SYSTEM",
-    description: "Reschedule entire production plan",
-    domain: "PRODUCTION",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "ERP" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "OPTIMIZE_CAPACITY",
-    description: "Optimize production capacity allocation",
-    domain: "PRODUCTION",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "ALLOCATE_SINGLE_ORDER",
-    description: "Allocate inventory to a single order",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "REALLOCATE_INVENTORY_SYSTEM",
-    description: "Reallocate inventory across orders",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SET_SAFETY_STOCK_POLICY",
-    description: "Adjust safety stock levels",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR", "PRINCIPAL"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SELECT_ROUTE_FOR_ORDER",
-    description: "Select route for a single order",
-    domain: "LOGISTICS",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "API" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "SIMULATE_ROUTING",
-    description: "Simulate routing options",
-    domain: "LOGISTICS",
-    allowedLevels: ["JUNIOR", "SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "OPTIMIZE_ROUTING_SYSTEM",
-    description: "Optimize routing across network",
-    domain: "LOGISTICS",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "RECONFIGURE_TRANSPORT_NETWORK",
-    description: "Change transport network structure",
-    domain: "LOGISTICS",
-    allowedLevels: ["PRINCIPAL"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "FORECAST_DEMAND",
-    description: "Generate demand forecast",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "DETECT_DEMAND_DRIFT",
-    description: "Detect demand anomalies",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["VISION", "JUNIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "REDEFINE_DEMAND_PLAN",
-    description: "Adjust demand plan globally",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SYNC_SINGLE_SUPPLIER",
-    description: "Sync data with a supplier",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "API" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SYNC_SUPPLY_CHAIN_SYSTEM",
-    description: "Sync all supply chain systems",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "API" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "PLAN_TASK",
-    description: "Plan a single task",
-    domain: "PRODUCTION",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "UPDATE_PROJECT_TASK",
-    description: "Update a project task",
-    domain: "PRODUCTION",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "REPLAN_PROJECT",
-    description: "Replan project timeline",
-    domain: "PRODUCTION",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "ALLOCATE_PROJECT_RESOURCES",
-    description: "Allocate project resources",
-    domain: "PRODUCTION",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SEND_EMAIL",
-    description: "Send an email",
-    domain: "COMMUNICATION",
-    allowedLevels: ["GRADUATE", "JUNIOR"],
-    providers: { primary: "API" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "CONTACT_SINGLE_SUPPLIER",
-    description: "Contact supplier for a single issue",
-    domain: "COMMUNICATION",
-    allowedLevels: ["JUNIOR"],
-    providers: { primary: "API" },
-    executionType: "ASYNC",
-    requiresApproval: true,
-  },
-  {
-    id: "NOTIFY_TEAM",
-    description: "Notify internal team",
-    domain: "COMMUNICATION",
-    allowedLevels: ["JUNIOR", "SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "BROADCAST_OPERATIONAL_UPDATE",
-    description: "Broadcast system-wide update",
-    domain: "COMMUNICATION",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "INTERNAL" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "GENERATE_SCENARIOS",
-    description: "Generate planning scenarios",
-    domain: "AI_TOOLS",
-    allowedLevels: ["JUNIOR", "SENIOR"],
-    providers: { primary: "CLAUDE", fallback: ["OPENAI", "OSS"] },
-    executionType: "SYNC",
-    requiresApproval: false,
-    estimatedCost: 0.02,
-  },
-  {
-    id: "SUMMARIZE_CONTEXT",
-    description: "Summarize operational context",
-    domain: "AI_TOOLS",
-    allowedLevels: ["VISION", "JUNIOR", "SENIOR"],
-    providers: { primary: "OPENAI", fallback: ["OSS"] },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "ANOMALY_EXPLANATION",
-    description: "Explain anomalies",
-    domain: "AI_TOOLS",
-    allowedLevels: ["VISION", "JUNIOR", "SENIOR"],
-    providers: { primary: "CLAUDE", fallback: ["OPENAI"] },
-    executionType: "SYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "SYNC_ERP",
-    description: "Sync ERP data",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "ERP" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
-  {
-    id: "TRIGGER_API",
-    description: "Trigger external API",
-    domain: "SUPPLY_CHAIN",
-    allowedLevels: ["SENIOR"],
-    providers: { primary: "API" },
-    executionType: "ASYNC",
-    requiresApproval: false,
-  },
+
+/* =====================================================
+ 1. DEMAND & PLANNING
+===================================================== */
+
+{
+  id: "FORECAST_DEMAND",
+  description: "Generate demand forecast",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "DETECT_DEMAND_DRIFT",
+  description: "Detect anomalies in demand",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["VISION", "JUNIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "REDEFINE_DEMAND_PLAN",
+  description: "Adjust demand plan globally",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "REBALANCE_PLAN",
+  description: "Rebalance global supply-demand plan",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR", "SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "FREEZE_PLAN",
+  description: "Freeze planning decisions",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "UNFREEZE_PLAN",
+  description: "Unfreeze planning decisions",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
+ 2. PROCUREMENT & SUPPLIER MANAGEMENT
+===================================================== */
+
+{
+  id: "CREATE_PURCHASE_ORDER",
+  description: "Create purchase order",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "UPDATE_PURCHASE_ORDER",
+  description: "Update purchase order",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "CANCEL_PURCHASE_ORDER",
+  description: "Cancel purchase order",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "EXPEDITE_SINGLE_ORDER",
+  description: "Expedite a single supplier order",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "API" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "EXPEDITE_SUPPLIER_SYSTEM",
+  description: "Expedite supplier globally",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "API" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "EVALUATE_SUPPLIER",
+  description: "Evaluate supplier performance",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "RANK_SUPPLIERS",
+  description: "Rank suppliers by performance",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "SELECT_SUPPLIER_STRATEGY",
+  description: "Define sourcing strategy",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["PRINCIPAL"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "MANAGE_SUPPLIER_RELATION",
+  description: "Manage supplier relationships",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
+ 3. INVENTORY MANAGEMENT
+===================================================== */
+
+{
+  id: "ALLOCATE_SINGLE_ORDER",
+  description: "Allocate inventory to order",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "REALLOCATE_INVENTORY_SYSTEM",
+  description: "Reallocate inventory globally",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "RESERVE_STOCK",
+  description: "Reserve stock",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "CORRECT_INVENTORY",
+  description: "Correct inventory discrepancies",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "SET_SAFETY_STOCK_POLICY",
+  description: "Adjust safety stock policy",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR", "PRINCIPAL"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "OPTIMIZE_STOCK_POSITION",
+  description: "Optimize stock across locations",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
+ 4. PRODUCTION
+===================================================== */
+
+{
+  id: "RESCHEDULE_SINGLE_ORDER",
+  description: "Reschedule production order",
+  domain: "PRODUCTION",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "RESCHEDULE_PRODUCTION_SYSTEM",
+  description: "Reschedule production globally",
+  domain: "PRODUCTION",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "OPTIMIZE_CAPACITY",
+  description: "Optimize capacity allocation",
+  domain: "PRODUCTION",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "SHORT_TERM_PRODUCTION_ADJUST",
+  description: "Adjust production short term",
+  domain: "PRODUCTION",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+/* =====================================================
+ 5. LOGISTICS & DISTRIBUTION
+===================================================== */
+
+{
+  id: "SELECT_ROUTE_FOR_ORDER",
+  description: "Select delivery route",
+  domain: "LOGISTICS",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "API" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "OPTIMIZE_ROUTING_SYSTEM",
+  description: "Optimize routing network",
+  domain: "LOGISTICS",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "MANAGE_WAREHOUSE",
+  description: "Manage warehouse operations",
+  domain: "LOGISTICS",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "PROCESS_ORDER",
+  description: "Process customer order",
+  domain: "LOGISTICS",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "OPTIMIZE_DISTRIBUTION_NETWORK",
+  description: "Optimize distribution network",
+  domain: "LOGISTICS",
+  allowedLevels: ["PRINCIPAL"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
+ 6. QUALITY & COMPLIANCE
+===================================================== */
+
+{
+  id: "TRIGGER_QUALITY_CHECK",
+  description: "Trigger quality inspection",
+  domain: "PRODUCTION",
+  allowedLevels: ["JUNIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "BLOCK_BATCH",
+  description: "Block defective batch",
+  domain: "PRODUCTION",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "RELEASE_BATCH",
+  description: "Release batch",
+  domain: "PRODUCTION",
+  allowedLevels: ["SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
+ 7. MONITORING & CONTROL (CRITICAL)
+===================================================== */
+
+{
+  id: "TRACK_KPI",
+  description: "Track operational KPIs",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["VISION", "JUNIOR", "SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "ANALYZE_COST",
+  description: "Analyze operational cost",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["SENIOR", "PRINCIPAL"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "DETECT_PERFORMANCE_DRIFT",
+  description: "Detect system performance drift",
+  domain: "SUPPLY_CHAIN",
+  allowedLevels: ["VISION", "JUNIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
+ 8. AI TOOLS ORCHESTRATION
+===================================================== */
+
+{
+  id: "GENERATE_SCENARIOS",
+  description: "Generate planning scenarios",
+  domain: "AI_TOOLS",
+  allowedLevels: ["JUNIOR", "SENIOR"],
+  providers: { primary: "CLAUDE", fallback: ["OPENAI", "OSS"] },
+  executionType: "SYNC",
+  requiresApproval: false,
+  estimatedCost: 0.02,
+},
+
+{
+  id: "SUMMARIZE_CONTEXT",
+  description: "Summarize operational context",
+  domain: "AI_TOOLS",
+  allowedLevels: ["VISION", "JUNIOR"],
+  providers: { primary: "OPENAI", fallback: ["OSS"] },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+{
+  id: "ANOMALY_EXPLANATION",
+  description: "Explain anomalies",
+  domain: "AI_TOOLS",
+  allowedLevels: ["VISION", "JUNIOR"],
+  providers: { primary: "CLAUDE" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
 ] as const satisfies readonly CapabilityDefinition[];

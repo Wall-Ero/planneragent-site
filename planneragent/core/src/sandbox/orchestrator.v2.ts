@@ -79,6 +79,16 @@ import type { CapabilityLevel } from "../execution/capability.types";
 import type { ResolutionContext } from "../execution/resolveCapability.final";
 import { resolveCapabilityFinal } from "../execution/resolveCapability.final";
 
+import { resolveBehaviorProfile } from "../decision/decision.behavior";
+
+import {resolveManagerBehavior} from "../decision/manager.behavior";
+
+import {overlayPolicyWithManagerBehavior} from "../decision/policy/policy.overlay.v1";
+
+import { mergeBehaviorProfiles } from "../decision/decision.behavior.merge";
+
+import type { SignedSnapshotV1 } from "./contracts.v2";
+
 // ======================================================
 // TYPES / CONSTANTS
 // ======================================================
@@ -306,7 +316,8 @@ export async function evaluateSandboxV2(
     } as any;
   }
 
-  const auth = authoritySandboxGuard(req.snapshot);
+  const snapshot = req.snapshot as SignedSnapshotV1;
+  const auth = authoritySandboxGuard(snapshot);
   if (!auth.ok) {
     return {
       ok: false,
@@ -511,20 +522,28 @@ export async function evaluateSandboxV2(
   // ACTION BUILDER
   // ----------------------------------------------------
 
+  const behaviorProfile = resolveBehaviorProfile({
+  company_id: req.company_id
+});
+
   const builtActions = buildActionsFromRealityV2({
-    requestId: req.request_id,
-    plan: req.plan,
-    asOf: nowIso(),
-    orders,
-    inventory,
-    movements,
-    baseline_metrics: req.baseline_metrics ?? {},
-    dlSignals: dl.risk_score ?? {},
-    inferredBom,
-    realitySnapshot: reality,
-    operationalTopology: topology,
-    topologyConfidence,
-  } as any);
+  requestId: req.request_id,
+  plan: req.plan,
+  asOf: nowIso(),
+  orders,
+  inventory,
+  movements,
+  baseline_metrics: req.baseline_metrics ?? {},
+  dlSignals: dl?.risk_score ?? {},
+  inferredBom,
+  realitySnapshot: reality,
+  operationalTopology: topology,
+  topologyConfidence,
+
+  // 🔥 QUI
+  behaviorProfile
+
+} as any);
 
   // ----------------------------------------------------
   // OPTIMIZER
@@ -573,53 +592,100 @@ export async function evaluateSandboxV2(
     optimizerOutput.best.actions = builtActions;
   }
 
-  // ----------------------------------------------------
-  // POLICY
-  // ----------------------------------------------------
+// ----------------------------------------------------
+// POLICY
+// ----------------------------------------------------
 
-  let history: any[] = [];
+let history: any[] = [];
 
-  try {
-    history = getDecisionHistory();
-  } catch {
-    history = [];
-  }
+try {
+  history = getDecisionHistory();
+} catch {
+  history = [];
+}
 
-  const policy = resolvePolicy({ history });
+const companyPolicy = resolvePolicy({ history });
 
-  let selectedBest = optimizerOutput?.best ?? null;
-  let selectedCandidates = optimizerOutput?.candidates ?? [];
-  let policyDebug: any[] = [];
+const managerBehavior = resolveManagerBehavior({
+  actor_id: req.actor_id,
+  override: req.behavior_override
+});
 
-  if (optimizerOutput?.candidates?.length) {
-    const weighted = applyPolicy(optimizerOutput.candidates, policy);
+const policy = overlayPolicyWithManagerBehavior({
+  basePolicy: companyPolicy,
+  managerBehavior,
+});
 
-    const enforced = applyPolicyConstraints(weighted, {
-      primary_focus: policy.primary_focus,
-      weights: policy.weights,
-      prefer_multi_action: policy.prefer_multi_action,
-      allow_single_lever: policy.allow_single_lever,
-      max_plan_churn: policy.max_plan_churn,
-      risk_profile:
-        policy.risk_profile === "CONSERVATIVE"
-          ? "LOW"
-          : policy.risk_profile === "AGGRESSIVE"
-          ? "HIGH"
-          : "BALANCED",
-    });
+// 🔥 DEBUG LOGS
+console.log("BEHAVIOR_OVERRIDE_RAW", req.behavior_override);
+console.log("COMPANY_POLICY_USED", companyPolicy);
+console.log("MANAGER_BEHAVIOR_USED", managerBehavior);
+console.log("EFFECTIVE_POLICY_USED", policy);
 
-    policyDebug = enforced.debug ?? [];
+// ----------------------------------------------------
+// POLICY APPLICATION
+// ----------------------------------------------------
 
-    selectedCandidates = policyDebug
-      .filter((c: any) => !c.violations?.includes("HARD_BLOCK"))
-      .sort(
-        (a: any, b: any) =>
-          (b.adjustedScore ?? b.score) - (a.adjustedScore ?? a.score)
-      );
+let selectedBest = optimizerOutput?.best ?? null;
+let selectedCandidates = optimizerOutput?.candidates ?? [];
 
-    selectedBest =
-      enforced.best ?? selectedCandidates[0] ?? optimizerOutput.best;
-  }
+// 🔵 DEBUG ONLY
+let policyDebug: any[] = [];
+
+if (optimizerOutput?.candidates?.length) {
+
+  // --------------------------------------------------
+  // STEP 1 — APPLY POLICY (SCORING)
+  // --------------------------------------------------
+
+  const weighted = applyPolicy(optimizerOutput.candidates, policy);
+
+  // --------------------------------------------------
+  // STEP 2 — APPLY CONSTRAINTS (ENFORCER)
+  // --------------------------------------------------
+
+  const enforced = applyPolicyConstraints(weighted, {
+    primary_focus: policy.primary_focus,
+    weights: policy.weights,
+    prefer_multi_action: policy.prefer_multi_action,
+    allow_single_lever: policy.allow_single_lever,
+    max_plan_churn: policy.max_plan_churn,
+    risk_profile:
+      policy.risk_profile === "CONSERVATIVE"
+        ? "LOW"
+        : policy.risk_profile === "AGGRESSIVE"
+        ? "HIGH"
+        : "BALANCED",
+  });
+
+  // --------------------------------------------------
+  // DEBUG (NON USARE PER RUNTIME LOGIC)
+  // --------------------------------------------------
+
+  policyDebug = enforced.debug ?? [];
+
+  // --------------------------------------------------
+  // RUNTIME — VALID CANDIDATES ONLY
+  // --------------------------------------------------
+
+  const validCandidates = (enforced.debug ?? []).filter(
+    (c: any) => !c.violations?.includes("HARD_BLOCK")
+  );
+
+  selectedCandidates = validCandidates.sort(
+    (a: any, b: any) =>
+      (b.adjustedScore ?? b.score) - (a.adjustedScore ?? a.score)
+  );
+
+  // --------------------------------------------------
+  // BEST SELECTION
+  // --------------------------------------------------
+
+  selectedBest =
+    enforced.best ??
+    selectedCandidates[0] ??
+    optimizerOutput.best;
+}
 
   // ----------------------------------------------------
   // ANOMALY + GOVERNANCE
@@ -862,19 +928,33 @@ if (!improvementMode && executionAllowed && selectedBest?.actions?.length) {
     anomaly,
   };
 
+   const companyBehavior = resolveBehaviorProfile({
+  company_id: req.company_id
+});
+
+const behaviorProfile = mergeBehaviorProfiles({
+  companyBehavior,
+  managerBehavior
+});
+
+      console.log("BEHAVIOR_PROFILE_USED", behaviorProfile);
+
   for (let i = 0; i < selectedBest.actions.length; i++) {
     const action = selectedBest.actions[i];
     const actionType = safeActionType(action);
 
     try {
       const resolution = resolveCapabilityFinal({
-        action: {
-          ...action,
-          type: action?.type ?? action?.action ?? action?.kind ?? "UNKNOWN",
-        },
-        plan: req.plan as CapabilityLevel,
-        context: resolutionContext,
-      });
+  action: {
+    ...action,
+    type: action?.type ?? action?.action ?? action?.kind ?? "UNKNOWN"
+  },
+  plan: req.plan as CapabilityLevel,
+  context: {
+    ...resolutionContext,
+    behaviorProfile
+  },
+});
 
       if (!resolution.capabilityId) {
         capabilityTrace.push({

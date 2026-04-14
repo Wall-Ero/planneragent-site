@@ -59,6 +59,8 @@ export type OptimizerInput = {
 
   budget?: Partial<OptimizerBudget>;
 
+  behaviorProfile?: any; // 🔥 TEMP (poi tipizziamo bene)
+
   // ======================================================
   // Inferred BOM (deterministic DL layer)
   // ======================================================

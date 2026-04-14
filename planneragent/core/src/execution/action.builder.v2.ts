@@ -50,6 +50,8 @@ export function buildActionsFromRealityV2(
   const maxExpeditePct = clamp01(input.constraints_hint?.maxExpeditePercent ?? 1);
   const allowEarlyRelease = input.constraints_hint?.allowEarlyRelease ?? true;
 
+  const behavior = input.behaviorProfile;
+
   for (const row of shortages) {
     if (row.shortage <= 0) continue;
 
@@ -67,35 +69,114 @@ export function buildActionsFromRealityV2(
       }))
     );
 
-    actions.push({
-      kind: "EXPEDITE_SUPPLIER",
-      sku: row.sku,
-      qty: expediteQty,
-      costFactor: expediteCostFactor(leadTime.days, topology.degree, confidence),
-      reason: buildExpediteReason(topology, leadTime, confidence)
-    });
+ // --------------------------------------------------
+// 🔥 BEHAVIOR-DRIVEN GENERATION (QTY + TIMING)
+// --------------------------------------------------
 
-    if (topology.exists || allowEarlyRelease) {
-      const adjustQty = Math.max(
-        1,
-        Math.ceil(row.shortage - expediteQty)
-      );
+const riskProfile = behavior?.preferences?.riskProfile ?? "BALANCED";
+const avoidSystemic = behavior?.preferences?.avoidSystemicActions === true;
+const preferSingle = behavior?.preferences?.preferSingleAction === true;
 
-      if (adjustQty > 0) {
-        actions.push({
-          kind: "SHORT_TERM_PRODUCTION_ADJUST",
-          sku: row.sku,
-          qty: adjustQty,
-          availableInDays: productionAvailabilityDays(leadTime.days, confidence),
-          costFactor: productionCostFactor(confidence),
-          reason: buildProductionReason(topology, leadTime, confidence)
-        });
-      }
+// --------------------------------------------------
+// 🎯 QTY MODIFIER (quanto spingo)
+// --------------------------------------------------
+
+const qtyMultiplier =
+  riskProfile === "AGGRESSIVE"
+    ? 1.2
+    : riskProfile === "CONSERVATIVE"
+    ? 0.7
+    : 1.0;
+
+const adjustedExpediteQty = Math.max(
+  1,
+  Math.ceil(expediteQty * qtyMultiplier)
+);
+
+// --------------------------------------------------
+// ⏱️ TIMING MODIFIER (quanto anticipo)
+// --------------------------------------------------
+
+const expediteDays =
+  riskProfile === "AGGRESSIVE"
+    ? 0
+    : riskProfile === "CONSERVATIVE"
+    ? Math.max(1, Math.ceil(leadTime.days * 0.3))
+    : 0;
+
+// 👉 SEMPRE possibile
+const expediteAction = {
+  kind: "EXPEDITE_SUPPLIER" as const,
+  sku: row.sku,
+  qty: adjustedExpediteQty,
+  availableInDays: expediteDays,
+  costFactor: expediteCostFactor(leadTime.days, topology.degree, confidence),
+  reason: buildExpediteReason(topology, leadTime, confidence)
+};
+
+// --------------------------------------------------
+// 🧠 ACTION STRATEGY
+// --------------------------------------------------
+
+if (riskProfile === "CONSERVATIVE") {
+  // 👉 UNA SOLA AZIONE, più prudente
+  actions.push(expediteAction);
+
+} else if (riskProfile === "AGGRESSIVE") {
+  // 👉 MULTI ACTION SPINTA + OVER-COVER
+
+  actions.push(expediteAction);
+
+  if (topology.exists || allowEarlyRelease) {
+
+    const adjustQty = Math.max(
+      1,
+      Math.ceil((row.shortage - adjustedExpediteQty) * 1.2) // 🔥 over-production
+    );
+
+    if (adjustQty > 0) {
+      actions.push({
+        kind: "SHORT_TERM_PRODUCTION_ADJUST",
+        sku: row.sku,
+        qty: adjustQty,
+        availableInDays: Math.max(
+          0,
+          productionAvailabilityDays(leadTime.days, confidence) - 1 // 🔥 anticipo
+        ),
+        costFactor: productionCostFactor(confidence) * 1.1, // 🔥 paga di più
+        reason: buildProductionReason(topology, leadTime, confidence)
+      });
     }
   }
 
-  return dedupeActions(actions);
+} else {
+  // 👉 BALANCED (adattivo)
+
+  actions.push(expediteAction);
+
+  if ((topology.exists && !avoidSystemic && !preferSingle) || allowEarlyRelease) {
+
+    const adjustQty = Math.max(
+      1,
+      Math.ceil(row.shortage - adjustedExpediteQty)
+    );
+
+    if (adjustQty > 0) {
+      actions.push({
+        kind: "SHORT_TERM_PRODUCTION_ADJUST",
+        sku: row.sku,
+        qty: adjustQty,
+        availableInDays: productionAvailabilityDays(leadTime.days, confidence),
+        costFactor: productionCostFactor(confidence),
+        reason: buildProductionReason(topology, leadTime, confidence)
+      });
+    }
+  }
 }
+  }
+
+  return dedupeActions(actions);
+
 
 // ======================================================
 // SHORTAGE
@@ -208,7 +289,12 @@ function expediteRatio(params: {
   confidence: number;
   maxExpeditePct: number;
 }): number {
-  let ratio = 0.7;
+  let ratio =
+  behavior?.preferences?.riskProfile === "AGGRESSIVE"
+    ? 0.85
+    : behavior?.preferences?.riskProfile === "CONSERVATIVE"
+    ? 0.5
+    : 0.7;
 
   if (!params.topology.exists) ratio += 0.1;
   if (params.topology.degree === 0) ratio += 0.1;
@@ -315,4 +401,5 @@ function dedupeActions(actions: Action[]): Action[] {
   }
 
   return out;
+}
 }

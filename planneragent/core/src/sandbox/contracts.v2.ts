@@ -27,6 +27,7 @@ export type PlanningDomain =
   | "supply_chain"
   | "production"
   | "logistics"
+  | "finance"
   | "general";
 
 /* =====================================================
@@ -112,6 +113,13 @@ export interface SandboxEvaluateRequestV2 {
   baseline_snapshot_id?: string;
 
   constraints_hint?: Record<string, unknown>;
+
+  behavior_override?: {
+  mode?: "SAFE" | "BALANCED" | "AGGRESSIVE";
+  priority?: "SERVICE" | "COST" | "STABILITY";
+  horizon?: "SHORT_TERM" | "MEDIUM_TERM" | "LONG_TERM";
+  pressure?: "LOW" | "MEDIUM" | "HIGH";
+};
 
   orders?: unknown[];
 
@@ -377,3 +385,49 @@ export interface SandboxEvaluateResponseV2 {
 
   policy_used?: import("../decision/policy/policy.schema.v1").PolicyRules;
 }
+
+/* =====================================================
+ SNAPSHOT (CANONICAL)
+===================================================== */
+
+export type SignedSnapshotV1 = {
+
+  v: 1;
+
+  company_id: string;
+
+  request_id: string;
+
+  plan: PlanTier;
+
+  intent: Intent;
+
+  domain: PlanningDomain;
+
+  actor_id: string;
+
+  legal_state: string;
+
+  oag_proof: unknown;
+
+  budget: {
+    budget_remaining_eur: number;
+    reset_at: string;
+  };
+
+  governance_flags: {
+    sovereignty: "paid" | "free" | "oss";
+  };
+
+  issued_at: string;
+
+  // 🔥 QUESTO È IL TUO NUOVO PEZZO
+  behavior_override?: {
+    mode?: "SAFE" | "BALANCED" | "AGGRESSIVE";
+    priority?: "SERVICE" | "COST" | "STABILITY";
+    horizon?: "SHORT_TERM" | "MEDIUM_TERM" | "LONG_TERM";
+    pressure?: "LOW" | "MEDIUM" | "HIGH";
+  };
+
+  signature: string;
+};

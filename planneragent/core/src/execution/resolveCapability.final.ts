@@ -4,6 +4,10 @@ import { CAPABILITY_REGISTRY } from "./capability.registry";
 import type { CapabilityDefinition, CapabilityLevel } from "./capability.types";
 import type { PlannerAction } from "./action.types";
 
+import { applyBehaviorBias } from "../decision/decision.behavior";
+
+import type { BehaviorProfile } from "../decision/decision.behavior";
+
 /* =====================================================
  TYPES
 ===================================================== */
@@ -26,6 +30,9 @@ export type ResolutionContext = {
   topologyConfidence?: number;
   correctionEffect?: "FULL" | "PARTIAL" | "NONE";
   anomaly?: boolean;
+
+  // 🔥 AGGIUNGI QUESTO
+  behaviorProfile?: BehaviorProfile;
 };
 
 /* =====================================================
@@ -144,6 +151,20 @@ function scoreCapability(
   const risk = input.context?.riskScore ?? 0.5;
   const topology = input.context?.topologyConfidence ?? 0.7;
   const anomaly = input.context?.anomaly ?? false;
+
+  const behavior = input.context?.behaviorProfile;
+
+if (behavior && behavior.confidence > 0) {
+  const adjusted = applyBehaviorBias({
+    baseScore: score,
+    capabilityId: c.id,
+    isSystemic: systemic,
+    profile: behavior
+  });
+
+  score = adjusted.score;
+  reasons.push(...adjusted.reasons);
+}
 
   // PLAN LOGIC
   if (input.plan === "JUNIOR") {

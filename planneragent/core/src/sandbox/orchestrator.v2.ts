@@ -623,26 +623,17 @@ console.log("MANAGER_BEHAVIOR_USED", managerBehavior);
 console.log("EFFECTIVE_POLICY_USED", policy);
 
 // ----------------------------------------------------
-// POLICY APPLICATION
+// POLICY APPLICATION (CANONICAL FIX)
 // ----------------------------------------------------
 
 let selectedBest = optimizerOutput?.best ?? null;
 let selectedCandidates = optimizerOutput?.candidates ?? [];
 
-// 🔵 DEBUG ONLY
+// debug only
 let policyDebug: any[] = [];
 
 if (optimizerOutput?.candidates?.length) {
-
-  // --------------------------------------------------
-  // STEP 1 — APPLY POLICY (SCORING)
-  // --------------------------------------------------
-
   const weighted = applyPolicy(optimizerOutput.candidates, policy);
-
-  // --------------------------------------------------
-  // STEP 2 — APPLY CONSTRAINTS (ENFORCER)
-  // --------------------------------------------------
 
   const enforced = applyPolicyConstraints(weighted, {
     primary_focus: policy.primary_focus,
@@ -658,33 +649,75 @@ if (optimizerOutput?.candidates?.length) {
         : "BALANCED",
   });
 
-  // --------------------------------------------------
-  // DEBUG (NON USARE PER RUNTIME LOGIC)
-  // --------------------------------------------------
-
   policyDebug = enforced.debug ?? [];
 
-  // --------------------------------------------------
-  // RUNTIME — VALID CANDIDATES ONLY
-  // --------------------------------------------------
+  const baselineShortage =
+    Number(req.baseline_metrics?.shortageUnits ?? 0) || 0;
 
-  const validCandidates = (enforced.debug ?? []).filter(
-    (c: any) => !c.violations?.includes("HARD_BLOCK")
-  );
+  const hardFiltered = (enforced.debug ?? []).filter((c: any) => {
+    if (c.violations?.includes("HARD_BLOCK")) return false;
 
-  selectedCandidates = validCandidates.sort(
-    (a: any, b: any) =>
-      (b.adjustedScore ?? b.score) - (a.adjustedScore ?? a.score)
-  );
+    const kpis = c.kpis ?? {};
+    const shortage = Number(kpis.shortageUnits ?? 0);
+    const serviceShortfall = Number(kpis.serviceShortfall ?? 0);
 
-  // --------------------------------------------------
-  // BEST SELECTION
-  // --------------------------------------------------
+    const isAssumedSupply =
+      c.evidence?.evalSteps?.some((s: string) =>
+        s.includes("assumed_supply")
+      ) ||
+      c.evidence?.evalSteps?.some((s: string) =>
+        s.includes("assumption")
+      ) ||
+      c.actions?.some((a: any) =>
+        String(a.reason ?? "").includes("assumed_supply")
+      ) ||
+      Number(c.kpis?.contextPenalty ?? 0) > 0.5;
+
+    // CONSERVATIVE: niente shortage residuo
+    if (policy.risk_profile === "CONSERVATIVE" && shortage > 0) {
+      return false;
+    }
+
+    // non peggiorare rispetto alla baseline
+    if (baselineShortage === 0 && shortage > 0) {
+      return false;
+    }
+
+    // no fake service
+    if (serviceShortfall >= 1) {
+      return false;
+    }
+
+    // CONSERVATIVE: niente supply assunta
+    if (policy.risk_profile === "CONSERVATIVE" && isAssumedSupply) {
+      return false;
+    }
+
+    return true;
+  });
+
+  selectedCandidates = hardFiltered.sort((a: any, b: any) => {
+    const aK = a.kpis ?? {};
+    const bK = b.kpis ?? {};
+
+    const aShort = Number(aK.shortageUnits ?? 0);
+    const bShort = Number(bK.shortageUnits ?? 0);
+
+    const aServ = Number(aK.serviceShortfall ?? 0);
+    const bServ = Number(bK.serviceShortfall ?? 0);
+
+    const aScore = Number(a.adjustedScore ?? a.score ?? 0);
+    const bScore = Number(b.adjustedScore ?? b.score ?? 0);
+
+    if (aShort !== bShort) return aShort - bShort;
+    if (aServ !== bServ) return aServ - bServ;
+
+    return bScore - aScore;
+  });
 
   selectedBest =
-    enforced.best ??
     selectedCandidates[0] ??
-    optimizerOutput.best;
+    null;
 }
 
   // ----------------------------------------------------

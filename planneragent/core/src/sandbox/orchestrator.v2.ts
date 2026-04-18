@@ -89,6 +89,9 @@ import { mergeBehaviorProfiles } from "../decision/decision.behavior.merge";
 
 import type { SignedSnapshotV1 } from "./contracts.v2";
 
+import { buildTopologyLayers } from "../topology/topology.layers.builder";
+import { compareTopologyLayers } from "../topology/topology.compare";
+
 // ======================================================
 // TYPES / CONSTANTS
 // ======================================================
@@ -507,6 +510,47 @@ export async function evaluateSandboxV2(
   const topologyEvidence = buildTopologyEvidenceFromTopology(topology);
   const topologyConfidence = topologyEvidence.topologyConfidence ?? 0.5;
 
+  const topologyLayers = buildTopologyLayers({
+  inventory,
+  movements,
+  movmag: (req.movmag ?? []) as any[],
+  orders,
+  inferredBom,
+});
+
+const topologyComparison = compareTopologyLayers(topologyLayers);
+
+// ----------------------------------------------------
+// PLAN COHERENCE (HARD GATE)
+// ----------------------------------------------------
+
+const isPlanCoherent =
+  !topologyComparison.bomDrift &&
+  !topologyComparison.orderBomDrift &&
+  (topologyConfidence ?? 0) > 0.6;
+
+  const planningMode = isPlanCoherent
+  ? "EXECUTION"
+  : "PLAN_REPAIR";
+
+console.log("TOPOLOGY_LAYERS", {
+  fromMovements: {
+    nodes: topologyLayers.fromMovements.nodes.length,
+    edges: topologyLayers.fromMovements.edges.length,
+  },
+  fromOrders: {
+    nodes: topologyLayers.fromOrders.nodes.length,
+    edges: topologyLayers.fromOrders.edges.length,
+  },
+  fromBom: {
+    nodes: topologyLayers.fromBom.nodes.length,
+    edges: topologyLayers.fromBom.edges.length,
+  },
+});
+
+console.log("TOPOLOGY_COMPARISON", topologyComparison);
+
+
   // ----------------------------------------------------
   // SIGNALS
   // ----------------------------------------------------
@@ -566,6 +610,7 @@ export async function evaluateSandboxV2(
         realitySnapshot: reality,
         operationalTopology: topology,
         topologyConfidence,
+        mode: planningMode
       } as any);
     } catch {
       optimizerOutput = null;
@@ -720,58 +765,121 @@ if (optimizerOutput?.candidates?.length) {
     null;
 }
 
-  // ----------------------------------------------------
-  // ANOMALY + GOVERNANCE
-  // ----------------------------------------------------
+// ----------------------------------------------------
+// 🔁 FALLBACK BEST (ADVISORY ONLY)
+// ----------------------------------------------------
 
-  let anomaly = false;
-  let anomalyReasons: string[] = [];
-  let requiredActions: EnrichedAction[] = [];
+if (!selectedBest && optimizerOutput?.best?.actions?.length) {
+  selectedBest = optimizerOutput.best;
 
-  let executionAllowed = false;
-  let governanceReason = "ADVISORY_ONLY";
-  let improvementMode = false;
+  console.log("FALLBACK_TO_OPTIMIZER_BEST", {
+    reason: "NO_POLICY_COMPLIANT_PLAN",
+    actions: selectedBest.actions,
+  });
+}
+ 
 
-  // 🔥 NEW
-  // governanceLocked prevents later branches from overwriting IMPROVE authority
-  let governanceLocked = false;
+// ----------------------------------------------------
+// ANOMALY + GOVERNANCE
+// ----------------------------------------------------
 
-  // --------------------------------------------------
-  // 🔥 IMPROVE INTENT (PRINCIPAL ONLY)
-  // --------------------------------------------------
-  // Applied BEFORE downstream governance logic and never overwritten.
-  // IMPROVE produces governed recommendations / improvement authority,
-  // but does not auto-execute runtime actions here.
-  // --------------------------------------------------
+let anomaly = false;
+let anomalyReasons: string[] = [];
+let requiredActions: EnrichedAction[] = [];
 
-  if (isImprove(req.intent)) {
-    governanceLocked = true;
-    executionAllowed = false;
+let executionAllowed = false;
+let governanceReason = "ADVISORY_ONLY";
+let improvementMode = false;
 
-    if (req.plan !== "PRINCIPAL") {
-      improvementMode = false;
-      governanceReason = "PRINCIPAL_REQUIRED_FOR_IMPROVEMENT";
-    } else {
-      improvementMode = true;
-      governanceReason = "IMPROVEMENT_AUTHORITY";
-    }
+let governanceLocked = false;
+
+// --------------------------------------------------
+// IMPROVE MODE
+// --------------------------------------------------
+
+if (isImprove(req.intent)) {
+  governanceLocked = true;
+  executionAllowed = false;
+
+  if (req.plan !== "PRINCIPAL") {
+    improvementMode = false;
+    governanceReason = "PRINCIPAL_REQUIRED_FOR_IMPROVEMENT";
+  } else {
+    improvementMode = true;
+    governanceReason = "IMPROVEMENT_AUTHORITY";
   }
+}
 
-  if (selectedBest) {
-    const hasInventoryBlocking =
-      correction.actions?.some((a) => a.blocking) ?? false;
+// --------------------------------------------------
+// SAFETY DERIVATIONS (GLOBAL SCOPE)
+// --------------------------------------------------
 
-    const hasExecutionGap =
-      executionGap.some((g) => g.type !== "OK");
+const hasInventoryBlocking =
+  correction.actions?.some((a) => a.blocking) ?? false;
+
+const hasExecutionGap =
+  executionGap.some((g) => g.type !== "OK");
+
+const weakReality =
+  typeof realityScore === "number" && realityScore < 0.5;
+
+const hasTopologyBlocking =
+  topologyComparison.bomDrift &&
+  policy.risk_profile === "CONSERVATIVE";
+
+const runtimeExecutablePlanActions =
+  hasRuntimeExecutablePlanActions(selectedBest);
+
+const outcome = selectedBest
+  ? validateDecisionOutcome(selectedBest)
+  : null;
+
+// --------------------------------------------------
+// MAIN GOVERNANCE
+// --------------------------------------------------
+
+if (selectedBest) {
+
+  // --------------------------------------------------
+  // 🔥 PLAN REPAIR MODE (HARD OVERRIDE)
+  // --------------------------------------------------
+
+  if (!isPlanCoherent) {
+
+    executionAllowed = false;
+    governanceReason = "BLOCKED_BY_PLAN_INCOHERENCE";
+
+    // 👉 advisor only
+    selectedBest = optimizerOutput?.best ?? null;
+
+    if (selectedBest?.actions) {
+      selectedBest.actions = [];
+    }
+
+    requiredActions = [
+      {
+        action: "REBUILD_PLAN_STRUCTURE",
+        priority: "HIGH",
+        blocking: true,
+        effort: "HIGH",
+      },
+    ];
+
+    anomaly = true;
+    anomalyReasons.push("PLAN_INCOHERENT");
+
+    console.log("PLAN_REPAIR_MODE_ACTIVE");
+
+  } else {
+
+    // --------------------------------------------------
+    // NORMAL FLOW
+    // --------------------------------------------------
 
     if (hasExecutionGap) {
       anomaly = true;
-      anomalyReasons = Array.from(
-        new Set([...anomalyReasons, "EXECUTION_MISMATCH"])
-      );
+      anomalyReasons.push("EXECUTION_MISMATCH");
     }
-
-    const outcome = validateDecisionOutcome(selectedBest);
 
     const anomalyResult = detectDecisionAnomalyV2({
       candidate: selectedBest,
@@ -779,9 +887,13 @@ if (optimizerOutput?.candidates?.length) {
         risk_score: dl?.risk_score?.stockout_risk,
         anomaly_signals: dl?.anomaly_signals,
       },
-      topologyConfidence,
+      topology: {
+        confidence: topologyConfidence,
+        comparison: topologyComparison,
+      },
       policy: {
         primary_focus: policy.primary_focus,
+        risk_profile: policy.risk_profile,
       },
     });
 
@@ -798,18 +910,18 @@ if (optimizerOutput?.candidates?.length) {
       requiredActions = enrichAnomalyActions(anomalyReasons);
     }
 
-    if (correction.actions?.length) {
-      const correctionEnriched: EnrichedAction[] = correction.actions.map((a) => {
-        const priority: "HIGH" | "MEDIUM" | "LOW" =
-          a.blocking ? "HIGH" : "MEDIUM";
+    // --------------------------------------------------
+    // CORRECTION ACTIONS
+    // --------------------------------------------------
 
-        return {
+    if (correction.actions?.length) {
+      const correctionEnriched: EnrichedAction[] =
+        correction.actions.map((a) => ({
           action: a.action,
-          priority,
+          priority: a.blocking ? "HIGH" : "MEDIUM",
           blocking: a.blocking,
           effort: "MEDIUM",
-        };
-      });
+        }));
 
       requiredActions = [
         ...requiredActions,
@@ -817,34 +929,54 @@ if (optimizerOutput?.candidates?.length) {
       ];
     }
 
+    // --------------------------------------------------
+    // TOPOLOGY CHECKS
+    // --------------------------------------------------
+
+    if (topologyComparison.bomDrift) {
+      anomaly = true;
+      anomalyReasons.push(
+        policy.risk_profile === "CONSERVATIVE"
+          ? "BOM_DRIFT_BLOCKING"
+          : "BOM_DRIFT"
+      );
+
+      requiredActions.push({
+        action: "ALIGN_BOM_AND_ORDERS",
+        priority: "HIGH",
+        blocking: true,
+        effort: "MEDIUM",
+      });
+    }
+
+    if (topologyComparison.missingConsumption) {
+      requiredActions.push({
+        action: "VERIFY_COMPONENT_CONSUMPTION",
+        priority: "HIGH",
+        blocking: true,
+        effort: "MEDIUM",
+      });
+    }
+
+    if (topologyComparison.unexpectedConsumption) {
+      requiredActions.push({
+        action: "VERIFY_UNEXPECTED_COMPONENT_USAGE",
+        priority: "HIGH",
+        blocking: true,
+        effort: "MEDIUM",
+      });
+    }
+
     requiredActions = dedupeRequiredActions(requiredActions);
 
-    const weakReality =
-      typeof realityScore === "number" && realityScore < 0.5;
-
     const criticalAnomaly = hasCriticalAnomaly(anomalyReasons);
-    const runtimeExecutablePlanActions =
-      hasRuntimeExecutablePlanActions(selectedBest);
 
     // --------------------------------------------------
     // AUTO-HEAL GOVERNANCE
     // --------------------------------------------------
-    //
-    // JUNIOR:
-    // - correction enters governance and can resolve/block the issue
-    // - execution still depends on explicit EXECUTE mode + runtime-executable plan actions
-    //
-    // SENIOR / PRINCIPAL:
-    // - if correctionEffect === FULL and there are no critical blockers,
-    //   the issue is considered healed at governance level
-    // - real auto-execution of correction actions still requires runtime bridge support
-    //
-    // IMPORTANT:
-    // If governance is already locked by IMPROVE, none of the branches below
-    // may overwrite reason/executionAllowed/improvementMode.
-    // --------------------------------------------------
 
     if (!governanceLocked) {
+
       if (hasInventoryBlocking && correctionEffect === "NONE") {
         executionAllowed = false;
         governanceReason = "BLOCKED_BY_INVENTORY_MISMATCH";
@@ -853,51 +985,67 @@ if (optimizerOutput?.candidates?.length) {
         executionAllowed = false;
         governanceReason = "BLOCKED_BY_SYSTEM_UNCERTAINTY";
 
+      } else if (hasTopologyBlocking) {
+        executionAllowed = false;
+        governanceReason = "BLOCKED_BY_BOM_DRIFT";
+
       } else if (weakReality && correctionEffect === "NONE") {
         executionAllowed = false;
         governanceReason = "BLOCKED_BY_LOW_REALITY_SCORE";
 
       } else if (correctionEffect === "FULL") {
-        const basePlanExecutionAllowed =
+
+        const baseAllowed =
           executionAllowedByPlan(req.plan, req.intent);
 
-        // Technical note:
-        // correction actions are already simulated/governed here,
-        // but runtime auto-execution currently exists only for selectedBest.actions
         executionAllowed =
-          basePlanExecutionAllowed && runtimeExecutablePlanActions;
+          baseAllowed && runtimeExecutablePlanActions;
 
-        if (req.plan === "SENIOR" || req.plan === "PRINCIPAL") {
-          governanceReason = executionAllowed
-            ? "AUTO_HEALED_EXECUTION"
-            : "AUTO_HEALED_RUNTIME_PENDING";
-        } else {
-          governanceReason = executionAllowed
-            ? "CORRECTION_RESOLVED_APPROVED_EXECUTION"
-            : "CORRECTION_RESOLVED_RUNTIME_PENDING";
-        }
+        governanceReason = executionAllowed
+          ? "AUTO_HEALED_EXECUTION"
+          : "AUTO_HEALED_RUNTIME_PENDING";
 
       } else if (correctionEffect === "PARTIAL") {
+
         executionAllowed = false;
         governanceReason = "EXECUTION_WITH_WARNINGS";
 
       } else {
-        executionAllowed = executionAllowedByPlan(req.plan, req.intent);
-        governanceReason = normalizeGovernanceReason(executionAllowed, req);
+
+        executionAllowed =
+          executionAllowedByPlan(req.plan, req.intent);
+
+        governanceReason = normalizeGovernanceReason(
+          executionAllowed,
+          req
+        );
       }
     }
-
-    recordDecision({
-      decision_id: req.request_id,
-      policy_used: policy,
-      outcome,
-      anomaly,
-    });
-  } else if (!governanceLocked) {
-    // selectedBest missing: preserve explicit governance semantics
-    executionAllowed = false;
-    governanceReason = "NO_ACTIONABLE_PLAN";
   }
+
+  // --------------------------------------------------
+  // DECISION MEMORY
+  // --------------------------------------------------
+
+  const safeOutcome =
+  outcome ??
+  (executionAllowed ? "SUCCESS" : "FAIL");
+
+  recordDecision({
+  decision_id: req.request_id,
+  policy_used: policy,
+  outcome: safeOutcome,
+  anomaly,
+});
+
+} else if (!governanceLocked) {
+
+  executionAllowed = false;
+
+  governanceReason = requiredActions.length
+    ? "ACTION_REQUIRED_NO_SAFE_PLAN"
+    : "NO_ACTIONABLE_PLAN";
+}
 
   // ----------------------------------------------------
   // SIGNAL FINALIZATION
@@ -911,6 +1059,8 @@ if (optimizerOutput?.candidates?.length) {
     });
 
     (signals as any).correction_effect = correctionEffect;
+    (signals as any).bom_drift = topologyComparison.bomDrift;
+    (signals as any).topology_alignment = topologyComparison.alignmentScore;
   }
 
   // ----------------------------------------------------
@@ -1176,8 +1326,23 @@ const behaviorProfile = mergeBehaviorProfiles({
     execution,
     policy_used: policy,
     policy_debug: policyDebug,
-    topology_debug: topologyEvidence,
-    decision_trace: null,
-    issued_at: nowIso(),
+topology_debug: topologyEvidence,
+topology_layers_debug: {
+  fromMovements: {
+    nodes: topologyLayers.fromMovements.nodes.length,
+    edges: topologyLayers.fromMovements.edges.length,
+  },
+  fromOrders: {
+    nodes: topologyLayers.fromOrders.nodes.length,
+    edges: topologyLayers.fromOrders.edges.length,
+  },
+  fromBom: {
+    nodes: topologyLayers.fromBom.nodes.length,
+    edges: topologyLayers.fromBom.edges.length,
+  },
+},
+topology_comparison_debug: topologyComparison,
+decision_trace: null,
+issued_at: nowIso(),
   } as any;
 }

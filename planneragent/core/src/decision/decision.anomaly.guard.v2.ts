@@ -8,6 +8,7 @@
 // - combine:
 //   - KPI sanity
 //   - DL signals
+//   - topology structure (NEW)
 //   - topology confidence
 //   - policy coherence
 //
@@ -17,7 +18,7 @@
 //
 // IMPORTANT:
 // - does NOT block decision
-// - only blocks learning
+// - only blocks learning / affects governance downstream
 // ======================================================
 
 type CandidateKpis = {
@@ -39,12 +40,33 @@ type DlEvidence = {
   anomaly_signals?: string[];
 };
 
+// 🔥 NEW — TOPOLOGY STRUCTURE (multi-layer aware)
+type TopologyComparison = {
+  bomDrift?: boolean;
+  orderBomDrift?: boolean;
+  missingConsumption?: boolean;
+  unexpectedConsumption?: boolean;
+  alignmentScore?: number;
+};
+
+type TopologyInput = {
+  confidence?: number;
+  comparison?: TopologyComparison;
+};
+
 type AnomalyInput = {
   candidate: Candidate | null;
   dl?: DlEvidence;
+
+  // 🔥 legacy support (still accepted)
   topologyConfidence?: number;
+
+  // 🔥 NEW STRUCTURED TOPOLOGY
+  topology?: TopologyInput;
+
   policy?: {
     primary_focus?: "SERVICE" | "COST" | "STABILITY";
+    risk_profile?: "CONSERVATIVE" | "BALANCED" | "AGGRESSIVE";
   };
 };
 
@@ -61,8 +83,13 @@ export function detectDecisionAnomalyV2(
 
   const candidate = input.candidate;
   const dl = input.dl ?? {};
-  const topologyConfidence = input.topologyConfidence;
   const policy = input.policy ?? {};
+
+  const topologyConfidence =
+    input.topology?.confidence ?? input.topologyConfidence;
+
+  const topologyComparison =
+    input.topology?.comparison ?? {};
 
   if (!candidate) {
     return {
@@ -124,11 +151,11 @@ export function detectDecisionAnomalyV2(
   // ==================================================
 
   if (
-  Array.isArray(dl.anomaly_signals) &&
-  dl.anomaly_signals.length > 0
-) {
-  reasons.push("DL_SIGNAL_ANOMALY");
-}
+    Array.isArray(dl.anomaly_signals) &&
+    dl.anomaly_signals.length > 0
+  ) {
+    reasons.push("DL_SIGNAL_ANOMALY");
+  }
 
   // ==================================================
   // RULE 7 — HIGH RISK SCORE
@@ -147,7 +174,50 @@ export function detectDecisionAnomalyV2(
   }
 
   // ==================================================
-  // RULE 9 — POLICY COHERENCE (SERVICE)
+  // 🔥 RULE 9 — TOPOLOGY STRUCTURAL ANOMALIES (NEW CORE)
+  // ==================================================
+
+  // BOM drift → struttura cambiata rispetto a ERP
+  if (topologyComparison.bomDrift) {
+    reasons.push("BOM_DRIFT");
+  }
+
+  // ordini basati su BOM vecchia
+  if (topologyComparison.orderBomDrift) {
+    reasons.push("ORDER_BOM_OUTDATED");
+  }
+
+  // mancano consumi attesi
+  if (topologyComparison.missingConsumption) {
+    reasons.push("MISSING_CONSUMPTION_FLOW");
+  }
+
+  // consumi inattesi
+  if (topologyComparison.unexpectedConsumption) {
+    reasons.push("UNEXPECTED_CONSUMPTION_FLOW");
+  }
+
+  // disallineamento generale
+  if (
+    typeof topologyComparison.alignmentScore === "number" &&
+    topologyComparison.alignmentScore < 0.6
+  ) {
+    reasons.push("LOW_TOPOLOGY_ALIGNMENT");
+  }
+
+  // ==================================================
+  // 🔥 RULE 10 — POLICY × TOPOLOGY (CRITICAL)
+  // ==================================================
+
+  if (
+    topologyComparison.bomDrift &&
+    policy.risk_profile === "CONSERVATIVE"
+  ) {
+    reasons.push("TOPOLOGY_UNSAFE_FOR_EXECUTION");
+  }
+
+  // ==================================================
+  // RULE 11 — POLICY COHERENCE (SERVICE)
   // ==================================================
 
   if (policy.primary_focus === "SERVICE") {
@@ -162,6 +232,6 @@ export function detectDecisionAnomalyV2(
 
   return {
     anomaly: reasons.length > 0,
-    reasons
+    reasons: Array.from(new Set(reasons)), // dedupe safety
   };
 }

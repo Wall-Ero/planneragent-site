@@ -852,10 +852,6 @@ if (selectedBest) {
     // 👉 advisor only
     selectedBest = optimizerOutput?.best ?? null;
 
-    if (selectedBest?.actions) {
-      selectedBest.actions = [];
-    }
-
     requiredActions = [
       {
         action: "REBUILD_PLAN_STRUCTURE",
@@ -1067,7 +1063,23 @@ if (selectedBest) {
   // EXPLAINER
   // ----------------------------------------------------
 
-  const explanation = selectedBest
+  const explanation =
+  !isPlanCoherent
+    ? {
+        summary: "Plan is incoherent. PlannerAgent is not proposing reality actions.",
+        whyChosen: [
+          "PLAN_INCOHERENT",
+          "EXECUTION_BLOCKED_BY_GOVERNANCE"
+        ],
+        tradeoffs: [],
+        risks: [
+          "PLAN_STRUCTURE_NOT_RELIABLE"
+        ],
+        whyBlocked:
+          "The current plan is structurally incoherent. PlannerAgent will not propose operational corrections against an unreliable plan.",
+        nextSteps: requiredActions.map((a) => a.action),
+      }
+    : selectedBest
     ? explainDecision(selectedBest as any, selectedCandidates as any, {
         anomaly,
         anomalyReasons,
@@ -1317,10 +1329,16 @@ const behaviorProfile = mergeBehaviorProfiles({
     domain: req.domain,
     signals,
     optimizer: {
-      best_score: selectedBest?.adjustedScore ?? selectedBest?.score ?? null,
-      actions: selectedBest?.actions ?? [],
-      candidates: selectedCandidates.length ?? 0,
-    },
+  best_score: isPlanCoherent
+    ? selectedBest?.adjustedScore ?? selectedBest?.score ?? null
+    : null,
+  actions: isPlanCoherent
+    ? selectedBest?.actions ?? []
+    : [],
+  candidates: isPlanCoherent
+    ? selectedCandidates.length ?? 0
+    : 0,
+},
     explanation,
     governance,
     execution,

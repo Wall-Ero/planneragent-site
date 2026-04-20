@@ -59,6 +59,15 @@ export async function runOptimizerV1(
     };
   }
 
+
+  // ---------------------------------------------------
+// PLANNING MODE (PLAN_REPAIR vs REALITY_CORRECTION)
+// ---------------------------------------------------
+
+if ((input as any).mode === "PLAN_REPAIR") {
+  return runPlanRepairOptimizer(input, t0, deterministicSeed);
+}
+
   // ---------------------------------------------------
   // BUDGET
   // ---------------------------------------------------
@@ -438,4 +447,90 @@ function sortCandidates(a: CandidatePlan, b: CandidatePlan): number {
   }
 
   return a.score - b.score;
+}
+
+// ======================================================
+// PLAN REPAIR OPTIMIZER (NO REALITY ACTIONS)
+// ======================================================
+
+function runPlanRepairOptimizer(
+  input: OptimizerInput,
+  t0: number,
+  deterministicSeed: string
+): OptimizerResult {
+  const actions: Action[] = buildPlanRepairActions(input);
+
+  const candidate = evaluateCandidate(input, actions, 0);
+
+  return {
+    ok: true,
+    best: {
+      ...candidate,
+      actions,
+    },
+    candidates: [
+      {
+        ...candidate,
+        actions,
+      },
+    ],
+    meta: {
+      engine: "OPT_V1_PLAN_REPAIR",
+      evalCount: 1,
+      millis: Date.now() - t0,
+      deterministicSeed,
+    },
+  };
+}
+
+function buildPlanRepairActions(input: OptimizerInput): Action[] {
+  const actions: Action[] = [];
+
+  const topologyConfidence =
+  typeof (input as any).topologyConfidence === "number"
+    ? (input as any).topologyConfidence
+    : 0;
+  const topology = input.operationalTopology;
+
+  const nodes = topology?.nodes?.length ?? 0;
+  const edges = topology?.edges?.length ?? 0;
+
+  // 🔴 TOPOLOGY COLLASSATA
+  if (
+  topologyConfidence < 0.6 ||
+  edges === 0 ||
+  !input.inferredBom ||
+  (input.inferredBom as any[]).length === 0
+) {
+    actions.push({
+      kind: "REBUILD_BOM_GRAPH",
+      reason: "topology_low_confidence",
+    } as any);
+  }
+
+  // 🔴 ORDERS NON COLLEGATI
+  if (nodes > 0 && edges === 0) {
+    actions.push({
+      kind: "RECONSTRUCT_ORDER_FLOW",
+      reason: "orders_not_connected",
+    } as any);
+  }
+
+  // 🔴 BOM MANCANTE
+  if (!input.inferredBom || (input.inferredBom as any[]).length === 0) {
+    actions.push({
+      kind: "COMPLETE_ORDER_STRUCTURE",
+      reason: "missing_bom_structure",
+    } as any);
+  }
+
+  // 🔴 FALLBACK MINIMO
+  if (actions.length === 0) {
+    actions.push({
+      kind: "REBUILD_BOM_GRAPH",
+      reason: "generic_plan_incoherence",
+    } as any);
+  }
+
+  return actions;
 }

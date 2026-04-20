@@ -35,35 +35,67 @@ export function explainDecision(
     anomalyReasons?: string[];
     requiredActions?: any[];
     correctionEffect?: CorrectionEffect;
+    problemType?: "PLAN" | "REALITY" | "NONE";
   }
 ): DecisionExplanation {
 
-  const whyChosen = buildWhy(best);
-  const tradeoffs = buildTradeoffs(best, candidates);
-  const risks = buildRisks(best);
+  // ------------------------------------------------------
+// 🔥 PLAN REPAIR MODE
+// ------------------------------------------------------
 
-  const summary = buildSummary(best, whyChosen);
-
-  let whyBlocked: string | undefined;
-  let nextSteps: string[] | undefined;
-
-  if (options?.anomaly) {
-    whyBlocked = buildWhyBlocked(
-      options.anomalyReasons,
-      options.correctionEffect
-    );
-
-    nextSteps = buildNextSteps(options.requiredActions);
-  }
-
+if (options?.problemType === "PLAN") {
   return {
-    summary,
-    whyChosen,
-    tradeoffs,
-    risks,
-    whyBlocked,
-    nextSteps,
+    summary:
+      "The current plan is structurally incoherent and cannot be used for operational decisions.",
+
+    whyChosen: [
+      "PLAN_INCOHERENT",
+      "STRUCTURAL_INCONSISTENCY"
+    ],
+
+    tradeoffs: [],
+
+    risks: [
+      "PLAN_STRUCTURE_NOT_RELIABLE"
+    ],
+
+    whyBlocked:
+      "PlannerAgent does not propose operational actions when the plan structure is not reliable.",
+
+    nextSteps: buildNextSteps(options?.requiredActions),
   };
+}
+
+// ------------------------------------------------------
+// NORMAL FLOW
+// ------------------------------------------------------
+
+const whyChosen = buildWhy(best);
+const tradeoffs = buildTradeoffs(best, candidates);
+const risks = buildRisks(best);
+
+const summary = buildSummary(best, whyChosen);
+
+let whyBlocked: string | undefined;
+let nextSteps: string[] | undefined;
+
+if (options?.anomaly) {
+  whyBlocked = buildWhyBlocked(
+    options.anomalyReasons,
+    options.correctionEffect
+  );
+
+  nextSteps = buildNextSteps(options.requiredActions);
+}
+
+return {
+  summary,
+  whyChosen,
+  tradeoffs,
+  risks,
+  whyBlocked,
+  nextSteps,
+};
 }
 
 // ------------------------------------------------------
@@ -161,9 +193,13 @@ function buildWhyBlocked(
   }
 
   // 🔴 NONE → vero blocco
-  if (!reasons || reasons.length === 0) {
-    return "Execution is blocked due to detected anomaly.";
-  }
+if (reasons?.includes("PLAN_INCOHERENT")) {
+  return "Execution is blocked because the plan structure is not reliable.";
+}
+
+if (!reasons || reasons.length === 0) {
+  return "Execution is blocked due to detected anomaly.";
+}
 
   if (reasons.includes("LOW_TOPOLOGY_CONFIDENCE")) {
     return "Execution is blocked due to low system reliability.";
@@ -228,7 +264,11 @@ function buildSummary(plan: CandidatePlan, why: string[]): string {
     ? DECISION_CODE_MAP[primaryWhyCode]?.label
     : "Optimizes plan outcomes";
 
-  return `Plan selected: ${actionSummary}. ${primaryWhyLabel}.`;
+  if (!plan.actions || plan.actions.length === 0) {
+  return "No operational action improves the current situation under given constraints.";
+}
+
+return `Plan selected: ${actionSummary}. ${primaryWhyLabel}.`;
 }
 
 // ------------------------------------------------------

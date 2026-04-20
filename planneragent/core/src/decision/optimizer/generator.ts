@@ -30,6 +30,11 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   const seed = seedFromRequestId(input.requestId);
   const rng = mulberry32(seed);
 
+  const planningMode =
+  (input as any).mode === "PLAN_REPAIR"
+    ? "PLAN_REPAIR"
+    : "REALITY_CORRECTION";
+
   // --------------------------------------------------
   // INPUTS
   // IMPORTANT:
@@ -37,6 +42,14 @@ export function generateCandidateActions(input: OptimizerInput): Action[][] {
   // and aligned upstream by orchestrator.
   // DO NOT re-normalize and DO NOT re-interpret here.
   // --------------------------------------------------
+
+  // --------------------------------------------------
+// PLAN REPAIR MODE
+// --------------------------------------------------
+
+if (planningMode === "PLAN_REPAIR") {
+  return generatePlanRepairCandidates(input);
+}
 
   const orders = normalizeOrdersForGenerator(input.orders ?? []);
   const inventory = normalizeInventoryForGenerator(input.inventory ?? []);
@@ -340,6 +353,69 @@ function normalizeMovementsForGenerator(
       lead_time: Number(m?.lead_time ?? 0),
     }))
     .filter((m) => m.sku && Number.isFinite(m.qty));
+}
+
+// ======================================================
+// PLAN REPAIR CANDIDATES
+// ======================================================
+
+function generatePlanRepairCandidates(
+  input: OptimizerInput
+): Action[][] {
+  const candidates: Action[][] = [];
+
+  const topology = input.operationalTopology;
+  const topologyConfidence =
+    typeof (input as any).topologyConfidence === "number"
+      ? (input as any).topologyConfidence
+      : 0;
+
+  const nodes = topology?.nodes?.length ?? 0;
+  const edges = topology?.edges?.length ?? 0;
+
+ const inferredBom =
+  Array.isArray(input.inferredBom)
+    ? input.inferredBom
+    : Array.isArray((input.inferredBom as any)?.bom)
+    ? (input.inferredBom as any).bom
+    : [];
+    
+  const hasBom = inferredBom.length > 0;
+  const hasOrders = Array.isArray(input.orders) && input.orders.length > 0;
+
+  const repairActions: Action[] = [];
+
+  if (!hasBom) {
+    repairActions.push({
+      kind: "REBUILD_BOM_GRAPH",
+      reason: "plan_repair_missing_bom",
+    } as any);
+  }
+
+  if (hasOrders && edges === 0) {
+    repairActions.push({
+      kind: "RECONSTRUCT_ORDER_FLOW",
+      reason: "plan_repair_orders_not_connected",
+    } as any);
+  }
+
+  if (topologyConfidence < 0.6 || nodes === 0) {
+    repairActions.push({
+      kind: "COMPLETE_ORDER_STRUCTURE",
+      reason: "plan_repair_low_topology_confidence",
+    } as any);
+  }
+
+  if (repairActions.length === 0) {
+    repairActions.push({
+      kind: "REBUILD_BOM_GRAPH",
+      reason: "plan_repair_generic_structure_fix",
+    } as any);
+  }
+
+  candidates.push(repairActions);
+
+  return dedupe(candidates);
 }
 
 // ======================================================

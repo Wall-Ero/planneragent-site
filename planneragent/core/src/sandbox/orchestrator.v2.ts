@@ -98,6 +98,8 @@ import { compareTopologyLayers } from "../topology/topology.compare";
 
 type CorrectionEffect = "FULL" | "PARTIAL" | "NONE";
 
+type ProblemType = "PLAN" | "REALITY" | "NONE";
+
 type CapabilityExecutionRecord = {
   action_index: number;
   action_type: string;
@@ -219,6 +221,45 @@ function deriveCorrectionEffect(
   }
 
   return "NONE";
+}
+
+function classifyProblemType(params: {
+  topologyConfidence: number;
+  topologyComparison: {
+    bomDrift: boolean;
+    orderBomDrift: boolean;
+    alignmentScore: number;
+  };
+  inventoryReconciliation?: {
+    hasBlockingMismatch?: boolean;
+  } | null;
+}): ProblemType {
+  const topologyConfidence = params.topologyConfidence ?? 0;
+  const alignmentScore = params.topologyComparison?.alignmentScore ?? 1;
+  const hasBlockingMismatch =
+    params.inventoryReconciliation?.hasBlockingMismatch === true;
+
+  const hasPlanStructuralIssue =
+  params.topologyComparison?.bomDrift === true ||
+  params.topologyComparison?.orderBomDrift === true ||
+  alignmentScore < 0.5;
+
+const lowConfidence =
+  topologyConfidence < 0.6;
+
+if (hasPlanStructuralIssue) {
+  return "PLAN";
+}
+
+if (lowConfidence) {
+  return "REALITY";
+}
+
+if (hasBlockingMismatch) {
+  return "REALITY";
+}
+
+return "NONE";
 }
 
 function dedupeRequiredActions(actions: EnrichedAction[]): EnrichedAction[] {
@@ -520,36 +561,50 @@ export async function evaluateSandboxV2(
 
 const topologyComparison = compareTopologyLayers(topologyLayers);
 
+
 // ----------------------------------------------------
-// PLAN COHERENCE (HARD GATE)
+// PROBLEM CLASSIFIER (CANONICAL)
 // ----------------------------------------------------
 
-const isPlanCoherent =
-  !topologyComparison.bomDrift &&
-  !topologyComparison.orderBomDrift &&
-  (topologyConfidence ?? 0) > 0.6;
-
-  const planningMode = isPlanCoherent
-  ? "EXECUTION"
-  : "PLAN_REPAIR";
-
-console.log("TOPOLOGY_LAYERS", {
-  fromMovements: {
-    nodes: topologyLayers.fromMovements.nodes.length,
-    edges: topologyLayers.fromMovements.edges.length,
-  },
-  fromOrders: {
-    nodes: topologyLayers.fromOrders.nodes.length,
-    edges: topologyLayers.fromOrders.edges.length,
-  },
-  fromBom: {
-    nodes: topologyLayers.fromBom.nodes.length,
-    edges: topologyLayers.fromBom.edges.length,
-  },
+const problemType = classifyProblemType({
+  topologyConfidence,
+  topologyComparison,
+  inventoryReconciliation,
 });
 
-console.log("TOPOLOGY_COMPARISON", topologyComparison);
+const isPlanCoherent = problemType !== "PLAN";
 
+const planningMode =
+  problemType === "PLAN"
+    ? "PLAN_REPAIR"
+    : "REALITY_CORRECTION";
+
+console.log("PROBLEM_CLASSIFIER", {
+  problemType,
+  isPlanCoherent,
+  planningMode,
+  topologyConfidence,
+  alignmentScore: topologyComparison.alignmentScore,
+  bomDrift: topologyComparison.bomDrift,
+  orderBomDrift: topologyComparison.orderBomDrift,
+  hasBlockingMismatch:
+    inventoryReconciliation?.hasBlockingMismatch === true,
+});
+
+console.log("PLANNING_MODE_SPLIT", {
+  problemType,
+  isPlanCoherent,
+  planningMode,
+
+  topologyConfidence,
+  alignmentScore: topologyComparison.alignmentScore,
+
+  bomDrift: topologyComparison.bomDrift,
+  orderBomDrift: topologyComparison.orderBomDrift,
+
+  hasBlockingMismatch:
+    inventoryReconciliation?.hasBlockingMismatch === true,
+});
 
   // ----------------------------------------------------
   // SIGNALS
@@ -845,28 +900,54 @@ if (selectedBest) {
   // --------------------------------------------------
 
   if (!isPlanCoherent) {
+  executionAllowed = false;
+  governanceReason = "BLOCKED_BY_PLAN_INCOHERENCE";
 
-    executionAllowed = false;
-    governanceReason = "BLOCKED_BY_PLAN_INCOHERENCE";
+  selectedBest = optimizerOutput?.best ?? null;
 
-    // 👉 advisor only
-    selectedBest = optimizerOutput?.best ?? null;
+  if (selectedBest?.actions) {
+    selectedBest.actions = [];
+  }
 
-    requiredActions = [
-      {
-        action: "REBUILD_PLAN_STRUCTURE",
-        priority: "HIGH",
-        blocking: true,
-        effort: "HIGH",
-      },
-    ];
+  const repairActions: EnrichedAction[] = [];
 
-    anomaly = true;
-    anomalyReasons.push("PLAN_INCOHERENT");
+  // 🔥 TOPOLOGY COLLASSATA
+  if ((topologyConfidence ?? 1) < 0.6) {
+    repairActions.push({
+      action: "REBUILD_BOM_GRAPH",
+      priority: "HIGH",
+      blocking: true,
+      effort: "HIGH",
+    });
+  }
 
-    console.log("PLAN_REPAIR_MODE_ACTIVE");
+  // 🔥 GAP TRA MOVEMENTS E REALTÀ
+  if (executionGap.some(g => g.type !== "OK")) {
+    repairActions.push({
+      action: "RESTORE_MOVEMENT_CHAIN",
+      priority: "HIGH",
+      blocking: true,
+      effort: "MEDIUM",
+    });
+  }
 
-  } else {
+  // 🔥 ORDERS NON ALLINEATI
+  if (topologyLayers.fromOrders.edges.length === 0) {
+    repairActions.push({
+      action: "RECONSTRUCT_ORDER_FLOW",
+      priority: "HIGH",
+      blocking: true,
+      effort: "MEDIUM",
+    });
+  }
+
+  requiredActions = dedupeRequiredActions(repairActions);
+
+  anomaly = true;
+  anomalyReasons = ["PLAN_INCOHERENT"];
+
+  console.log("PLAN_REPAIR_MODE_INTELLIGENT");
+} else {
 
     // --------------------------------------------------
     // NORMAL FLOW
@@ -1047,18 +1128,71 @@ if (selectedBest) {
   // SIGNAL FINALIZATION
   // ----------------------------------------------------
 
-  if (signals && typeof signals === "object") {
-    (signals as any).reality = deriveRealityState({
-      realityScore,
-      anomaly,
-      topologyConfidence,
-    });
+ if (signals && typeof signals === "object") {
 
-    (signals as any).correction_effect = correctionEffect;
-    (signals as any).bom_drift = topologyComparison.bomDrift;
-    (signals as any).topology_alignment = topologyComparison.alignmentScore;
+  // --------------------------------------------------
+  // PLAN SIGNAL (STRUCTURAL TRUTH)
+  // --------------------------------------------------
+
+  (signals as any).plan =
+    problemType === "PLAN"
+      ? "INCOHERENT"
+      : "COHERENT";
+
+  // --------------------------------------------------
+  // REALITY SIGNAL (ONLY IF PLAN IS VALID)
+  // --------------------------------------------------
+
+  (signals as any).reality =
+    problemType === "PLAN"
+      ? "UNKNOWN"
+      : deriveRealityState({
+          realityScore,
+          anomaly,
+          topologyConfidence,
+        });
+
+  // --------------------------------------------------
+  // MODE (NEW — CRITICAL FOR UI)
+  // --------------------------------------------------
+
+  (signals as any).mode = planningMode;
+
+  // --------------------------------------------------
+  // CORRECTION EFFECT
+  // --------------------------------------------------
+
+  (signals as any).correction_effect =
+    problemType === "PLAN"
+      ? "NONE"
+      : correctionEffect;
+
+  // --------------------------------------------------
+  // TOPOLOGY SIGNALS
+  // --------------------------------------------------
+
+  (signals as any).bom_drift = topologyComparison.bomDrift;
+  (signals as any).topology_alignment = topologyComparison.alignmentScore;
+
+  // --------------------------------------------------
+  // DECISION PRESSURE (SMART OVERRIDE)
+  // --------------------------------------------------
+
+  if (problemType === "PLAN") {
+    (signals as any).decision_pressure = "HIGH";
   }
 
+  // --------------------------------------------------
+  // DATA AWARENESS (OPTIONAL BUT POTENTE)
+  // --------------------------------------------------
+
+  (signals as any).data_awareness =
+    topologyConfidence < 0.5
+      ? "LOW"
+      : topologyConfidence < 0.75
+      ? "MEDIUM"
+      : "HIGH";
+}
   // ----------------------------------------------------
   // EXPLAINER
   // ----------------------------------------------------
@@ -1085,6 +1219,7 @@ if (selectedBest) {
         anomalyReasons,
         requiredActions,
         correctionEffect,
+        problemType,
       })
     : null;
 
@@ -1360,6 +1495,7 @@ topology_layers_debug: {
   },
 },
 topology_comparison_debug: topologyComparison,
+problem_type_debug: problemType,
 decision_trace: null,
 issued_at: nowIso(),
   } as any;

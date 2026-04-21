@@ -1178,9 +1178,58 @@ if (selectedBest) {
   // DECISION PRESSURE (SMART OVERRIDE)
   // --------------------------------------------------
 
-  if (problemType === "PLAN") {
-    (signals as any).decision_pressure = "HIGH";
+  // --------------------------------------------------
+// DECISION PRESSURE (CANONICAL ENGINE)
+// --------------------------------------------------
+
+let decisionPressure: "LOW" | "MEDIUM" | "HIGH" = "MEDIUM";
+
+// 🟥 PLAN → non puoi decidere (pressione strutturale)
+if (problemType === "PLAN") {
+  decisionPressure = "HIGH";
+}
+
+// 🟧 REALITY
+else {
+
+  // 🟢 completamente correggibile → bassa pressione
+ if (correctionEffect === "FULL") {
+
+  if (anomaly) {
+    decisionPressure = "MEDIUM"; // 👈 leggermente più onesto
+  } else {
+    decisionPressure = "LOW";
   }
+}
+
+  // 🟡 parzialmente correggibile
+  else if (correctionEffect === "PARTIAL") {
+    decisionPressure = "MEDIUM";
+  }
+
+  // 🔴 non correggibile
+  else {
+
+    if (anomaly) {
+      decisionPressure = "HIGH";
+    }
+
+    else if (
+      typeof realityScore === "number" &&
+      realityScore < 0.6
+    ) {
+      decisionPressure = "HIGH";
+    }
+
+    else {
+      decisionPressure = "MEDIUM";
+    }
+  }
+}
+
+// --------------------------------------------------
+
+(signals as any).decision_pressure = decisionPressure;
 
   // --------------------------------------------------
   // DATA AWARENESS (OPTIONAL BUT POTENTE)

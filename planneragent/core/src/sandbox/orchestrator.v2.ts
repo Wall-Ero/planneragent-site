@@ -610,6 +610,46 @@ const planCoherence = computePlanCoherence({
   topologyLayers,
 });
 
+// ----------------------------------------------------
+// PLAN SOURCE (CANONICAL)
+// ----------------------------------------------------
+
+let planSource: "MASTER" | "ORDERS_INFERRED" | "REALITY_INFERRED" | "ASSUMED";
+
+const hasMasterBom =
+  Array.isArray(req.masterBom) && req.masterBom.length > 0;
+
+const hasOrdersBom =
+  Array.isArray(inferredBom) && inferredBom.length > 0;
+
+const hasBehavioralData =
+  (req.movord?.length ?? 0) > 0 ||
+  (req.movmag?.length ?? 0) > 0 ||
+  movements.length > 0;
+
+if (hasMasterBom) {
+  planSource = "MASTER";
+}
+else if (hasOrdersBom) {
+  planSource = "ORDERS_INFERRED";
+}
+else if (hasBehavioralData) {
+  planSource = "REALITY_INFERRED";
+}
+else {
+  planSource = "ASSUMED";
+}
+
+let planConfidence = planCoherence.score;
+
+// penalità su fonti deboli
+if (planSource === "ASSUMED") {
+  planConfidence *= 0.5;
+}
+else if (planSource === "REALITY_INFERRED") {
+  planConfidence *= 0.7;
+}
+
 const isPlanCoherent = planCoherence.coherent;
 
 const planningMode = isPlanCoherent
@@ -1241,11 +1281,19 @@ const dp = computeDecisionPressureV2({
 // PLAN (CANONICAL)
 // --------------------------------------------------
 
-(signals as any).plan = planCoherence.coherent
-  ? "COHERENT"
-  : planCoherence.score >= 0.5
-  ? "SOME_GAPS"
-  : "INCOHERENT";
+(signals as any).plan = {
+  level: planCoherence.coherent
+    ? "COHERENT"
+    : planCoherence.score >= 0.5
+    ? "SOME_GAPS"
+    : "INCOHERENT",
+
+  source: planSource,
+
+  confidence: Number(planConfidence.toFixed(3)),
+
+  score: Number(planCoherence.score.toFixed(3)),
+};
 
 // --------------------------------------------------
 // DECISION PRESSURE (CANONICAL ENGINE)
@@ -1567,6 +1615,10 @@ topology_layers_debug: {
 },
 topology_comparison_debug: topologyComparison,
 plan_coherence_debug: planCoherence,
+plan_source_debug: {
+  source: planSource,
+  confidence: planConfidence,
+},
 decision_pressure_debug: dp.breakdown,
 problem_type_debug: problemType,
 decision_trace: null,

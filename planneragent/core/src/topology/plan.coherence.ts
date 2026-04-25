@@ -1,13 +1,14 @@
 // core/src/topology/plan.coherence.ts
 // ======================================================
-// PlannerAgent — Plan Coherence Engine v1
+// PlannerAgent — Plan Coherence Engine v2
 // Canonical Source of Truth
-// Determines if a plan structurally exists (PLAN ONLY — NO REALITY)
+// PLAN ONLY — NO REALITY CONTAMINATION
 // ======================================================
 
 type PlanCoherenceInput = {
   orders?: any[];
   inferredBom?: any[];
+
   topologyLayers?: {
     fromOrders?: { nodes: any[]; edges: any[] };
     fromBom?: { nodes: any[]; edges: any[] };
@@ -19,11 +20,19 @@ export type PlanCoherenceResult = {
   level: "COHERENT" | "SOME_GAPS" | "INCOHERENT";
   score: number;
   reasons: string[];
+
   metrics: {
     orderCount: number;
     orderEdges: number;
     bomEdges: number;
+
     connectedRatio: number;
+
+    parentCount: number;
+    parentWithComponents: number;
+    coverage: number;
+
+    avgComponentsPerParent: number;
   };
 };
 
@@ -40,18 +49,15 @@ export function computePlanCoherence(
 
   const orderNodes = input.topologyLayers?.fromOrders?.nodes ?? [];
   const orderEdges = input.topologyLayers?.fromOrders?.edges ?? [];
-
   const bomEdges = input.topologyLayers?.fromBom?.edges ?? [];
 
   const reasons: string[] = [];
 
-  const orderCount = orders.length;
-  const orderEdgeCount = orderEdges.length;
-  const bomEdgeCount = bomEdges.length;
-
   // --------------------------------------------------
   // BASIC EXISTENCE
   // --------------------------------------------------
+
+  const orderCount = orders.length;
 
   if (orderCount === 0) {
     return {
@@ -64,13 +70,19 @@ export function computePlanCoherence(
         orderEdges: 0,
         bomEdges: 0,
         connectedRatio: 0,
+        parentCount: 0,
+        parentWithComponents: 0,
+        coverage: 0,
+        avgComponentsPerParent: 0,
       },
     };
   }
 
   // --------------------------------------------------
-  // CONNECTIVITY
+  // CONNECTIVITY (ORDERS GRAPH)
   // --------------------------------------------------
+
+  const orderEdgeCount = orderEdges.length;
 
   const connectedRatio =
     orderNodes.length === 0
@@ -82,29 +94,83 @@ export function computePlanCoherence(
   }
 
   // --------------------------------------------------
-  // BOM COVERAGE
+  // BOM STRUCTURE
   // --------------------------------------------------
 
-  const hasBomStructure = bomEdgeCount > 0;
+  const bomEdgeCount = bomEdges.length;
 
-  if (!hasBomStructure) {
-    reasons.push("NO_BOM_LINKS");
+const hasBomFromSystem = bomEdgeCount > 0;
+const hasBomFromOrders = orderEdgeCount > 0;
+
+const hasStrongOrderStructure =
+  orderEdgeCount >= 2 && orderCount >= 2;
+
+const hasStructuralPlan =
+  hasBomFromSystem || hasStrongOrderStructure;
+
+ if (!hasStructuralPlan) {
+  reasons.push("NO_STRUCTURAL_PLAN");
+}
+
+  // --------------------------------------------------
+  // BOM QUALITY (CRUCIALE)
+  // --------------------------------------------------
+
+  const parentMap = new Map<string, number>();
+
+  for (const row of inferredBom ?? []) {
+    const parent = String(row?.parent ?? "").trim();
+    if (!parent) continue;
+
+    parentMap.set(parent, (parentMap.get(parent) ?? 0) + 1);
+  }
+
+  const parentCount = parentMap.size;
+
+  const parentWithComponents = Array.from(parentMap.values())
+    .filter((c) => c > 0).length;
+
+  const coverage =
+    parentCount === 0
+      ? 0
+      : parentWithComponents / parentCount;
+
+  const totalComponents = Array.from(parentMap.values())
+    .reduce((a, b) => a + b, 0);
+
+  const avgComponentsPerParent =
+    parentCount === 0
+      ? 0
+      : totalComponents / parentCount;
+
+  if (coverage < 0.5) {
+    reasons.push("LOW_BOM_COVERAGE");
+  }
+
+  if (avgComponentsPerParent < 1) {
+    reasons.push("WEAK_BOM_STRUCTURE");
   }
 
   // --------------------------------------------------
-  // STRUCTURAL SCORE
+  // SCORE (RIBILANCIATO)
   // --------------------------------------------------
 
   let score = 0;
 
-  // ordini esistono
-  score += 0.4;
+  // esistenza piano
+  score += 0.3;
 
   // connettività
-  score += connectedRatio * 0.3;
+  score += connectedRatio * 0.25;
 
-  // bom
-  score += hasBomStructure ? 0.3 : 0;
+  // struttura BOM
+score += hasStructuralPlan ? 0.3 : 0;
+
+  // coverage BOM
+  score += coverage * 0.15;
+
+  // profondità BOM
+  score += Math.min(1, avgComponentsPerParent / 3) * 0.1;
 
   score = Math.max(0, Math.min(1, score));
 
@@ -116,7 +182,7 @@ export function computePlanCoherence(
 
   if (score >= 0.75) {
     level = "COHERENT";
-  } else if (score >= 0.4) {
+  } else if (score >= 0.45) {
     level = "SOME_GAPS";
   } else {
     level = "INCOHERENT";
@@ -134,6 +200,10 @@ export function computePlanCoherence(
       orderEdges: orderEdgeCount,
       bomEdges: bomEdgeCount,
       connectedRatio,
+      parentCount,
+      parentWithComponents,
+      coverage,
+      avgComponentsPerParent,
     },
   };
 }

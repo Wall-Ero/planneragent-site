@@ -612,13 +612,6 @@ const planCoherence = computePlanCoherence({
   topologyLayers,
 });
 
-const planQuality = computePlanQuality({
-  selectedBest: null, // placeholder (lo aggiorniamo dopo)
-  topologyConfidence,
-  dlRisk: dl?.risk_score?.stockout_risk,
-  planCoherence,
-});
-
 // ----------------------------------------------------
 // PLAN SOURCE (CANONICAL)
 // ----------------------------------------------------
@@ -824,14 +817,14 @@ console.log("EFFECTIVE_POLICY_USED", policy);
 
 let selectedBest = optimizerOutput?.best ?? null;
 
+let selectedCandidates = optimizerOutput?.candidates ?? [];
+
 const planQualityFinal = computePlanQuality({
   selectedBest,
   topologyConfidence,
   dlRisk: dl?.risk_score?.stockout_risk,
   planCoherence,
 });
-
-let selectedCandidates = optimizerOutput?.candidates ?? [];
 
 // debug only
 let policyDebug: any[] = [];

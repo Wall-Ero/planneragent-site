@@ -257,39 +257,43 @@ export function buildReality(params: BuildRealityParams) {
   // ------------------------------------------------------
 
   return createRealitySnapshot({
-    observed,
-    reconstructed: {
-      plan_bom: planBomResult.bom ?? [],
-      reality_bom: realityBomResult.bom ?? [],
-      plan_reality_diff: planRealityDiff,
-    },
-    assumed,
+  observed,
 
-    fusion,
-    twinSnapshot,
+  reconstructed: {
+    plan_bom: planBomResult.bom ?? [],
+    plan_bom_quality: planBomResult.quality,
+    reality_bom: realityBomResult.bom ?? [],
+    plan_reality_diff: planRealityDiff,
+  },
 
-    confidence,
-    awareness_level: awareness,
-    assumptions,
+  assumed,
 
-    reality_score: realityScore,
+  fusion,
+  twinSnapshot,
 
-    process_instability: instability,
+  confidence,
+  awareness_level: awareness,
+  assumptions,
 
-    bom_divergence: {
-      master_vs_plan: fusion.divergence.master_vs_plan,
-      plan_vs_reality: divergence,
-      master_vs_reality: fusion.divergence.master_vs_reality,
-    },
+  reality_score: realityScore,
 
-    signals: [
-      ...(planBomResult.signals ?? []),
-      ...(realityBomResult.signals ?? []),
-      ...(planRealityDiff.signals ?? []),
-      ...(fusion.signals ?? []),
-      ...(instability.unstable_components > 0
-        ? [`process_instability:${instability.overall_instability}`]
-        : []),
-    ],
-  });
+  process_instability: instability,
+
+  bom_divergence: {
+    master_vs_plan: fusion.divergence.master_vs_plan,
+    plan_vs_reality: divergence,
+    master_vs_reality: fusion.divergence.master_vs_reality,
+  },
+
+  signals: [
+    ...(planBomResult.signals ?? []),
+    ...(realityBomResult.signals ?? []),
+    ...(planRealityDiff.signals ?? []),
+    ...(fusion.signals ?? []),
+    ...(instability.unstable_components > 0
+      ? [`process_instability:${instability.overall_instability}`]
+      : []),
+  ],
+});
+
 }

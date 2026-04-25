@@ -20,7 +20,7 @@ import { computeDlEvidenceV2 } from "./dl.v2";
 import { buildUiSignalsV1 } from "./signal.engine.v1";
 
 import { buildReality } from "../reality/reality.builder";
-import { buildOperationalTopology } from "../topology/topology.builder";
+import { buildOperationalTopology } from "../topology/topology.builder.v2";
 
 import { runOptimizerV1 } from "../decision/optimizer";
 
@@ -97,6 +97,11 @@ import { computePlanCoherence } from "../topology/plan.coherence";
 import { computeDecisionPressureV2 } from "../decision/decision.pressure.v2";
 
 import { computePlanQuality } from "../topology/plan.quality";
+
+import type { ExpectedConsumption } from "../decision/expected/expected.consumption.engine";
+
+import { autoHealTopologyInput } from "../topology/topology.autoheal";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -262,27 +267,32 @@ function classifyProblemType(params: {
   const weakReality =
     typeof realityScore === "number" && realityScore < 0.5;
 
-  // ------------------------------------------
-  // 1. PLAN PROBLEM (STRUTTURA ROTTA)
-  // ------------------------------------------
-
-    if (
-    topologyComparison.bomDrift === true ||
-    topologyComparison.orderBomDrift === true ||
-    topologyComparison.alignmentScore < 0.5
-  ) {
-    return "PLAN";
-  }
-
+  
   // ------------------------------------------
   // 2. REALITY PROBLEM (DATI NON ALLINEATI)
   // ------------------------------------------
-if (!planCoherence.coherent) return "PLAN";
+// 🔥 NEW LOGIC: BOM missing ≠ PLAN problem
+
+const severePlanBreak =
+  !planCoherence.coherent &&
+  (
+    topologyComparison.bomDrift ||
+    topologyComparison.orderBomDrift ||
+    topologyComparison.alignmentScore < 0.4
+  );
+
+if (severePlanBreak) return "PLAN";
+
+const weakStructure =
+  planCoherence.score < 0.75 ||
+  (planCoherence as any)?.metrics?.coverage === 0 ||
+  (planCoherence as any)?.metrics?.parentCount === 0;
 
 if (
   topologyComparison.bomDrift ||
   topologyComparison.orderBomDrift ||
-  topologyComparison.alignmentScore < 0.5
+  topologyComparison.alignmentScore < 0.5 ||
+  weakStructure
 ) {
   return "PLAN";
 }
@@ -416,6 +426,11 @@ export async function evaluateSandboxV2(
 
   const orders = normalizeOrders(req.orders ?? []);
   const movements = normalizeMovements(req.movements ?? []);
+
+const strictMovements = movements.filter(
+  (m): m is { sku: string; qty: number; date?: string; type: string; event: string } =>
+    typeof m.sku === "string" && m.sku.length > 0
+);
   const normalizedInventory = normalizeInventory(req.inventory ?? []);
 
   // ----------------------------------------------------
@@ -446,9 +461,9 @@ export async function evaluateSandboxV2(
   console.log("ORCH_INVENTORY_RECONCILIATION", inventoryReconciliation);
 
   const anomalyDiagnosis = detectInventoryAnomalies(
-    inventoryReconciliation.rows,
-    movements
-  );
+  inventoryReconciliation.rows,
+  strictMovements
+);
 
   console.log("ORCH_INVENTORY_ANOMALY_DIAGNOSIS", anomalyDiagnosis);
 
@@ -469,30 +484,61 @@ export async function evaluateSandboxV2(
     masterBom: (req.masterBom ?? []) as any[],
   });
 
-  const inferredBom =
-    (reality as any)?.reconstructed?.inferred_bom?.length
-      ? (reality as any).reconstructed.inferred_bom
-      : ((req.masterBom ?? []) as any[]);
+ const rawBom =
+  (reality as any)?.reconstructed?.plan_bom?.length
+    ? (reality as any).reconstructed.plan_bom
+    : (req.masterBom ?? []);
 
+const inferredBom = (rawBom ?? []).flatMap((b: any) => {
+  if (Array.isArray(b.components)) {
+    return b.components.map((c: any) => ({
+      parentSku: b.parent,
+      componentSku: c.component,
+      qtyPer: c.ratio ?? c.qty ?? 1,
+    }));
+  }
+
+  return [{
+    parentSku: b.parentSku ?? b.parent,
+    componentSku: b.componentSku ?? b.component,
+    qtyPer: b.qtyPer ?? b.ratio ?? b.qty ?? 1,
+  }];
+}).filter((b: any) => b.parentSku && b.componentSku);
+
+const inferredBomQuality =
+  (reality as any)?.reconstructed?.plan_bom_quality ?? null;
   // ----------------------------------------------------
   // EXPECTED CONSUMPTION
   // ----------------------------------------------------
 
-  const expectedConsumption = computeExpectedConsumption(
-    orders,
-    inferredBom
-  );
+  let expectedConsumption = computeExpectedConsumption(
+  orders,
+  inferredBom
+);
 
-  console.log("EXPECTED_CONSUMPTION", expectedConsumption);
+// 🔥 FIX: garantisci expected minimo
+if (!expectedConsumption || expectedConsumption.length === 0) {
+ expectedConsumption = (orders ?? [])
+  .map((o: any): ExpectedConsumption => ({
+    sku: String(o.sku ?? "").trim(),
+    expectedQty: Number(o.qty ?? 0),
+    source: "ORDER_BOM" as const, // 🔥 FIX TYPESCRIPT
+  }))
+    .filter((x) => x.sku && x.expectedQty > 0);
+
+  console.log("EXPECTED_FALLBACK_FROM_ORDERS", expectedConsumption);
+}
+
+console.log("EXPECTED_CONSUMPTION_FINAL", expectedConsumption);
 
   // ----------------------------------------------------
   // EXECUTION GAP
   // ----------------------------------------------------
 
-  const executionGap = computeExecutionGap(
-    expectedConsumption,
-    movements
-  );
+const executionGap = computeExecutionGap(
+  expectedConsumption,
+  strictMovements
+);
 
   console.log("EXECUTION_GAP", executionGap);
 
@@ -576,27 +622,103 @@ export async function evaluateSandboxV2(
 
   const dl = dlResult.evidence;
 
-  // ----------------------------------------------------
-  // TOPOLOGY
-  // ----------------------------------------------------
+  // =====================================================
+// 🔥 TOPOLOGY NORMALIZATION (REQUIRED FOR V2)
+// =====================================================
 
-  const topology = buildOperationalTopology({
-    orders,
-    inventory,
-    movements,
-    movmag: (req.movmag ?? []) as any[],
-    inferredBom,
+// ---------- ORDERS ----------
+const topologyOrders = (orders ?? []).map((o: any) => ({
+  orderId: String(o.orderId ?? o.id ?? "").trim(),
+  sku: String(o.sku ?? o.item ?? "").trim(),
+  commessa: String(o.commessa ?? "").trim(),
+})).filter((o: any) => o.orderId || o.sku);
+
+
+// ---------- INVENTORY ----------
+const topologyInventory = (inventory ?? []).map((i: any) => ({
+  sku: String(i.sku ?? i.item ?? "").trim(),
+  qty: Number(i.qty ?? i.quantity ?? 0),
+  warehouse: String(i.warehouse ?? "").trim(),
+})).filter((i: any) => i.sku);
+
+
+// ---------- MOVEMENTS ----------
+const topologyMovements = (movements ?? []).map((m: any) => ({
+  sku: String(m.sku ?? m.item ?? "").trim(),
+
+  qty: Number(m.qty ?? m.quantity ?? 0),
+
+  type: String(m.type ?? m.movementType ?? "").trim(),
+  event: String(m.event ?? "").trim(),
+
+  orderId: String(m.orderId ?? m.id ?? "").trim(),
+  commessa: String(m.commessa ?? "").trim(),
+
+  parentSku: String(
+    m.parentSku ?? m.producedSku ?? ""
+  ).trim(),
+
+  consumedSku: String(
+    m.consumedSku ?? m.component ?? ""
+  ).trim(),
+
+  batch: String(m.batch ?? "").trim(),
+})).filter((m: any) => m.sku || m.parentSku);
+
+
+// ---------- BOM ----------
+const topologyBom = (inferredBom ?? []).map((b: any) => ({
+  parent: String(b.parentSku ?? b.parent ?? "").trim(),
+  component: String(b.componentSku ?? b.component ?? "").trim(),
+  qty: Number(b.qtyPer ?? b.ratio ?? b.qty ?? 1),
+})).filter((b: any) => b.parent && b.component);
+
+
+// =====================================================
+// 🚀 BUILD TOPOLOGY V2
+// =====================================================
+
+// =====================================================
+// 🔥 AUTO-HEAL TOPOLOGY INPUT
+// =====================================================
+
+const healed = autoHealTopologyInput({
+  orders: topologyOrders,
+  inventory: topologyInventory,
+  movements: topologyMovements,
+  inferredBom: topologyBom,
+});
+
+// 🔥 DATA QUALITY SIGNAL
+if (healed.warnings.length > 0) {
+  console.log("⚠️ DATA QUALITY ISSUES", {
+    count: healed.warnings.length,
+    warnings: healed.warnings,
   });
+}
+
+console.log("TOPOLOGY_AUTO_HEAL_WARNINGS", healed.warnings);
+
+// =====================================================
+// 🚀 BUILD TOPOLOGY (HEALED)
+// =====================================================
+
+const topology = buildOperationalTopology({
+  orders: healed.orders,
+  inventory: healed.inventory,
+  movements: healed.movements,
+  movmag: (req.movmag ?? []) as any[],
+  inferredBom: healed.inferredBom,
+});
 
   const topologyEvidence = buildTopologyEvidenceFromTopology(topology);
   const topologyConfidence = topologyEvidence.topologyConfidence ?? 0.5;
 
   const topologyLayers = buildTopologyLayers({
-  inventory,
-  movements,
-  movmag: (req.movmag ?? []) as any[],
-  orders,
-  inferredBom,
+  inventory: healed.inventory,
+  movements: healed.movements,
+  orders: healed.orders,
+  inferredBom: healed.inferredBom,
 });
 
 const topologyComparison = compareTopologyLayers(topologyLayers);
@@ -609,6 +731,7 @@ const topologyComparison = compareTopologyLayers(topologyLayers);
 const planCoherence = computePlanCoherence({
   orders,
   inferredBom,
+  inferredBomQuality,
   topologyLayers,
 });
 

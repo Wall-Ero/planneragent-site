@@ -8,6 +8,14 @@
 type PlanCoherenceInput = {
   orders?: any[];
   inferredBom?: any[];
+  inferredBomQuality?: {
+    hasParents?: boolean;
+    hasComponents?: boolean;
+    parentCount?: number;
+    componentLinkCount?: number;
+    linkCoverage?: number;
+    avgComponentsPerParent?: number;
+  } | null;
 
   topologyLayers?: {
     fromOrders?: { nodes: any[]; edges: any[] };
@@ -115,33 +123,33 @@ const hasStructuralPlan =
   // --------------------------------------------------
   // BOM QUALITY (CRUCIALE)
   // --------------------------------------------------
+const q = input.inferredBomQuality;
 
-  const parentMap = new Map<string, number>();
+  const parentCount = q?.parentCount ?? 0;
 
-  for (const row of inferredBom ?? []) {
-    const parent = String(row?.parent ?? "").trim();
-    if (!parent) continue;
+  const componentLinkCount = q?.componentLinkCount ?? 0;
 
-    parentMap.set(parent, (parentMap.get(parent) ?? 0) + 1);
-  }
-
-  const parentCount = parentMap.size;
-
-  const parentWithComponents = Array.from(parentMap.values())
-    .filter((c) => c > 0).length;
+  const parentWithComponents =
+    q?.hasComponents ? parentCount : 0;
 
   const coverage =
-    parentCount === 0
-      ? 0
-      : parentWithComponents / parentCount;
-
-  const totalComponents = Array.from(parentMap.values())
-    .reduce((a, b) => a + b, 0);
+    typeof q?.linkCoverage === "number"
+      ? q.linkCoverage
+      : 0;
 
   const avgComponentsPerParent =
-    parentCount === 0
-      ? 0
-      : totalComponents / parentCount;
+    typeof q?.avgComponentsPerParent === "number"
+      ? q.avgComponentsPerParent
+      : 0;
+
+  if (!q?.hasParents) {
+    reasons.push("NO_BOM_PARENTS");
+  }
+
+  if (!q?.hasComponents) {
+    reasons.push("NO_BOM_COMPONENTS");
+  }
+
 
   if (coverage < 0.5) {
     reasons.push("LOW_BOM_COVERAGE");

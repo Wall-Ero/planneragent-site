@@ -33,10 +33,21 @@ export type InferredBomParent = {
   confidence: number
 }
 
+export type BomInferenceQuality = {
+  hasParents: boolean
+  hasComponents: boolean
+  parentCount: number
+  componentLinkCount: number
+  linkCoverage: number
+  avgComponentsPerParent: number
+}
+
 export type BomInferenceFromOrders = {
   bom: InferredBomParent[]
   signals: string[]
+  quality: BomInferenceQuality
 }
+
 
 function normalizeOrderId(o: OrderRow): string {
   return String(o.orderId ?? o.order ?? "").trim()
@@ -148,9 +159,36 @@ export function inferBomFromOrders(
 
   }
 
+const parentCount = bom.length
+
+  const componentLinkCount = bom.reduce(
+    (sum, p) => sum + (p.components?.length ?? 0),
+    0
+  )
+
+  const parentWithComponents = bom.filter(
+    (p) => (p.components?.length ?? 0) > 0
+  ).length
+
+  const linkCoverage =
+    parentCount === 0 ? 0 : parentWithComponents / parentCount
+
+  const avgComponentsPerParent =
+    parentCount === 0 ? 0 : componentLinkCount / parentCount
+
+  const quality: BomInferenceQuality = {
+    hasParents: parentCount > 0,
+    hasComponents: componentLinkCount > 0,
+    parentCount,
+    componentLinkCount,
+    linkCoverage,
+    avgComponentsPerParent,
+  }
+
   return {
     bom,
-    signals
+    signals,
+    quality
   }
 
 }

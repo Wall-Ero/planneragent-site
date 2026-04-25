@@ -1,125 +1,105 @@
 // core/src/decision/decision.pressure.v2.ts
-// ======================================================
-// PlannerAgent — Decision Pressure Engine V2 (Reality-Driven)
-// Canonical Source of Truth
-// ======================================================
 
-export type DecisionPressure = "LOW" | "MEDIUM" | "HIGH";
+export type DecisionPressureLevel = "LOW" | "MEDIUM" | "HIGH";
 
-type Input = {
+function maxPressure(levels: DecisionPressureLevel[]): DecisionPressureLevel {
+  if (levels.includes("HIGH")) return "HIGH";
+  if (levels.includes("MEDIUM")) return "MEDIUM";
+  return "LOW";
+}
+
+export function computeDecisionPressureV2(params: {
   problemType: "PLAN" | "REALITY" | "NONE";
   correctionEffect: "FULL" | "PARTIAL" | "NONE";
   realityScore?: number | null;
 
-  // opzionale
-  horizonDays?: number;
-};
-
-type Breakdown = {
-  structural: DecisionPressure;
-  operational: DecisionPressure;
-  temporal: DecisionPressure;
-};
-
-export function computeDecisionPressureV2(input: Input): {
-  final: DecisionPressure;
-  breakdown: Breakdown;
-} {
+  // 🔥 NUOVI INPUT
+  shortageUnits: number;
+  demandUnits: number;
+  inventoryLevel: number;
+  executionGap?: any[];
+}) {
+  const {
+    problemType,
+    correctionEffect,
+    realityScore,
+    shortageUnits,
+    demandUnits,
+    inventoryLevel,
+    executionGap,
+  } = params;
 
   // --------------------------------------------------
-  // 🔴 HARD RULE — PLAN NON GENERA DECISION PRESSURE
+  // STRUCTURAL
   // --------------------------------------------------
 
-  if (input.problemType === "PLAN") {
-    return {
-      final: "LOW",
-      breakdown: {
-        structural: "LOW",
-        operational: "LOW",
-        temporal: "LOW",
-      },
-    };
+  const structural: DecisionPressureLevel =
+    problemType === "PLAN"
+      ? "HIGH"
+      : problemType === "REALITY"
+      ? "MEDIUM"
+      : "LOW";
+
+  // --------------------------------------------------
+  // OPERATIONAL
+  // --------------------------------------------------
+
+  const operational: DecisionPressureLevel =
+    (executionGap ?? []).length > 0 ? "MEDIUM" : "LOW";
+
+  // --------------------------------------------------
+  // TEMPORAL (🔥 QUESTA È LA CHIAVE)
+  // --------------------------------------------------
+
+  let temporal: DecisionPressureLevel = "LOW";
+
+  if (demandUnits > inventoryLevel) {
+    temporal = "HIGH";
   }
 
   // --------------------------------------------------
-  // 🟧 OPERATIONAL (REALITY) — DRIVER PRINCIPALE
+  // SHORTAGE BOOST
   // --------------------------------------------------
 
-  let operational: DecisionPressure = "LOW";
+  let shortagePressure: DecisionPressureLevel = "LOW";
 
-  const weakReality =
-    typeof input.realityScore === "number" &&
-    input.realityScore < 0.5;
-
-  if (input.problemType === "REALITY") {
-
-    if (input.correctionEffect === "NONE") {
-      operational = "HIGH";
-    }
-
-    else if (input.correctionEffect === "PARTIAL") {
-      operational = "MEDIUM";
-    }
-
-    else {
-      operational = "LOW";
-    }
-
-  } else {
-
-    // sistema non rotto ma fragile
-    if (weakReality) {
-      operational = "MEDIUM";
-    } else {
-      operational = "LOW";
-    }
+  if (shortageUnits > 0) {
+    shortagePressure =
+      shortageUnits > 100 ? "HIGH" : "MEDIUM";
   }
 
   // --------------------------------------------------
-  // 🟨 TEMPORAL (TIME WINDOW)
+  // CORRECTION EFFECT MODIFIER
   // --------------------------------------------------
 
-  let temporal: DecisionPressure = "LOW";
+  let correctionModifier: DecisionPressureLevel = "LOW";
 
-  const horizon = input.horizonDays ?? 30;
-
-  if (horizon <= 3) temporal = "HIGH";
-  else if (horizon <= 7) temporal = "MEDIUM";
-  else temporal = "LOW";
+  if (correctionEffect === "NONE") {
+    correctionModifier = "HIGH";
+  } else if (correctionEffect === "PARTIAL") {
+    correctionModifier = "MEDIUM";
+  }
 
   // --------------------------------------------------
-  // 🧠 FUSIONE (REALITY-DRIVEN)
+  // FINAL
   // --------------------------------------------------
 
-  const final = mergePressure(operational, temporal);
+  const final = maxPressure([
+    structural,
+    operational,
+    temporal,
+    shortagePressure,
+    correctionModifier,
+  ]);
 
   return {
     final,
     breakdown: {
-      structural: "LOW",
+      structural,
       operational,
       temporal,
+      shortage: shortagePressure,
+      correction: correctionModifier,
     },
   };
-}
-
-// --------------------------------------------------
-// HELPER — MERGE CORRETTO
-// --------------------------------------------------
-
-function mergePressure(
-  operational: DecisionPressure,
-  temporal: DecisionPressure
-): DecisionPressure {
-
-  if (operational === "HIGH") return "HIGH";
-
-  if (operational === "MEDIUM") {
-    return temporal === "HIGH" ? "HIGH" : "MEDIUM";
-  }
-
-  // operational LOW
-  if (temporal === "HIGH") return "MEDIUM";
-
-  return "LOW";
 }

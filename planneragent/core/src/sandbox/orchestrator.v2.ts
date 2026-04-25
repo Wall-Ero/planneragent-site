@@ -613,6 +613,20 @@ const planCoherence = computePlanCoherence({
 });
 
 // ----------------------------------------------------
+// PROBLEM TYPE (MOVE UP)
+// ----------------------------------------------------
+
+const problemType: ProblemType = classifyProblemType({
+  planCoherence,
+  topologyConfidence,
+  topologyComparison,
+  inventoryReconciliation,
+  correctionEffect,
+  realityScore,
+});
+
+
+// ----------------------------------------------------
 // PLAN SOURCE (CANONICAL)
 // ----------------------------------------------------
 
@@ -657,15 +671,6 @@ const isPlanCoherent = planCoherence.coherent;
 const planningMode = isPlanCoherent
   ? "REALITY_CORRECTION"
   : "PLAN_REPAIR";
-
-const problemType: ProblemType = classifyProblemType({
-  planCoherence,
-  topologyConfidence,
-  topologyComparison,
-  inventoryReconciliation,
-  correctionEffect,
-  realityScore,
-});
 
 console.log("PROBLEM_CLASSIFIER", {
   problemType,
@@ -817,6 +822,32 @@ console.log("EFFECTIVE_POLICY_USED", policy);
 
 let selectedBest = optimizerOutput?.best ?? null;
 
+// ----------------------------------------------------
+// DECISION PRESSURE (MOVED UP FOR PLAN QUALITY)
+// ----------------------------------------------------
+
+const dp = computeDecisionPressureV2({
+  problemType,
+  correctionEffect,
+  realityScore,
+
+  // 🔥 NUOVI INPUT REALI (FONDAMENTALE)
+  shortageUnits: selectedBest?.kpis?.shortageUnits ?? 0,
+
+  demandUnits: (orders ?? []).reduce(
+    (sum, o) => sum + Number(o.qty ?? 0),
+    0
+  ),
+
+  inventoryLevel: (inventory ?? []).reduce(
+    (sum, i) => sum + Number(i.qty ?? 0),
+    0
+  ),
+
+  executionGap,
+});
+
+
 let selectedCandidates = optimizerOutput?.candidates ?? [];
 
 const planQualityFinal = computePlanQuality({
@@ -824,6 +855,7 @@ const planQualityFinal = computePlanQuality({
   topologyConfidence,
   dlRisk: dl?.risk_score?.stockout_risk,
   planCoherence,
+  decisionPressure: dp.final, // 🔥 NEW
 });
 
 // debug only
@@ -1247,12 +1279,6 @@ if (selectedBest) {
     ? "ACTION_REQUIRED_NO_SAFE_PLAN"
     : "NO_ACTIONABLE_PLAN";
 }
-
-const dp = computeDecisionPressureV2({
-  problemType,
-  correctionEffect,
-  realityScore,
-});
 
   // ----------------------------------------------------
   // SIGNAL FINALIZATION

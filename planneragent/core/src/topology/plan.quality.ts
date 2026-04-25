@@ -12,10 +12,11 @@ export type PlanQualityLevel =
   | "UNUSABLE";
 
 export function computePlanQuality(params: {
-  selectedBest: any | null;
+  selectedBest: any;
   topologyConfidence: number;
   dlRisk?: number;
-  planCoherence: { coherent: boolean };
+  planCoherence: any;
+  decisionPressure?: "LOW" | "MEDIUM" | "HIGH";
 }) {
   // ----------------------------------------------------
   // NO PLAN → UNUSABLE
@@ -56,6 +57,20 @@ export function computePlanQuality(params: {
 
   let score = 1;
 
+  // ----------------------------------------------------
+// DECISION PRESSURE IMPACT (CANONICAL)
+// ----------------------------------------------------
+
+let dpPenalty = 0;
+
+if (params.decisionPressure === "HIGH") {
+  dpPenalty = 0.25;
+} else if (params.decisionPressure === "MEDIUM") {
+  dpPenalty = 0.1;
+}
+
+score -= dpPenalty;
+
   if (shortage > 0) score -= 0.4;
   if (serviceShortfall > 0) score -= 0.3;
   if (churn > 5) score -= 0.15;
@@ -80,6 +95,14 @@ export function computePlanQuality(params: {
   // ----------------------------------------------------
 
   const reasons: string[] = [];
+
+  // ----------------------------------------------------
+// DECISION PRESSURE REASON
+// ----------------------------------------------------
+
+if (params.decisionPressure === "HIGH") {
+  reasons.push("HIGH_DECISION_PRESSURE");
+}
 
   if (shortage > 0) reasons.push("SHORTAGE_PRESENT");
   if (serviceShortfall > 0) reasons.push("SERVICE_NOT_FULL");

@@ -96,6 +96,8 @@ import { computePlanCoherence } from "../topology/plan.coherence";
 
 import { computeDecisionPressureV2 } from "../decision/decision.pressure.v2";
 
+import { computePlanQuality } from "../topology/plan.quality";
+
 // ======================================================
 // TYPES / CONSTANTS
 // ======================================================
@@ -610,6 +612,13 @@ const planCoherence = computePlanCoherence({
   topologyLayers,
 });
 
+const planQuality = computePlanQuality({
+  selectedBest: null, // placeholder (lo aggiorniamo dopo)
+  topologyConfidence,
+  dlRisk: dl?.risk_score?.stockout_risk,
+  planCoherence,
+});
+
 // ----------------------------------------------------
 // PLAN SOURCE (CANONICAL)
 // ----------------------------------------------------
@@ -814,6 +823,14 @@ console.log("EFFECTIVE_POLICY_USED", policy);
 // ----------------------------------------------------
 
 let selectedBest = optimizerOutput?.best ?? null;
+
+const planQualityFinal = computePlanQuality({
+  selectedBest,
+  topologyConfidence,
+  dlRisk: dl?.risk_score?.stockout_risk,
+  planCoherence,
+});
+
 let selectedCandidates = optimizerOutput?.candidates ?? [];
 
 // debug only
@@ -1281,7 +1298,7 @@ const dp = computeDecisionPressureV2({
 // PLAN (CANONICAL)
 // --------------------------------------------------
 
-(signals as any).plan = {
+  (signals as any).plan = {
   level: planCoherence.coherent
     ? "COHERENT"
     : planCoherence.score >= 0.5
@@ -1289,10 +1306,11 @@ const dp = computeDecisionPressureV2({
     : "INCOHERENT",
 
   source: planSource,
-
   confidence: Number(planConfidence.toFixed(3)),
-
   score: Number(planCoherence.score.toFixed(3)),
+
+  quality: planQualityFinal.level,
+  quality_score: planQualityFinal.score,
 };
 
 // --------------------------------------------------
@@ -1615,6 +1633,7 @@ topology_layers_debug: {
 },
 topology_comparison_debug: topologyComparison,
 plan_coherence_debug: planCoherence,
+plan_quality_debug: planQualityFinal,
 plan_source_debug: {
   source: planSource,
   confidence: planConfidence,

@@ -234,23 +234,68 @@ function deriveCorrectionEffect(
   return "NONE";
 }
 
+// --------------------------------------------------
+// EXECUTION TYPE (CANONICAL)
+// --------------------------------------------------
+
+type ExecutionType =
+  | "DATA_REPAIR"
+  | "PLAN_REPAIR"
+  | "OPERATIONAL_EXECUTION";
+
+function mapExecutionType(action: string): ExecutionType {
+
+  // -------------------------
+  // DATA REPAIR
+  // -------------------------
+  if (
+    action === "POST_PRODUCTION_RECEIPT" ||
+    action === "VERIFY_COMPONENT_CONSUMPTION" ||
+    action === "RESTORE_MOVEMENT_CHAIN"
+  ) return "DATA_REPAIR";
+
+  // -------------------------
+  // PLAN REPAIR
+  // -------------------------
+  if (
+    action === "REBUILD_PLAN_STRUCTURE" ||
+    action === "REBUILD_BOM_GRAPH" ||
+    action === "DEFINE_PLAN_STRUCTURE" ||
+    action === "ALIGN_BOM_AND_ORDERS"
+  ) return "PLAN_REPAIR";
+
+  // -------------------------
+  // DEFAULT
+  // -------------------------
+  return "OPERATIONAL_EXECUTION";
+}
+
+
+// ======================================================
+// PROBLEM CLASSIFIER v1 — FINAL (Hybrid Plan + Reality)
+// ======================================================
+
+type PlanState = "VALID" | "MISSING" | "BROKEN";
+
 function classifyProblemType(params: {
-  planCoherence: {
-    coherent: boolean;
-    score: number;
-  };
+  planCoherence: { coherent: boolean; score: number; metrics?: any };
   topologyConfidence: number;
   topologyComparison: {
+    alignmentScore: number;
     bomDrift: boolean;
     orderBomDrift: boolean;
-    alignmentScore: number;
   };
   inventoryReconciliation?: {
     hasBlockingMismatch?: boolean;
   } | null;
   correctionEffect: "FULL" | "PARTIAL" | "NONE";
   realityScore?: number | null;
-}): ProblemType {
+  movementsCount: number;
+  movementQualityScore: number;
+}): {
+  problemType: ProblemType;
+  planState: PlanState;
+} {
 
   const {
     planCoherence,
@@ -259,58 +304,75 @@ function classifyProblemType(params: {
     inventoryReconciliation,
     correctionEffect,
     realityScore,
+    movementsCount,
+    movementQualityScore,
   } = params;
+
+  const metrics = (planCoherence as any)?.metrics ?? {};
+
+  // -------------------------
+  // PLAN STATE
+  // -------------------------
+  const planState: PlanState =
+    metrics.coverage === 0 && metrics.parentCount === 0
+      ? "MISSING"
+      : !planCoherence.coherent
+      ? "BROKEN"
+      : "VALID";
+
+  // -------------------------
+  // REALITY
+  // -------------------------
+  
+  const strongReality =
+  movementsCount > 0 &&
+  movementQualityScore > 0.6 &&
+  topologyConfidence > 0.7 &&
+  typeof realityScore === "number" &&
+  realityScore > 0.7;
+
+  const severeMisalignment =
+    topologyComparison.alignmentScore < 0.5 ||
+    topologyComparison.bomDrift ||
+    topologyComparison.orderBomDrift;
 
   const hasBlockingMismatch =
     inventoryReconciliation?.hasBlockingMismatch === true;
 
-  const weakReality =
-    typeof realityScore === "number" && realityScore < 0.5;
 
-  
-  // ------------------------------------------
-  // 2. REALITY PROBLEM (DATI NON ALLINEATI)
-  // ------------------------------------------
-// 🔥 NEW LOGIC: BOM missing ≠ PLAN problem
+  // -------------------------
+  // CLASSIFICATION
+  // -------------------------
 
-const severePlanBreak =
-  !planCoherence.coherent &&
-  (
-    topologyComparison.bomDrift ||
-    topologyComparison.orderBomDrift ||
-    topologyComparison.alignmentScore < 0.4
-  );
+  // 🔴 PLAN BROKEN → sempre PLAN
+  if (planState === "BROKEN") {
+    return { problemType: "PLAN", planState };
+  }
 
-if (severePlanBreak) return "PLAN";
+  // 🟠 PLAN MISSING
+  if (planState === "MISSING") {
+    if (strongReality) {
+      return { problemType: "REALITY", planState };
+    }
+    return { problemType: "PLAN", planState };
+  }
 
-const weakStructure =
-  planCoherence.score < 0.75 ||
-  (planCoherence as any)?.metrics?.coverage === 0 ||
-  (planCoherence as any)?.metrics?.parentCount === 0;
+  // 🟢 PLAN VALID
 
-if (
-  topologyComparison.bomDrift ||
-  topologyComparison.orderBomDrift ||
-  topologyComparison.alignmentScore < 0.5 ||
-  weakStructure
-) {
-  return "PLAN";
+  if (severeMisalignment) {
+    if (strongReality) {
+      return { problemType: "REALITY", planState };
+    }
+    return { problemType: "PLAN", planState };
+  }
+
+  if (hasBlockingMismatch && correctionEffect !== "FULL") {
+    return { problemType: "REALITY", planState };
+  }
+
+  return { problemType: "NONE", planState };
 }
 
-if (hasBlockingMismatch && correctionEffect !== "FULL") return "REALITY";
-
-if (topologyConfidence < 0.6) return "REALITY";
-
-if (weakReality && correctionEffect === "NONE") return "REALITY";
-
-return "NONE";
-
-  // ------------------------------------------
-  // 3. NONE (SISTEMA SANO)
-  // ------------------------------------------
-
-  return "NONE";
-}
 
 function dedupeRequiredActions(actions: EnrichedAction[]): EnrichedAction[] {
   const map = new Map<string, EnrichedAction>();
@@ -373,6 +435,31 @@ function safeActionType(action: any): string {
   );
 }
 
+function buildPlanRepairStrategies(params: {
+  topologyConfidence: number;
+  executionGap: any[];
+  topologyLayers: any;
+}) {
+  const { topologyConfidence, executionGap, topologyLayers } = params;
+
+  const strategies: { type: string }[] = [];
+
+  if (topologyConfidence < 0.6) {
+    strategies.push({ type: "REBUILD_BOM_GRAPH" });
+  }
+
+  if (executionGap.some((g: any) => g.type !== "OK")) {
+    strategies.push({ type: "RESTORE_MOVEMENT_CHAIN" });
+  }
+
+  if ((topologyLayers?.fromOrders?.edges?.length ?? 0) === 0) {
+    strategies.push({ type: "RECONSTRUCT_ORDER_FLOW" });
+  }
+
+  strategies.push({ type: "REBUILD_PLAN_STRUCTURE" });
+
+  return strategies;
+}
 
 // ======================================================
 // MAIN
@@ -421,17 +508,126 @@ export async function evaluateSandboxV2(
   }
 
   // ----------------------------------------------------
-  // NORMALIZATION
-  // ----------------------------------------------------
+// MOVEMENT QUALITY ENGINE (CANONICAL)
+// ----------------------------------------------------
 
-  const orders = normalizeOrders(req.orders ?? []);
-  const movements = normalizeMovements(req.movements ?? []);
+type MovementQuality = {
+  total: number;
+  valid: number;
+  nonZero: number;
+  knownType: number;
+  qualityScore: number;   // 0 → 1
+};
 
-const strictMovements = movements.filter(
-  (m): m is { sku: string; qty: number; date?: string; type: string; event: string } =>
-    typeof m.sku === "string" && m.sku.length > 0
+function computeMovementQuality(
+  movements: {
+    sku?: string;
+    qty?: number;
+    event?: string;
+  }[]
+): MovementQuality {
+
+  const total = movements.length;
+
+  if (total === 0) {
+    return {
+      total: 0,
+      valid: 0,
+      nonZero: 0,
+      knownType: 0,
+      qualityScore: 0,
+    };
+  }
+
+  let valid = 0;
+  let nonZero = 0;
+  let knownType = 0;
+
+  for (const m of movements) {
+
+    const hasSku =
+      typeof m.sku === "string" && m.sku.length > 0;
+
+    const hasQty =
+      Number.isFinite(m.qty);
+
+    const isNonZero =
+      Number.isFinite(m.qty) && m.qty !== 0;
+
+    const isKnown =
+      m.event && m.event !== "UNKNOWN";
+
+    if (hasSku && hasQty) valid++;
+    if (isNonZero) nonZero++;
+    if (isKnown) knownType++;
+  }
+
+  const qualityScore =
+    (valid / total) * 0.4 +
+    (nonZero / total) * 0.3 +
+    (knownType / total) * 0.3;
+
+  return {
+    total,
+    valid,
+    nonZero,
+    knownType,
+    qualityScore: Number(qualityScore.toFixed(3)),
+  };
+}
+ 
+// ----------------------------------------------------
+// NORMALIZATION
+// ----------------------------------------------------
+
+const orders = normalizeOrders(req.orders ?? []);
+const movements = normalizeMovements(req.movements ?? []);
+
+// ----------------------------------------------------
+// MOVEMENT QUALITY (CANONICAL)
+// ----------------------------------------------------
+
+const totalMovements = movements.length;
+
+const validMovements = movements.filter(
+  (m) =>
+    typeof m.sku === "string" &&
+    m.sku.length > 0 &&
+    Number.isFinite(m.qty) &&
+    m.qty !== 0 &&
+    m.event !== "UNKNOWN"
 );
-  const normalizedInventory = normalizeInventory(req.inventory ?? []);
+
+const validRatio =
+  totalMovements > 0
+    ? validMovements.length / totalMovements
+    : 0;
+
+const hasProduction = validMovements.some(
+  (m) => m.event === "PRODUCTION_LOAD"
+);
+
+const hasConsumption = validMovements.some(
+  (m) => m.event === "COMPONENT_CONSUMPTION"
+);
+
+const flowConsistency =
+  hasProduction && hasConsumption ? 1 : 0.5;
+
+const movementQuality = {
+  qualityScore: Number(
+    (validRatio * 0.7 + flowConsistency * 0.3).toFixed(3)
+  ),
+  validRatio,
+  flowConsistency,
+  total: totalMovements,
+  valid: validMovements.length,
+};
+
+// 👉 QUESTO è il tuo strict reale
+const strictMovements = validMovements;
+
+const normalizedInventory = normalizeInventory(req.inventory ?? []);
 
   // ----------------------------------------------------
   // INVENTORY RECONSTRUCTION
@@ -555,42 +751,41 @@ const executionGap = computeExecutionGap(
   console.log("ORCH_CORRECTION_ACTIONS", correction);
 
   // ----------------------------------------------------
-  // CORRECTION SIMULATION
-  // ----------------------------------------------------
+// CORRECTION SIMULATION
+// ----------------------------------------------------
 
-  const preCorrectionReconciliation = inventoryReconciliation;
+const preCorrectionReconciliation = inventoryReconciliation;
 
-  let simulatedInventory = inventory;
+// Canonical rule:
+// correction actions simulate ERP alignment,
+// not another movement reconstruction.
+const postCorrectionReconciliation: InventoryReconciliationResult = {
+  rows: inventoryReconciliation.rows.map((r: any) => ({
+    ...r,
+    erpQty: r.reconstructedQty,
+    delta: 0,
+    absDelta: 0,
+    status: "MATCH",
+  })),
+  mismatchCount: 0,
+  majorMismatchCount: 0,
+  totalAbsoluteDelta: 0,
+  hasBlockingMismatch: false,
+};
 
-  if (correction.actions?.length) {
-    const simulation = simulateCorrectionsOnInventory(
-      inventory,
-      correction.actions
-    );
+console.log(
+  "POST_CORRECTION_RECONCILIATION",
+  postCorrectionReconciliation
+);
 
-    simulatedInventory = simulation.simulatedInventory;
+const correctionEffect = deriveCorrectionEffect(
+  preCorrectionReconciliation,
+  postCorrectionReconciliation
+);
 
-    console.log("SIMULATED_INVENTORY", simulatedInventory);
-  }
-
-  const postCorrectionReconciliation = reconcileInventory(
-    normalizedInventory,
-    simulatedInventory
-  );
-
-  console.log(
-    "POST_CORRECTION_RECONCILIATION",
-    postCorrectionReconciliation
-  );
-
-  const correctionEffect = deriveCorrectionEffect(
-    preCorrectionReconciliation,
-    postCorrectionReconciliation
-  );
-
-  console.log("CORRECTION_EFFECTIVENESS", {
-    effect: correctionEffect,
-  });
+console.log("CORRECTION_EFFECTIVENESS", {
+  effect: correctionEffect,
+});
 
   const realityScore: number | null =
     typeof (reality as any)?.reality_score === "number"
@@ -739,15 +934,20 @@ const planCoherence = computePlanCoherence({
 // PROBLEM TYPE (MOVE UP)
 // ----------------------------------------------------
 
-const problemType: ProblemType = classifyProblemType({
+const { problemType, planState } = classifyProblemType({
   planCoherence,
   topologyConfidence,
   topologyComparison,
   inventoryReconciliation,
   correctionEffect,
   realityScore,
+  movementsCount: strictMovements.length,
+  movementQualityScore: movementQuality.qualityScore,
 });
 
+const isPlanRepairMode = problemType === "PLAN";
+
+const metrics = (planCoherence as any)?.metrics ?? {};
 
 // ----------------------------------------------------
 // PLAN SOURCE (CANONICAL)
@@ -789,7 +989,9 @@ else if (planSource === "REALITY_INFERRED") {
   planConfidence *= 0.7;
 }
 
-const isPlanCoherent = planCoherence.coherent;
+const isPlanCoherent =
+  planCoherence.coherent &&
+  planCoherence.score >= 0.8;
 
 const planningMode = isPlanCoherent
   ? "REALITY_CORRECTION"
@@ -1148,32 +1350,22 @@ const outcome = selectedBest
 // --------------------------------------------------
 // MAIN GOVERNANCE
 // --------------------------------------------------
+
 if (selectedBest) {
-
   // --------------------------------------------------
-  // PROBLEM TYPE GOVERNANCE (CANONICAL DRIVER)
+  // PLAN REPAIR GOVERNANCE — CANONICAL
   // --------------------------------------------------
 
-  if (problemType === "PLAN") {
+  if (isPlanRepairMode) {
+    anomaly = true;
 
-    executionAllowed = false;
-    governanceReason = "BLOCKED_BY_PLAN_STRUCTURE";
-
-    console.log("GOVERNANCE_BLOCK_BY_PROBLEM_TYPE_PLAN");
-
-    // --------------------------------------------------
-    // 🔥 PLAN REPAIR MODE (HARD OVERRIDE)
-    // --------------------------------------------------
-
-    selectedBest = optimizerOutput?.best ?? null;
-
-    if (selectedBest?.actions) {
-      selectedBest.actions = [];
-    }
+    anomalyReasons = [
+      "PLAN_INCOHERENT",
+      "STRUCTURAL_REPAIR_REQUIRED",
+    ];
 
     const repairActions: EnrichedAction[] = [];
 
-    // 🔥 TOPOLOGY COLLASSATA
     if ((topologyConfidence ?? 1) < 0.6) {
       repairActions.push({
         action: "REBUILD_BOM_GRAPH",
@@ -1183,8 +1375,7 @@ if (selectedBest) {
       });
     }
 
-    // 🔥 GAP TRA MOVEMENTS E REALTÀ
-    if (executionGap.some(g => g.type !== "OK")) {
+    if (executionGap.some((g) => g.type !== "OK")) {
       repairActions.push({
         action: "RESTORE_MOVEMENT_CHAIN",
         priority: "HIGH",
@@ -1193,7 +1384,6 @@ if (selectedBest) {
       });
     }
 
-    // 🔥 ORDERS NON ALLINEATI
     if (topologyLayers.fromOrders.edges.length === 0) {
       repairActions.push({
         action: "RECONSTRUCT_ORDER_FLOW",
@@ -1203,33 +1393,54 @@ if (selectedBest) {
       });
     }
 
-    requiredActions = dedupeRequiredActions(repairActions);
+    if (topologyComparison.bomDrift || topologyComparison.orderBomDrift) {
+      repairActions.push({
+        action: "ALIGN_BOM_AND_ORDERS",
+        priority: "HIGH",
+        blocking: true,
+        effort: "MEDIUM",
+      });
+    }
 
-    anomaly = true;
-    anomalyReasons = ["PLAN_INCOHERENT"];
+    if (planState === "MISSING") {
+      repairActions.push({
+        action: "DEFINE_PLAN_STRUCTURE",
+        priority: "MEDIUM",
+        blocking: false,
+        effort: "MEDIUM",
+      });
+    }
 
-    requiredActions.push({
+    repairActions.push({
       action: "REBUILD_PLAN_STRUCTURE",
       priority: "HIGH",
       blocking: true,
       effort: "HIGH",
     });
 
-    console.log("PLAN_REPAIR_MODE_INTELLIGENT");
+    requiredActions = dedupeRequiredActions(repairActions);
 
-  } else {
+    selectedBest.actions = requiredActions;
+  }
 
-    // --------------------------------------------------
-    // REALITY ISSUE (NON BLOCCANTE)
-    // --------------------------------------------------
+  // --------------------------------------------------
+  // REALITY / EXECUTION GOVERNANCE
+  // only when not repairing plan
+  // --------------------------------------------------
 
+  if (!isPlanRepairMode) {
     if (problemType === "REALITY") {
       console.log("GOVERNANCE_REALITY_ISSUE_DETECTED");
     }
 
-    // --------------------------------------------------
-    // NORMAL FLOW
-    // --------------------------------------------------
+    if (planState === "MISSING") {
+      requiredActions.push({
+        action: "DEFINE_PLAN_STRUCTURE",
+        priority: "MEDIUM",
+        blocking: false,
+        effort: "MEDIUM",
+      });
+    }
 
     if (hasExecutionGap) {
       anomaly = true;
@@ -1265,11 +1476,6 @@ if (selectedBest) {
       requiredActions = enrichAnomalyActions(anomalyReasons);
     }
 
-
-    // --------------------------------------------------
-    // CORRECTION ACTIONS
-    // --------------------------------------------------
-
     if (correction.actions?.length) {
       const correctionEnriched: EnrichedAction[] =
         correction.actions.map((a) => ({
@@ -1284,10 +1490,6 @@ if (selectedBest) {
         ...correctionEnriched,
       ];
     }
-
-    // --------------------------------------------------
-    // TOPOLOGY CHECKS
-    // --------------------------------------------------
 
     if (topologyComparison.bomDrift) {
       anomaly = true;
@@ -1325,84 +1527,129 @@ if (selectedBest) {
 
     requiredActions = dedupeRequiredActions(requiredActions);
 
-    const criticalAnomaly = hasCriticalAnomaly(anomalyReasons);
-
-    // --------------------------------------------------
-    // AUTO-HEAL GOVERNANCE
-    // --------------------------------------------------
-
-    if (!governanceLocked) {
-
-      if (hasInventoryBlocking && correctionEffect === "NONE") {
-        executionAllowed = false;
-        governanceReason = "BLOCKED_BY_INVENTORY_MISMATCH";
-
-      } else if (criticalAnomaly) {
-        executionAllowed = false;
-        governanceReason = "BLOCKED_BY_SYSTEM_UNCERTAINTY";
-
-      } else if (hasTopologyBlocking) {
-        executionAllowed = false;
-        governanceReason = "BLOCKED_BY_BOM_DRIFT";
-
-      } else if (weakReality && correctionEffect === "NONE") {
-        executionAllowed = false;
-        governanceReason = "BLOCKED_BY_LOW_REALITY_SCORE";
-
-      } else if (correctionEffect === "FULL") {
-
-        const baseAllowed =
-          executionAllowedByPlan(req.plan, req.intent);
-
-        executionAllowed =
-          baseAllowed && runtimeExecutablePlanActions;
-
-        governanceReason = executionAllowed
-          ? "AUTO_HEALED_EXECUTION"
-          : "AUTO_HEALED_RUNTIME_PENDING";
-
-      } else if (correctionEffect === "PARTIAL") {
-
-        executionAllowed = false;
-        governanceReason = "EXECUTION_WITH_WARNINGS";
-
-      } else {
-
-        executionAllowed =
-          executionAllowedByPlan(req.plan, req.intent);
-
-        governanceReason = normalizeGovernanceReason(
-          executionAllowed,
-          req
-        );
-      }
-    }
+    selectedBest.actions = dedupeRequiredActions([
+      ...(selectedBest.actions ?? []),
+      ...requiredActions,
+    ]);
   }
 
   // --------------------------------------------------
-  // DECISION MEMORY
+  // EXECUTION TYPE — SINGLE POINT
   // --------------------------------------------------
 
-  const safeOutcome =
-  outcome ??
-  (executionAllowed ? "SUCCESS" : "FAIL");
+  if (selectedBest?.actions?.length) {
+    selectedBest.actions = selectedBest.actions.map((a: any) => ({
+      ...a,
+      executionType: mapExecutionType(
+        a?.type ?? a?.action ?? a?.kind ?? "UNKNOWN"
+      ),
+    }));
+  }
+
+  const criticalAnomaly = hasCriticalAnomaly(anomalyReasons);
+
+  // --------------------------------------------------
+  // EXECUTION TYPE GOVERNANCE
+  // --------------------------------------------------
+
+  let allowedExecutionTypes: ExecutionType[] | null = null;
+
+  if (movementQuality.qualityScore < 0.5) {
+    executionAllowed = true;
+    governanceReason = "DATA_REPAIR_ONLY";
+    allowedExecutionTypes = ["DATA_REPAIR"];
+  } else if (isPlanRepairMode) {
+    executionAllowed =
+      req.plan === "SENIOR" &&
+      req.intent === "EXECUTE";
+
+    governanceReason = executionAllowed
+      ? "PLAN_REPAIR_DELEGATED_EXECUTION"
+      : req.plan === "JUNIOR"
+      ? "PLAN_REPAIR_APPROVAL_REQUIRED"
+      : req.plan === "VISION"
+      ? "PLAN_REPAIR_REQUIRED_OBSERVATION_ONLY"
+      : req.plan === "PRINCIPAL" && req.intent === "IMPROVE"
+      ? "PLAN_REPAIR_IMPROVEMENT_AUTHORITY"
+      : "PLAN_REPAIR_REQUIRED";
+
+    allowedExecutionTypes = ["PLAN_REPAIR"];
+  } else {
+    executionAllowed = executionAllowedByPlan(req.plan, req.intent);
+    governanceReason = normalizeGovernanceReason(executionAllowed, req);
+    allowedExecutionTypes = null;
+  }
+
+  if (
+    executionAllowed &&
+    allowedExecutionTypes &&
+    selectedBest?.actions?.length
+  ) 
+  
+  // 🔥 ALLINEA REQUIRED ACTIONS (UI + GOVERNANCE)
+if (allowedExecutionTypes) {
+  requiredActions = requiredActions.filter(
+    (a: any) =>
+      allowedExecutionTypes!.includes(
+        mapExecutionType(a.action)
+      )
+  );
+}
+{
+    selectedBest.actions = selectedBest.actions.filter(
+      (a: any) => allowedExecutionTypes!.includes(a.executionType)
+    );
+  }
+
+  if (
+    executionAllowed &&
+    (!selectedBest?.actions || selectedBest.actions.length === 0)
+  ) {
+    executionAllowed = false;
+    governanceReason = "NO_ALLOWED_ACTIONS";
+  }
+
+  // --------------------------------------------------
+  // HARD BLOCKS
+  // --------------------------------------------------
+
+  if (hasInventoryBlocking && correctionEffect === "NONE") {
+    executionAllowed = false;
+    governanceReason = "BLOCKED_BY_INVENTORY_MISMATCH";
+
+  } else if (criticalAnomaly) {
+    executionAllowed = false;
+    governanceReason = "BLOCKED_BY_SYSTEM_UNCERTAINTY";
+
+  } else if (hasTopologyBlocking) {
+    executionAllowed = false;
+    governanceReason = "BLOCKED_BY_BOM_DRIFT";
+
+  } else if (weakReality && correctionEffect === "NONE") {
+    executionAllowed = false;
+    governanceReason = "BLOCKED_BY_LOW_REALITY_SCORE";
+
+  } else if (correctionEffect === "PARTIAL") {
+    executionAllowed = false;
+    governanceReason = "EXECUTION_WITH_WARNINGS";
+  }
 
   recordDecision({
-  decision_id: req.request_id,
-  policy_used: policy,
-  outcome: safeOutcome,
-  anomaly,
-});
+    decision_id: req.request_id,
+    policy_used: policy,
+    outcome: outcome ?? (executionAllowed ? "SUCCESS" : "FAIL"),
+    anomaly,
+  });
 
 } else if (!governanceLocked) {
-
   executionAllowed = false;
 
-  governanceReason = requiredActions.length
-    ? "ACTION_REQUIRED_NO_SAFE_PLAN"
-    : "NO_ACTIONABLE_PLAN";
+  if (problemType !== "PLAN") {
+    governanceReason = requiredActions.length
+      ? "ACTION_REQUIRED_NO_SAFE_PLAN"
+      : "NO_ACTIONABLE_PLAN";
+  }
 }
-
   // ----------------------------------------------------
   // SIGNAL FINALIZATION
   // ----------------------------------------------------
@@ -1441,11 +1688,11 @@ if (selectedBest) {
 // --------------------------------------------------
 
   (signals as any).plan = {
-  level: planCoherence.coherent
-    ? "COHERENT"
-    : planCoherence.score >= 0.5
-    ? "SOME_GAPS"
-    : "INCOHERENT",
+level: isPlanCoherent
+  ? "COHERENT"
+  : planCoherence.score >= 0.5
+  ? "SOME_GAPS"
+  : "INCOHERENT",
 
   source: planSource,
   confidence: Number(planConfidence.toFixed(3)),
@@ -1461,6 +1708,29 @@ if (selectedBest) {
 
 (signals as any).decision_pressure = dp.final;
 
+// --------------------------------------------------
+// DECISION PRESSURE TYPE (CANONICAL)
+// --------------------------------------------------
+
+if (movementQuality.qualityScore < 0.5) {
+
+  (signals as any).decision_pressure_type = "DATA_QUALITY";
+
+  // 🔥 QUESTO È IL PUNTO CHIAVE
+  (signals as any).decision_blocked_reason = "UNRELIABLE_REALITY";
+
+} else {
+
+  if (problemType === "PLAN") {
+    (signals as any).decision_pressure_type = "PLAN";
+  } else if (problemType === "REALITY") {
+    (signals as any).decision_pressure_type = "EXECUTION";
+  } else {
+    (signals as any).decision_pressure_type = "NONE";
+  }
+
+}
+
   // --------------------------------------------------
   // DATA AWARENESS (OPTIONAL BUT POTENTE)
   // --------------------------------------------------
@@ -1471,6 +1741,21 @@ if (selectedBest) {
       : topologyConfidence < 0.75
       ? "MEDIUM"
       : "HIGH";
+
+      // --------------------------------------------------
+// PLAN STATE (STRUCTURAL SIGNAL)
+// --------------------------------------------------
+
+(signals as any).plan_state = planState;
+
+// --------------------------------------------------
+// UNSTRUCTURED EXECUTION SIGNAL
+// --------------------------------------------------
+
+if (problemType === "REALITY" && planState === "MISSING") {
+  (signals as any).unstructured_execution = true;
+}
+
 }
   // ----------------------------------------------------
   // EXPLAINER
@@ -1565,17 +1850,29 @@ const behaviorProfile = mergeBehaviorProfiles({
   },
 });
 
-      if (!resolution.capabilityId) {
-        capabilityTrace.push({
-          action_index: i,
-          action_type: actionType,
-          status: "FALLBACK_TO_RUNTIME",
-          error: "CAPABILITY_NOT_RESOLVED",
-        });
+     if (!resolution.capabilityId) {
 
-        fallbackActions.push(action);
-        continue;
-      }
+  // 🔴 DATA REPAIR NON PUÒ ANDARE IN RUNTIME
+  if (action.executionType === "DATA_REPAIR") {
+    capabilityTrace.push({
+      action_index: i,
+      action_type: actionType,
+      status: "FAILED",
+      error: "DATA_REPAIR_REQUIRES_CAPABILITY",
+    });
+    continue;
+  }
+
+  capabilityTrace.push({
+    action_index: i,
+    action_type: actionType,
+    status: "FALLBACK_TO_RUNTIME",
+    error: "CAPABILITY_NOT_RESOLVED",
+  });
+
+  fallbackActions.push(action);
+  continue;
+}
 
       const capabilityResult = await executeCapability({
         capabilityId: resolution.capabilityId,
@@ -1685,12 +1982,22 @@ const behaviorProfile = mergeBehaviorProfiles({
 
   const runtimeUsed = runtimeIntents.length > 0 || runtimeTrace.length > 0;
 
-  const engine: "CAPABILITY" | "RUNTIME" | "HYBRID" =
-    capabilityHandledCount > 0 && runtimeUsed
-      ? "HYBRID"
-      : capabilityHandledCount > 0
-      ? "CAPABILITY"
-      : "RUNTIME";
+  const hasOnlyDataRepair =
+  selectedBest?.actions?.length > 0 &&
+  selectedBest.actions.every(
+    (a: any) => a.executionType === "DATA_REPAIR"
+  );
+
+const engine: "CAPABILITY" | "RUNTIME" | "HYBRID" =
+  hasOnlyDataRepair
+    ? "CAPABILITY" // 👈 dominio corretto anche se fallisce
+    : capabilityHandledCount > 0 && runtimeUsed
+    ? "HYBRID"
+    : capabilityHandledCount > 0
+    ? "CAPABILITY"
+    : runtimeUsed
+    ? "RUNTIME"
+    : "CAPABILITY"; // 👈 fallback safe
 
   execution = {
     capabilities: capabilityTrace,

@@ -126,6 +126,12 @@ type CapabilityExecutionRecord = {
   error?: string;
 };
 
+type ExecutionOutcome =
+  | "SUCCESS"
+  | "PARTIAL"
+  | "FAILED"
+  | "BLOCKED";
+
 const CRITICAL_ANOMALIES = [
   "LOW_TOPOLOGY_CONFIDENCE",
 ] as const;
@@ -1804,6 +1810,7 @@ let execution: {
   results: any[];
   trace: any[];
   engine?: "CAPABILITY" | "RUNTIME" | "HYBRID";
+  outcome?: ExecutionOutcome;
 } | null = null;
 
 if (!improvementMode && executionAllowed && selectedBest?.actions?.length) {
@@ -1849,6 +1856,21 @@ const behaviorProfile = mergeBehaviorProfiles({
     behaviorProfile
   },
 });
+
+// --------------------------------------------------
+// EXECUTION OUTCOME FALLBACK
+// --------------------------------------------------
+
+if (!execution) {
+  execution = {
+    capabilities: [],
+    intents: [],
+    results: [],
+    trace: [],
+    engine: "CAPABILITY",
+    outcome: executionAllowed ? "FAILED" : "BLOCKED",
+  };
+}
 
      if (!resolution.capabilityId) {
 
@@ -1999,13 +2021,46 @@ const engine: "CAPABILITY" | "RUNTIME" | "HYBRID" =
     ? "RUNTIME"
     : "CAPABILITY"; // 👈 fallback safe
 
+    // --------------------------------------------------
+// EXECUTION OUTCOME (CANONICAL)
+// --------------------------------------------------
+
+let executionOutcome: ExecutionOutcome;
+
+if (!executionAllowed) {
+  executionOutcome = "BLOCKED";
+} else {
+  const total = capabilityTrace.length;
+
+  const executed = capabilityTrace.filter(
+    (c) => c.status === "EXECUTED"
+  ).length;
+
+  const failed = capabilityTrace.filter(
+    (c) =>
+      c.status === "FAILED" ||
+      c.status === "FALLBACK_TO_RUNTIME"
+  ).length;
+
+  if (total === 0) {
+    executionOutcome = "FAILED";
+  } else if (executed === total) {
+    executionOutcome = "SUCCESS";
+  } else if (executed > 0) {
+    executionOutcome = "PARTIAL";
+  } else {
+    executionOutcome = "FAILED";
+  }
+}
+
   execution = {
-    capabilities: capabilityTrace,
-    intents: runtimeIntents,
-    results: runtimeResults,
-    trace: runtimeTrace,
-    engine,
-  };
+  capabilities: capabilityTrace,
+  intents: runtimeIntents,
+  results: runtimeResults,
+  trace: runtimeTrace,
+  engine,
+  outcome: executionOutcome,
+};
 }
 
   // ----------------------------------------------------

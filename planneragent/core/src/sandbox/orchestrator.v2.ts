@@ -102,6 +102,8 @@ import type { ExpectedConsumption } from "../decision/expected/expected.consumpt
 
 import { autoHealTopologyInput } from "../topology/topology.autoheal";
 
+import { learnCapability } from "../execution/capability.memory";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -433,12 +435,18 @@ function normalizeGovernanceReason(
 }
 
 function safeActionType(action: any): string {
-  return (
+  return String(
     action?.type ??
     action?.action ??
     action?.kind ??
     "UNKNOWN_ACTION"
   );
+}
+
+function normalizeActionType(action: any): string {
+  return safeActionType(action)
+    .trim()
+    .toUpperCase();
 }
 
 function buildPlanRepairStrategies(params: {
@@ -1842,10 +1850,10 @@ const behaviorProfile = mergeBehaviorProfiles({
 
   for (let i = 0; i < selectedBest.actions.length; i++) {
     const action = selectedBest.actions[i];
-    const actionType = safeActionType(action);
+    const actionType = normalizeActionType(action);
 
     try {
-      const resolution = resolveCapabilityFinal({
+      const resolution = await resolveCapabilityFinal({
   action: {
     ...action,
     type: action?.type ?? action?.action ?? action?.kind ?? "UNKNOWN"
@@ -1896,35 +1904,55 @@ if (!execution) {
   continue;
 }
 
-      const capabilityResult = await executeCapability({
-        capabilityId: resolution.capabilityId,
-        plan: req.plan,
-        payload: {
-          action,
-          company_id: req.company_id,
-          actor_id: req.actor_id,
-          request_id: req.request_id,
-          baseline_snapshot_id: (req as any).baseline_snapshot_id,
-          context: {
-            tenantId: req.company_id,
-            approver: req.actor_id,
-            issued_at: nowIso(),
-          },
-          resolution: {
-            candidates: resolution.candidates,
-            scoring: resolution.scoring,
-          },
-        },
-      });
+const capabilityResult = await executeCapability({
+  capabilityId: resolution.capabilityId,
+  plan: req.plan,
+  payload: {
+    action,
+    company_id: req.company_id,
+    actor_id: req.actor_id,
+    request_id: req.request_id,
+    baseline_snapshot_id: (req as any).baseline_snapshot_id,
+    context: {
+      tenantId: req.company_id,
+      approver: req.actor_id,
+      issued_at: nowIso(),
+    },
+    resolution: {
+      candidates: resolution.candidates,
+      scoring: resolution.scoring,
+    },
+  },
+});
 
-      capabilityTrace.push({
-        action_index: i,
-        action_type: actionType,
-        capability_id: resolution.capabilityId,
-        status: capabilityResult.status,
-        provider: capabilityResult?.provider,
-        result: capabilityResult,
-      });
+// --------------------------------------
+// 🧠 LEARNING (PlannerAgent memory layer)
+// --------------------------------------
+
+if (resolution.capabilityId) {
+  const success = capabilityResult.status === "EXECUTED";
+
+  console.log("MEMORY_WRITE", actionType, resolution.capabilityId, success);
+
+  learnCapability({
+    action: actionType,
+    capabilityId: resolution.capabilityId,
+    success,
+  });
+}
+
+// --------------------------------------
+// TRACE
+// --------------------------------------
+
+capabilityTrace.push({
+  action_index: i,
+  action_type: actionType,
+  capability_id: resolution.capabilityId,
+  status: capabilityResult.status,
+  provider: capabilityResult?.provider,
+  result: capabilityResult,
+});
 
       // Only true execution success stays in capability lane.
       // Pending approval / skipped are governed states, not runtime fallbacks.

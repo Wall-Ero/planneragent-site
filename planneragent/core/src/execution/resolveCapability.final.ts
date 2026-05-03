@@ -8,6 +8,19 @@ import { applyBehaviorBias } from "../decision/decision.behavior";
 
 import type { BehaviorProfile } from "../decision/decision.behavior";
 
+import { getCapabilityFromMemory } from "./capability.memory";
+
+function normalizeActionType(action: any): string {
+  return String(
+    action?.type ??
+    action?.action ??
+    action?.kind ??
+    "UNKNOWN"
+  )
+    .trim()
+    .toUpperCase();
+}
+
 /* =====================================================
  TYPES
 ===================================================== */
@@ -39,12 +52,34 @@ export type ResolutionContext = {
  ENTRY
 ===================================================== */
 
-export function resolveCapabilityFinal(input: {
+export async function resolveCapabilityFinal(input: {
   action: PlannerAction;
   plan: CapabilityLevel;
   context?: ResolutionContext;
-}): CapabilityResolutionResult {
+}): Promise<CapabilityResolutionResult> {
 
+  // --------------------------------------
+// MEMORY FIRST (PlannerAgent principle)
+// --------------------------------------
+
+const rawAction = input.action;
+
+const actionType = normalizeActionType(rawAction);
+
+const memoryCapability = await getCapabilityFromMemory(actionType);
+
+console.log("MEMORY_LOOKUP", actionType);
+
+if (memoryCapability) {
+
+  console.log("MEMORY_HIT", actionType, memoryCapability);
+
+  return {
+    capabilityId: memoryCapability,
+    candidates: [],
+    scoring: [],
+  };
+}
   const candidates = resolveCandidates(input);
 
   if (!candidates.length) {
@@ -57,6 +92,25 @@ export function resolveCapabilityFinal(input: {
 
   scoring.sort((a, b) => b.score - a.score);
 
+  // --------------------------------------
+// DEFAULT CAPABILITY BOOTSTRAP
+// --------------------------------------
+
+const bootstrapMap: Record<string, string> = {
+  RESTORE_MOVEMENT_CHAIN: "adjust_production",
+  VERIFY_COMPONENT_CONSUMPTION: "check_consumption",
+  POST_PRODUCTION_RECEIPT: "post_production",
+};
+
+const fallback = bootstrapMap[actionType];
+
+if (fallback) {
+  return {
+    capabilityId: fallback,
+    candidates: [],
+   scoring: [],
+  };
+}
   return {
     capabilityId: scoring[0].capabilityId,
     candidates: candidates.map(c => c.id),

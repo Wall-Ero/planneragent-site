@@ -260,11 +260,13 @@ function mapExecutionType(action: string): ExecutionType {
   // -------------------------
   // DATA REPAIR
   // -------------------------
-  if (
-    action === "POST_PRODUCTION_RECEIPT" ||
-    action === "VERIFY_COMPONENT_CONSUMPTION" ||
-    action === "RESTORE_MOVEMENT_CHAIN"
-  ) return "DATA_REPAIR";
+ if (
+  action === "POST_PRODUCTION_RECEIPT" ||
+  action === "POST_COMPONENT_CONSUMPTION" ||
+  action === "INVESTIGATE_MISSING_CONSUMPTION" ||
+  action === "VERIFY_COMPONENT_CONSUMPTION" ||
+  action === "RESTORE_MOVEMENT_CHAIN"
+) return "DATA_REPAIR";
 
   // -------------------------
   // PLAN REPAIR
@@ -322,15 +324,22 @@ function classifyProblemType(params: {
 
   const metrics = (planCoherence as any)?.metrics ?? {};
 
+  const planExists =
+  (metrics.orderCount ?? 0) > 0 &&
+  (
+    (metrics.bomEdges ?? 0) > 0 ||
+    (metrics.orderEdges ?? 0) > 0
+  );
+
   // -------------------------
   // PLAN STATE
   // -------------------------
   const planState: PlanState =
-    metrics.coverage === 0 && metrics.parentCount === 0
-      ? "MISSING"
-      : !planCoherence.coherent
-      ? "BROKEN"
-      : "VALID";
+  !planExists
+    ? "MISSING"
+    : !planCoherence.coherent
+    ? "BROKEN"
+    : "VALID";
 
   // -------------------------
   // REALITY
@@ -378,11 +387,11 @@ function classifyProblemType(params: {
     return { problemType: "PLAN", planState };
   }
 
-  if (hasBlockingMismatch && correctionEffect !== "FULL") {
-    return { problemType: "REALITY", planState };
-  }
+ if (hasBlockingMismatch) {
+  return { problemType: "REALITY", planState };
+}
 
-  return { problemType: "NONE", planState };
+return { problemType: "NONE", planState };
 }
 
 
@@ -1031,9 +1040,7 @@ else if (planSource === "REALITY_INFERRED") {
   planConfidence *= 0.7;
 }
 
-const isPlanCoherent =
-  planCoherence.coherent &&
-  planCoherence.score >= 0.8;
+const isPlanCoherent = planCoherence.coherent;
 
 let planningMode: string;
 

@@ -105,7 +105,7 @@ export function computePlanCoherence(
   // BOM STRUCTURE
   // --------------------------------------------------
 
-  const bomEdgeCount = bomEdges.length;
+ const bomEdgeCount = bomEdges.length;
 
 const hasBomFromSystem = bomEdgeCount > 0;
 const hasBomFromOrders = orderEdgeCount > 0;
@@ -113,51 +113,62 @@ const hasBomFromOrders = orderEdgeCount > 0;
 const hasStrongOrderStructure =
   orderEdgeCount >= 2 && orderCount >= 2;
 
+  const q = input.inferredBomQuality;
+
+const bomQualityAvailable =
+  q &&
+  typeof q.parentCount === "number" &&
+  typeof q.componentLinkCount === "number";
+
 const hasStructuralPlan =
   hasBomFromSystem || hasStrongOrderStructure;
+
+ if (hasStructuralPlan && !bomQualityAvailable) {
+  reasons.push("BOM_NOT_VERIFIED");
+}
 
  if (!hasStructuralPlan) {
   reasons.push("NO_STRUCTURAL_PLAN");
 }
 
   // --------------------------------------------------
-  // BOM QUALITY (CRUCIALE)
-  // --------------------------------------------------
-const q = input.inferredBomQuality;
+// BOM QUALITY (CLEAN + NON DUPLICATED)
+// --------------------------------------------------
 
-  const parentCount = q?.parentCount ?? 0;
+const parentCount = q?.parentCount ?? 0;
 
-  const componentLinkCount = q?.componentLinkCount ?? 0;
+const componentLinkCount = q?.componentLinkCount ?? 0;
 
-  const parentWithComponents =
-    q?.hasComponents ? parentCount : 0;
+const parentWithComponents =
+  q?.hasComponents ? parentCount : 0;
 
-  const coverage =
-    typeof q?.linkCoverage === "number"
-      ? q.linkCoverage
-      : 0;
+const coverage =
+  typeof q?.linkCoverage === "number"
+    ? q.linkCoverage
+    : 0;
 
-  const avgComponentsPerParent =
-    typeof q?.avgComponentsPerParent === "number"
-      ? q.avgComponentsPerParent
-      : 0;
+const avgComponentsPerParent =
+  typeof q?.avgComponentsPerParent === "number"
+    ? q.avgComponentsPerParent
+    : 0;
 
-  if (!q?.hasParents) {
-    reasons.push("NO_BOM_PARENTS");
-  }
+// ---- STRUCTURE (esistenza reale della BOM)
 
-  if (!q?.hasComponents) {
-    reasons.push("NO_BOM_COMPONENTS");
-  }
+if (bomQualityAvailable && (!q?.hasParents || !q?.hasComponents)) {
+  reasons.push("WEAK_BOM_STRUCTURE");
+}
 
+// ---- COVERAGE
 
-  if (coverage < 0.5) {
-    reasons.push("LOW_BOM_COVERAGE");
-  }
+if (coverage < 0.5) {
+  reasons.push("LOW_BOM_COVERAGE");
+}
 
-  if (avgComponentsPerParent < 1) {
-    reasons.push("WEAK_BOM_STRUCTURE");
-  }
+// ---- DEPTH (separato, niente più duplicati)
+
+if (avgComponentsPerParent < 1) {
+  reasons.push("LOW_BOM_DEPTH");
+}
 
   // --------------------------------------------------
   // SCORE (RIBILANCIATO)

@@ -47,10 +47,9 @@ function round3(n: number): number {
 export function compareTopologyLayers(layers: TopologyLayers): TopologyComparison {
   const signals: string[] = [];
 
-  const movementEdges = filterRelevantEdges(layers.fromMovements, [
-    "CONSUMPTION",
-    "PRODUCTION",
-  ]);
+const movementEdges = filterRelevantEdges(layers.fromMovements, [
+  "CONSUMPTION",
+]);
 
   const bomEdges = filterRelevantEdges(layers.fromBom, [
     "BOM",
@@ -60,9 +59,36 @@ export function compareTopologyLayers(layers: TopologyLayers): TopologyCompariso
     "ORDER_LINK",
   ]);
 
+  console.log("TOPOLOGY_COMPARE_DEBUG", {
+  movementEdges: movementEdges.map((e) => ({
+    from: e.from,
+    to: e.to,
+    kind: e.kind,
+    source: e.source,
+    qty: e.qty,
+  })),
+  bomEdges: bomEdges.map((e) => ({
+    from: e.from,
+    to: e.to,
+    kind: e.kind,
+    source: e.source,
+    qty: e.qty,
+  })),
+  orderEdges: orderEdges.map((e) => ({
+    from: e.from,
+    to: e.to,
+    kind: e.kind,
+    source: e.source,
+    qty: e.qty,
+  })),
+});
+
   const missingInMovements = diffEdges(bomEdges, movementEdges);
   const unexpectedInMovements = diffEdges(movementEdges, bomEdges);
-  const missingInOrders = diffEdges(bomEdges, orderEdges);
+  // Orders do not express BOM structure directly.
+// Order drift must be computed only when an order-derived BOM layer exists.
+// For now, do not compare BOM edges against ORDER_LINK edges.
+const missingInOrders: TopologyEdge[] = [];
 
   const missingConsumption = missingInMovements.length > 0;
   const unexpectedConsumption = unexpectedInMovements.length > 0;

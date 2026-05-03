@@ -59,13 +59,41 @@ function flattenRealityBom(rows: any[]) {
   );
 }
 
+export function flattenRealityBomForTopology(bom: any[]): {
+  parent: string;
+  component: string;
+  qty: number;
+}[] {
+  return (bom ?? []).flatMap((p) =>
+    (p.components ?? []).map((c: any) => ({
+      parent: p.parent,
+      component: c.component,
+      qty: c.median_ratio,
+    }))
+  );
+}
+
 function normalizeMasterBom(rows: AnyRow[]) {
   return (rows ?? [])
-    .map((r) => ({
-      parent: String(r?.parent ?? "").trim(),
-      component: String(r?.component ?? "").trim(),
-      ratio: Number(r?.ratio ?? 0),
-    }))
+    .flatMap((r: any) => {
+      const parent = String(r?.parent ?? r?.parentSku ?? "").trim();
+
+      if (Array.isArray(r?.components)) {
+        return r.components.map((c: any) => ({
+          parent,
+          component: String(c?.component ?? c?.componentSku ?? "").trim(),
+          ratio: Number(c?.ratio ?? c?.qty ?? c?.qtyPer ?? 1),
+        }));
+      }
+
+      return [
+        {
+          parent,
+          component: String(r?.component ?? r?.componentSku ?? "").trim(),
+          ratio: Number(r?.ratio ?? r?.qty ?? r?.qtyPer ?? 1),
+        },
+      ];
+    })
     .filter((r) => r.parent && r.component && r.ratio > 0);
 }
 
@@ -99,17 +127,27 @@ export function buildReality(params: BuildRealityParams) {
     master_bom: normalizeMasterBom(params.masterBom ?? []),
   };
 
-  // ------------------------------------------------------
+ // ------------------------------------------------------
   // BOM INFERENCE
   // ------------------------------------------------------
 
+  const orderLikeRows =
+    (params.movord?.length ?? 0) > 0
+      ? params.movord ?? []
+      : params.orders ?? [];
+
+  const movementLikeRows =
+    (params.movmag?.length ?? 0) > 0
+      ? params.movmag ?? []
+      : params.movements ?? [];
+
   const planBomResult = inferBomFromOrders(
-    (params.movord ?? params.orders ?? []) as any
+    orderLikeRows as any
   );
 
   const realityBomResult = inferBomFromProduction(
-    (params.movord ?? []) as any,
-    (params.movmag ?? params.movements ?? []) as any
+    orderLikeRows as any,
+    movementLikeRows as any
   );
 
   const planBomFlat = flattenPlanBom(planBomResult.bom ?? []);
@@ -170,8 +208,8 @@ export function buildReality(params: BuildRealityParams) {
   }
 
   const hasBehavioralData =
-    (params.movord?.length ?? 0) > 0 &&
-    (params.movmag?.length ?? 0) > 0;
+    (orderLikeRows.length > 0 && movementLikeRows.length > 0) ||
+    movementLikeRows.length > 0;
 
   if (!hasBehavioralData) {
     assumptions.add({

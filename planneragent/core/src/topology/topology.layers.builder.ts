@@ -49,20 +49,22 @@ export function buildTopologyLayers(input: {
   movmag?: MovementRow[];
   orders?: OrderRow[];
   inferredBom?: BomRow[];
+
+  inferredBomFromReality?: BomRow[]; // 🔥 AGGIUNGI QUESTO
 }): TopologyLayers {
   const inventory = input.inventory ?? [];
   const movements = input.movements ?? [];
   const movmag = input.movmag ?? [];
   const orders = input.orders ?? [];
   const inferredBom = input.inferredBom ?? [];
-
+  const inferredBomFromReality = input.inferredBomFromReality ?? [];
   const fromMovements = buildOperationalTopology({
-    inventory,
-    movements,
-    movmag,
-    orders: [],
-    inferredBom: [],
-  });
+  inventory,
+  movements,        // ✅ USA I MOVEMENTS REALI
+  movmag,           // ✅ USA I MOVMAG REALI
+  orders: [],
+  inferredBom: inferredBomFromReality,
+});
 
   const fromOrders = buildOperationalTopology({
     inventory,

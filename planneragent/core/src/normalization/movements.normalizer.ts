@@ -1,7 +1,6 @@
-// core/src/normalization/movements.normalizer.ts
 // ======================================================
 // PlannerAgent — Movements Normalizer
-// Canonical Source of Truth
+// FIXED — PRESERVE SEMANTICS
 // ======================================================
 
 import { mapMovementType } from "./movement.mapping";
@@ -10,8 +9,17 @@ export type NormalizedMovement = {
   sku: string;
   qty: number;
   date?: string;
+
   type: string;
   event: string;
+
+  orderId?: string;
+  commessa?: string;
+  batch?: string;
+
+  parentSku?: string;
+  producedSku?: string;
+  consumedSku?: string;
 };
 
 export function normalizeMovements(input: any[]): NormalizedMovement[] {
@@ -26,8 +34,18 @@ export function normalizeMovements(input: any[]): NormalizedMovement[] {
       sku: m.sku,
       qty: Number(m.qty ?? 0),
       date: m.date,
+
       type: m.type,
       event: mappedType,
+
+      // 🔥 CRITICI — NON PERDERLI MAI
+      orderId: m.orderId,
+      commessa: m.commessa,
+      batch: m.batch,
+
+      parentSku: m.parentSku,
+      producedSku: m.producedSku,
+      consumedSku: m.consumedSku,
     };
   });
 }

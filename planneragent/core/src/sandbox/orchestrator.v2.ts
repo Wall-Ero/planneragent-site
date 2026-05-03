@@ -104,6 +104,8 @@ import { autoHealTopologyInput } from "../topology/topology.autoheal";
 
 import { learnCapability } from "../execution/capability.memory";
 
+import { flattenRealityBomForTopology } from "../reality/reality.builder";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -241,6 +243,8 @@ function deriveCorrectionEffect(
 
   return "NONE";
 }
+
+
 
 // --------------------------------------------------
 // EXECUTION TYPE (CANONICAL)
@@ -475,6 +479,20 @@ function buildPlanRepairStrategies(params: {
   return strategies;
 }
 
+function applyMemoryBias(
+  actions: any[],
+  memory: { action: string }[]
+): any[] {
+  return [...actions].sort((a: any, b: any) => {
+    const aHit = memory.some((m) => m.action === a.action);
+    const bHit = memory.some((m) => m.action === b.action);
+
+    if (aHit && !bHit) return -1;
+    if (!aHit && bHit) return 1;
+    return 0;
+  });
+}
+
 // ======================================================
 // MAIN
 // ======================================================
@@ -483,6 +501,9 @@ export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2,
   env?: { DB?: D1Database; DL_ENABLED?: string; RESEND_API_KEY?: string }
 ): Promise<SandboxEvaluateResponseV2> {
+
+  try {
+
   // ----------------------------------------------------
   // VALIDATION
   // ----------------------------------------------------
@@ -693,6 +714,12 @@ const normalizedInventory = normalizeInventory(req.inventory ?? []);
     movmag: (req.movmag ?? []) as any[],
     masterBom: (req.masterBom ?? []) as any[],
   });
+
+  const realityBom =
+  (reality as any)?.reconstructed?.reality_bom ?? [];
+
+const inferredBomFromReality =
+  flattenRealityBomForTopology(realityBom);
 
  const rawBom =
   (reality as any)?.reconstructed?.plan_bom?.length
@@ -923,11 +950,12 @@ const topology = buildOperationalTopology({
   const topologyEvidence = buildTopologyEvidenceFromTopology(topology);
   const topologyConfidence = topologyEvidence.topologyConfidence ?? 0.5;
 
-  const topologyLayers = buildTopologyLayers({
+ const topologyLayers = buildTopologyLayers({
   inventory: healed.inventory,
   movements: healed.movements,
   orders: healed.orders,
-  inferredBom: healed.inferredBom,
+  inferredBom: healed.inferredBom, // PLAN
+  inferredBomFromReality,          // 🔥 REALITY
 });
 
 const topologyComparison = compareTopologyLayers(topologyLayers);
@@ -1161,6 +1189,26 @@ console.log("EFFECTIVE_POLICY_USED", policy);
 
 let selectedBest = optimizerOutput?.best ?? null;
 
+// --------------------------------------------------
+// MEMORY BIAS (NEW)
+// --------------------------------------------------
+
+let memory: any[] = [];
+
+try {
+  memory = getDecisionHistory();
+} catch {
+  memory = [];
+}
+
+if (selectedBest?.actions?.length && memory.length > 0) {
+  selectedBest.actions = applyMemoryBias(
+    selectedBest.actions,
+    memory
+  );
+}
+
+
 // ----------------------------------------------------
 // DECISION PRESSURE (MOVED UP FOR PLAN QUALITY)
 // ----------------------------------------------------
@@ -1188,6 +1236,52 @@ const dp = computeDecisionPressureV2({
 
 
 let selectedCandidates = optimizerOutput?.candidates ?? [];
+
+// ======================================================
+// 🧠 MEMORY SIGNAL EXTRACTION (CANONICAL)
+// ======================================================
+
+function getMemoryScoreForAction(actionType: string): number {
+  try {
+    const memory = getDecisionHistory?.() ?? [];
+
+    const matches = memory.filter((m: any) =>
+      m?.action === actionType && m?.success === true
+    );
+
+    if (matches.length === 0) return 0;
+
+    // più successi → più peso (log scale per evitare dominance)
+    return Math.min(1, Math.log10(matches.length + 1));
+  } catch {
+    return 0;
+  }
+}
+
+// ----------------------------------------------------
+// APPLY MEMORY BIAS TO CANDIDATES
+// ----------------------------------------------------
+
+selectedCandidates = selectedCandidates.map((c: any) => {
+
+  const actions = c.actions ?? [];
+
+  const memoryScores = actions.map((a: any) =>
+    getMemoryScoreForAction(
+      safeActionType(a)
+    )
+  );
+
+  const avgMemoryScore =
+    memoryScores.length > 0
+      ? memoryScores.reduce((s: number, x: number) => s + x, 0) / memoryScores.length
+      : 0;
+
+  return {
+    ...c,
+    memoryScore: avgMemoryScore,
+  };
+});
 
 const planQualityFinal = computePlanQuality({
   selectedBest,
@@ -1223,46 +1317,50 @@ if (optimizerOutput?.candidates?.length) {
     Number(req.baseline_metrics?.shortageUnits ?? 0) || 0;
 
   const hardFiltered = (enforced.debug ?? []).filter((c: any) => {
-    if (c.violations?.includes("HARD_BLOCK")) return false;
 
-    const kpis = c.kpis ?? {};
-    const shortage = Number(kpis.shortageUnits ?? 0);
-    const serviceShortfall = Number(kpis.serviceShortfall ?? 0);
+  // 🔥 FIX 1
+  if (Array.isArray(c.violations) && c.violations.includes("HARD_BLOCK")) return false;
 
-    const isAssumedSupply =
-      c.evidence?.evalSteps?.some((s: string) =>
-        s.includes("assumed_supply")
-      ) ||
-      c.evidence?.evalSteps?.some((s: string) =>
-        s.includes("assumption")
-      ) ||
-      c.actions?.some((a: any) =>
-        String(a.reason ?? "").includes("assumed_supply")
-      ) ||
-      Number(c.kpis?.contextPenalty ?? 0) > 0.5;
+  const kpis = c.kpis ?? {};
+  const shortage = Number(kpis.shortageUnits ?? 0);
+  const serviceShortfall = Number(kpis.serviceShortfall ?? 0);
 
-    // CONSERVATIVE: niente shortage residuo
-    if (policy.risk_profile === "CONSERVATIVE" && shortage > 0) {
-      return false;
-    }
+  // 🔥 FIX 2
+  const evalSteps = Array.isArray(c.evidence?.evalSteps)
+    ? c.evidence.evalSteps
+    : [];
 
-    // non peggiorare rispetto alla baseline
-    if (baselineShortage === 0 && shortage > 0) {
-      return false;
-    }
+  const actions = Array.isArray(c.actions)
+    ? c.actions
+    : [];
 
-    // no fake service
-    if (serviceShortfall >= 1) {
-      return false;
-    }
+  const isAssumedSupply =
+    evalSteps.some((s: string) =>
+      s.includes("assumed_supply") || s.includes("assumption")
+    ) ||
+    actions.some((a: any) =>
+      String(a?.reason ?? "").includes("assumed_supply")
+    ) ||
+    Number(c.kpis?.contextPenalty ?? 0) > 0.5;
 
-    // CONSERVATIVE: niente supply assunta
-    if (policy.risk_profile === "CONSERVATIVE" && isAssumedSupply) {
-      return false;
-    }
+  if (policy.risk_profile === "CONSERVATIVE" && shortage > 0) {
+    return false;
+  }
 
-    return true;
-  });
+  if (baselineShortage === 0 && shortage > 0) {
+    return false;
+  }
+
+  if (serviceShortfall >= 1) {
+    return false;
+  }
+
+  if (policy.risk_profile === "CONSERVATIVE" && isAssumedSupply) {
+    return false;
+  }
+
+  return true;
+});
 
   selectedCandidates = hardFiltered.sort((a: any, b: any) => {
     const aK = a.kpis ?? {};
@@ -1280,7 +1378,38 @@ if (optimizerOutput?.candidates?.length) {
     if (aShort !== bShort) return aShort - bShort;
     if (aServ !== bServ) return aServ - bServ;
 
-    return bScore - aScore;
+    return selectedCandidates.sort((a: any, b: any) => {
+
+  const aK = a.kpis ?? {};
+  const bK = b.kpis ?? {};
+
+  const aShort = Number(aK.shortageUnits ?? 0);
+  const bShort = Number(bK.shortageUnits ?? 0);
+
+  const aServ = Number(aK.serviceShortfall ?? 0);
+  const bServ = Number(bK.serviceShortfall ?? 0);
+
+  const aScore = Number(a.adjustedScore ?? a.score ?? 0);
+  const bScore = Number(b.adjustedScore ?? b.score ?? 0);
+
+  const aMem = Number(a.memoryScore ?? 0);
+  const bMem = Number(b.memoryScore ?? 0);
+
+  // 1️⃣ PRIORITÀ OPERATIVA
+  if (aShort !== bShort) return aShort - bShort;
+  if (aServ !== bServ) return aServ - bServ;
+
+  // 2️⃣ MEMORIA (🔥 NUOVO LIVELLO)
+  if (aMem !== bMem) return bMem - aMem;
+
+  // 3️⃣ SCORE CLASSICO
+  return bScore - aScore;
+});
+console.log("MEMORY_RANKING", selectedCandidates.map((c: any) => ({
+  actions: (c.actions ?? []).map((a: any) => safeActionType(a)),
+  memoryScore: c.memoryScore,
+  score: c.score,
+})));
   });
 
   selectedBest =
@@ -1594,13 +1723,12 @@ if (selectedBest) {
     allowedExecutionTypes = null;
   }
 
-  if (
-    executionAllowed &&
-    allowedExecutionTypes &&
-    selectedBest?.actions?.length
-  ) 
-  
-  // 🔥 ALLINEA REQUIRED ACTIONS (UI + GOVERNANCE)
+ if (
+  executionAllowed &&
+  allowedExecutionTypes &&
+  selectedBest?.actions?.length
+) 
+
 if (allowedExecutionTypes) {
   requiredActions = requiredActions.filter(
     (a: any) =>
@@ -1608,12 +1736,11 @@ if (allowedExecutionTypes) {
         mapExecutionType(a.action)
       )
   );
+
+  selectedBest.actions = selectedBest.actions.filter(
+    (a: any) => allowedExecutionTypes!.includes(a.executionType)
+  );
 }
-{
-    selectedBest.actions = selectedBest.actions.filter(
-      (a: any) => allowedExecutionTypes!.includes(a.executionType)
-    );
-  }
 
   if (
     executionAllowed &&
@@ -2175,4 +2302,20 @@ problem_type_debug: problemType,
 decision_trace: null,
 issued_at: nowIso(),
   } as any;
+}catch (err: any) {
+
+    // 🔥 LOG STRUTTURATO (NON SOLO console.error)
+    console.error("🔥 ORCHESTRATOR ERROR", {
+      message: err?.message,
+      stack: err?.stack,
+      request_id: req?.request_id,
+    });
+
+    return {
+      ok: false,
+      request_id: req?.request_id ?? "unknown",
+      reason: err?.message ?? "UNKNOWN_ERROR",
+      stack: err?.stack ?? null
+    } as any;
+  }
 }

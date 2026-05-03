@@ -2,6 +2,8 @@
 
 import { CAPABILITY_REGISTRY } from "./capability.registry";
 
+import type { CapabilityLevel } from "./capability.types";
+
 /* =====================================================
  TYPES — 🔥 CANONICAL CONTRACT
 ===================================================== */
@@ -23,7 +25,7 @@ export type CapabilityExecutionResult = {
 
 export async function executeCapability(input: {
   capabilityId: string;
-  plan: string;
+  plan: CapabilityLevel;
   payload: any;
 }): Promise<CapabilityExecutionResult> {
 
@@ -53,7 +55,7 @@ export async function executeCapability(input: {
   // GOVERNANCE — PLAN CHECK
   // ----------------------------------------------------
 
-  if (!capability.allowedLevels.includes(input.plan as any)) {
+  if (!(capability.allowedLevels as readonly string[]).includes(input.plan)) {
     return {
       status: "SKIPPED"
     };
@@ -90,7 +92,7 @@ export async function executeCapability(input: {
     // FALLBACK CHAIN
     // ----------------------------------------------------
 
-    for (const fallback of capability.providers.fallback || []) {
+    for (const fallback of getFallbacks(capability.providers)) {
       try {
         const result = await executeWithProvider(fallback, input.payload);
 
@@ -108,6 +110,13 @@ export async function executeCapability(input: {
 
     throw new Error("All providers failed");
   }
+}
+
+function getFallbacks(providers: any): string[] {
+  if (providers && Array.isArray(providers.fallback)) {
+    return providers.fallback;
+  }
+  return [];
 }
 
 /* =====================================================

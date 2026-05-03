@@ -278,6 +278,40 @@ export const CAPABILITY_REGISTRY = [
 },
 
 /* =====================================================
+ 4B. PRODUCTION DATA REPAIR
+===================================================== */
+
+{
+  id: "POST_PRODUCTION_RECEIPT",
+  description: "Post production receipt into ERP",
+  domain: "PRODUCTION",
+  allowedLevels: ["JUNIOR", "SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "POST_COMPONENT_CONSUMPTION",
+  description: "Post component consumption into ERP",
+  domain: "PRODUCTION",
+  allowedLevels: ["JUNIOR", "SENIOR"],
+  providers: { primary: "ERP" },
+  executionType: "ASYNC",
+  requiresApproval: true,
+},
+
+{
+  id: "INVESTIGATE_MISSING_CONSUMPTION",
+  description: "Investigate missing component consumption posting",
+  domain: "PRODUCTION",
+  allowedLevels: ["VISION", "JUNIOR", "SENIOR"],
+  providers: { primary: "INTERNAL" },
+  executionType: "SYNC",
+  requiresApproval: false,
+},
+
+/* =====================================================
  5. LOGISTICS & DISTRIBUTION
 ===================================================== */
 

@@ -1035,9 +1035,15 @@ const isPlanCoherent =
   planCoherence.coherent &&
   planCoherence.score >= 0.8;
 
-const planningMode = isPlanCoherent
-  ? "REALITY_CORRECTION"
-  : "PLAN_REPAIR";
+let planningMode: string;
+
+if (problemType === "REALITY" && planState === "MISSING") {
+  planningMode = "REALITY_EXECUTION";
+} else if (problemType === "PLAN") {
+  planningMode = "PLAN_REPAIR";
+} else {
+  planningMode = "REALITY_CORRECTION";
+}
 
 console.log("PROBLEM_CLASSIFIER", {
   problemType,
@@ -1905,17 +1911,17 @@ if (problemType === "REALITY" && planState === "MISSING") {
   const explanation =
   !isPlanCoherent
     ? {
-        summary: "Plan is incoherent. PlannerAgent is not proposing reality actions.",
+        summary: "Execution continues on reality. Plan reconstruction required.",
         whyChosen: [
           "PLAN_INCOHERENT",
-          "EXECUTION_BLOCKED_BY_GOVERNANCE"
+          "EXECUTION_CONTINUES_ON_REALITY"    
         ],
         tradeoffs: [],
         risks: [
           "PLAN_STRUCTURE_NOT_RELIABLE"
         ],
         whyBlocked:
-          "The current plan is structurally incoherent. PlannerAgent will not propose operational corrections against an unreliable plan.",
+          "Plan structure is weak, execution continues on observed reality",
         nextSteps: requiredActions.map((a) => a.action),
       }
     : selectedBest
@@ -2009,7 +2015,24 @@ if (!execution) {
 
      if (!resolution.capabilityId) {
 
-  // 🔴 DATA REPAIR NON PUÒ ANDARE IN RUNTIME
+  const informationalActions = [
+    "EXECUTION_MISMATCH",
+    "NO_ACTIONS",
+    "DL_SIGNAL_ANOMALY"
+  ];
+
+  // 🟢 SIGNAL → NO OP (non è errore)
+  if (informationalActions.includes(actionType)) {
+    capabilityTrace.push({
+      action_index: i,
+      action_type: actionType,
+      status: "SKIPPED",
+      result: "INFORMATIONAL_SIGNAL"
+    });
+    continue;
+  }
+
+  // 🔴 DATA REPAIR → deve avere capability
   if (action.executionType === "DATA_REPAIR") {
     capabilityTrace.push({
       action_index: i,
@@ -2020,6 +2043,7 @@ if (!execution) {
     continue;
   }
 
+  // 🟡 tutto il resto → fallback runtime
   capabilityTrace.push({
     action_index: i,
     action_type: actionType,

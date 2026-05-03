@@ -80,11 +80,35 @@ if (memoryCapability) {
     scoring: [],
   };
 }
-  const candidates = resolveCandidates(input);
+  // --------------------------------------
+// CANONICAL ACTION → CAPABILITY MAP
+// --------------------------------------
 
-  if (!candidates.length) {
-    return { capabilityId: null, candidates: [], scoring: [] };
-  }
+const actionCapabilityMap: Record<string, string> = {
+  RESTORE_MOVEMENT_CHAIN: "RESTORE_MOVEMENT_CHAIN",
+  VERIFY_COMPONENT_CONSUMPTION: "POST_COMPONENT_CONSUMPTION",
+  POST_PRODUCTION_RECEIPT: "POST_PRODUCTION_RECEIPT",
+  POST_COMPONENT_CONSUMPTION: "POST_COMPONENT_CONSUMPTION",
+  INVESTIGATE_MISSING_CONSUMPTION: "INVESTIGATE_MISSING_CONSUMPTION",
+};
+
+const mappedCapability = actionCapabilityMap[actionType];
+
+if (mappedCapability) {
+  console.log("CAPABILITY_MAP_HIT", actionType, mappedCapability);
+
+  return {
+    capabilityId: mappedCapability,
+    candidates: [mappedCapability],
+    scoring: [],
+  };
+}
+
+const candidates = resolveCandidates(input);
+
+if (!candidates.length) {
+  return { capabilityId: null, candidates: [], scoring: [] };
+}
 
   const scoring = candidates.map(c =>
     scoreCapability(c, input)
@@ -96,21 +120,6 @@ if (memoryCapability) {
 // DEFAULT CAPABILITY BOOTSTRAP
 // --------------------------------------
 
-const bootstrapMap: Record<string, string> = {
-  RESTORE_MOVEMENT_CHAIN: "adjust_production",
-  VERIFY_COMPONENT_CONSUMPTION: "check_consumption",
-  POST_PRODUCTION_RECEIPT: "post_production",
-};
-
-const fallback = bootstrapMap[actionType];
-
-if (fallback) {
-  return {
-    capabilityId: fallback,
-    candidates: [],
-   scoring: [],
-  };
-}
   return {
     capabilityId: scoring[0].capabilityId,
     candidates: candidates.map(c => c.id),

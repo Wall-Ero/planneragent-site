@@ -109,6 +109,8 @@ import { flattenRealityBomForTopology } from "../reality/reality.builder";
 import { buildOrdDecisionTrace } from "../decision/ord/ord.trace";
 import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
 
+import { replayDecision } from "../decision/decision.replay.engine";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -1914,6 +1916,7 @@ if (problemType === "REALITY" && planState === "MISSING") {
 }
 
 }
+
   // ----------------------------------------------------
   // EXPLAINER
   // ----------------------------------------------------
@@ -1943,6 +1946,7 @@ if (problemType === "REALITY" && planState === "MISSING") {
         problemType,
       })
     : null;
+    
 
   // ----------------------------------------------------
 // EXECUTION
@@ -2342,6 +2346,25 @@ const decisionTrace = buildDecisionTraceFromOrd({
 });
 
 // ----------------------------------------------------
+// REPLAY (DECISION MEMORY)
+// ----------------------------------------------------
+
+let replayResult: any = null;
+
+try {
+  const history = getDecisionHistory() as any;
+
+  if (decisionTrace && history?.length) {
+    replayResult = replayDecision({
+      current: decisionTrace,
+      history,
+    });
+  }
+} catch {
+  replayResult = null;
+}
+
+// ----------------------------------------------------
 // EXECUTION EVIDENCE
 // ----------------------------------------------------
 
@@ -2384,16 +2407,26 @@ const anomalyCheck = detectDecisionAnomalyV2({
   },
 });
 
-const learningEligible =
-  execution?.outcome === "SUCCESS" &&
-  outcome === "SUCCESS" &&
-  !anomalyCheck.anomaly;
+const executionOk =
+  execution?.outcome === "SUCCESS" ||
+  execution?.outcome === "PARTIAL";
+
+const outcomeFinal =
+  executionOk ? "SUCCESS" : "FAIL";
+
+const learningEligible = executionOk;
+
+const learningQuality = anomalyCheck.anomaly ? "LOW" : "HIGH";
 
 (decisionTrace as any).learning = {
   eligible: learningEligible,
-  outcome,
-  anomaly: anomalyCheck.anomaly
+  outcome: outcomeFinal,
+  anomaly: anomalyCheck.anomaly,
+  quality: learningQuality
 };
+
+console.log("DEBUG execution outcome:", execution?.outcome);
+console.log("DEBUG learningEligible:", learningEligible);
 
   return {
     ok: true,
@@ -2442,7 +2475,25 @@ plan_source_debug: {
 },
 decision_pressure_debug: dp.breakdown,
 problem_type_debug: problemType,
-decision_trace: decisionTrace,
+decision_trace: {
+  ...decisionTrace,
+  replay: replayResult
+    ? {
+        hasSimilar: replayResult.hasSimilar,
+        similarity: replayResult.similarityScore,
+        explanation: replayResult.explanation,
+      }
+    : null,
+},
+
+replay: replayResult
+  ? {
+      hasSimilar: replayResult.hasSimilar,
+      similarity: replayResult.similarityScore,
+      explanation: replayResult.explanation,
+    }
+  : null,
+
 issued_at: nowIso(),
   } as any;
 }catch (err: any) {

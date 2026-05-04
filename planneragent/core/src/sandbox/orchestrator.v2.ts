@@ -106,6 +106,9 @@ import { learnCapability } from "../execution/capability.memory";
 
 import { flattenRealityBomForTopology } from "../reality/reality.builder";
 
+import { buildOrdDecisionTrace } from "../decision/ord/ord.trace";
+import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -2283,6 +2286,115 @@ if (!executionAllowed) {
   // RESPONSE
   // ----------------------------------------------------
 
+  // ----------------------------------------------------
+// DECISION TRACE — BUILD ORD LAYER
+// ----------------------------------------------------
+
+const ordTrace = buildOrdDecisionTrace({
+
+  requestId: req.request_id,
+
+  // REALITY
+  ordersSeen: orders.length,
+  inventorySeen: inventory.length,
+  shortagesDetected: selectedBest?.kpis?.shortageUnits ?? 0,
+
+  // OPTIMIZER
+  optimizerCandidates: selectedCandidates.length,
+  optimizerBestScore:
+    selectedBest?.adjustedScore ??
+    selectedBest?.score ??
+    0,
+
+  // ACTIONS
+  actions: (selectedBest?.actions ?? []).map((a: any) => ({
+    kind: safeActionType(a),
+    sku: a?.sku,
+    qty: a?.qty
+  })),
+
+  // GOVERNANCE
+  executionAllowed,
+  governanceReason,
+
+  executionLevel:
+    req.plan === "VISION"
+      ? "HUMAN"
+      : req.plan === "JUNIOR"
+      ? "JUNIOR"
+      : req.plan === "SENIOR"
+      ? "SENIOR"
+      : "SYSTEM",
+
+  decisionMode:
+    req.intent === "EXECUTE"
+      ? executionAllowed
+        ? "DELEGATED_EXECUTION"
+        : "HUMAN_APPROVED"
+      : "OBSERVATION"
+});
+
+const decisionTrace = buildDecisionTraceFromOrd({
+  ord: ordTrace,
+  dl,
+  authorityLevel: req.plan as any,
+  decisionMode: ordTrace.decisionMode as any
+});
+
+// ----------------------------------------------------
+// EXECUTION EVIDENCE
+// ----------------------------------------------------
+
+if (execution?.capabilities?.length) {
+  decisionTrace.execution = {
+    evidences: execution.capabilities
+  .filter((c: any) =>
+    c.status === "EXECUTED" ||
+    c.status === "FAILED"
+  )
+  .map((c: any) => ({
+    capability_id: c.capability_id ?? "UNKNOWN",
+    success: c.status === "EXECUTED",
+    executed_at: nowIso(),
+    external_ref: c.provider,
+    details: c.result,
+    governance: executionAllowed ? "EXECUTE" : "BLOCKED",
+    rationale: governanceReason
+  }))
+  };
+}
+
+// ----------------------------------------------------
+// LEARNING GATE
+// ----------------------------------------------------
+
+const anomalyCheck = detectDecisionAnomalyV2({
+  candidate: selectedBest,
+  dl: {
+    risk_score: dl?.risk_score?.stockout_risk,
+    anomaly_signals: dl?.anomaly_signals,
+  },
+  topology: {
+    confidence: topologyConfidence,
+    comparison: topologyComparison,
+  },
+  policy: {
+    primary_focus: policy.primary_focus,
+    risk_profile: policy.risk_profile,
+  },
+});
+
+const learningEligible =
+  execution?.outcome === "SUCCESS" &&
+  outcome === "SUCCESS" &&
+  !anomalyCheck.anomaly;
+
+(decisionTrace as any).learning = {
+  eligible: learningEligible,
+  outcome,
+  anomaly: anomalyCheck.anomaly
+};
+
   return {
     ok: true,
     request_id: req.request_id,
@@ -2330,7 +2442,7 @@ plan_source_debug: {
 },
 decision_pressure_debug: dp.breakdown,
 problem_type_debug: problemType,
-decision_trace: null,
+decision_trace: decisionTrace,
 issued_at: nowIso(),
   } as any;
 }catch (err: any) {

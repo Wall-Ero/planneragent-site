@@ -131,11 +131,19 @@ export function buildDecisionTraceFromOrd(input: {
   const senior =
     authorityLevel === "SENIOR" || authorityLevel === "PRINCIPAL"
       ? {
-          autonomous_execution: (ord.actions ?? []).map((a) => ({
-            type: a.kind,
-            description: `Executed on SKU ${a.sku ?? "unknown"}`,
-            executed: ord.governance.executionAllowed
-          }))
+          autonomous_execution: (ord.actions ?? [])
+  .filter((a) => ![
+    "EXECUTION_MISMATCH",
+    "NO_ACTIONS",
+    "DL_SIGNAL_ANOMALY"
+  ].includes(a.kind))
+  .map((a) => ({
+    type: a.kind,
+    description: a.sku
+  ? `Executed for SKU ${a.sku}`
+  : `Executed ${a.kind}`,
+    executed: ord.governance.executionAllowed
+  }))
         }
       : undefined
 

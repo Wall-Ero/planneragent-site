@@ -1,3 +1,5 @@
+//core/src/governance/decision.types.ts
+
 /**
  * DecisionMode
  * Cognitive mode for boundary + LLM behavior

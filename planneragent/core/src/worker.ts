@@ -18,17 +18,7 @@ import type { GovernanceSchedulerInput } from "./scheduler/scheduler.types";
 import { resolveLegalState } from "./governance/legal/legalState";
 import { onboardingRoutes } from "./onboarding/routes.onboarding";
 
-
-
-export interface Env {
-  SNAPSHOT_HMAC_SECRET: string;
-  LEGAL_STATE?: string;
-  TWILIO_ACCOUNT_SID?: string;
-  TWILIO_AUTH_TOKEN?: string;
-  TWILIO_FROM_NUMBER?: string;
-  ENVIRONMENT?: string;
-  VERSION?: string;
-}
+import type { Env } from "./types/env";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
@@ -150,11 +140,16 @@ export default {
       // --------------------------------------------
       // CORE EXECUTION
       // --------------------------------------------
-      const response = await evaluateSandboxV2({
-  ...parsed,
-  domain: normalizeDomain(parsed.domain),
-  snapshot,
-});
+
+      
+   const response = await evaluateSandboxV2(
+  {
+    ...parsed,
+    domain: normalizeDomain(parsed.domain),
+    snapshot,
+  },
+  env
+);
 
       return json(response);
 

@@ -111,6 +111,11 @@ import { buildDecisionTraceFromOrd } from "../decision/decision.trace.builder";
 
 import { replayDecision } from "../decision/decision.replay.engine";
 
+import { D1DecisionStoreAdapter } from "../decision-memory/decision.store";
+import { buildDecisionMemorySnapshotV1 } from "../decision-memory/snapshot/snapshot.builder";
+
+import type { Env } from "../types/env";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -513,10 +518,20 @@ function applyMemoryBias(
 
 export async function evaluateSandboxV2(
   req: SandboxEvaluateRequestV2,
-  env?: { DB?: D1Database; DL_ENABLED?: string; RESEND_API_KEY?: string }
+  env?: Env
 ): Promise<SandboxEvaluateResponseV2> {
 
   try {
+
+    if (!env?.POLICIES_DB) {
+  return {
+    ok: false,
+    error: "DB_NOT_CONFIGURED",
+    request_id: req.request_id ?? "unknown"
+  };
+}
+
+const store = new D1DecisionStoreAdapter(env.POLICIES_DB);
 
   // ----------------------------------------------------
   // VALIDATION
@@ -2345,6 +2360,7 @@ const decisionTrace = buildDecisionTraceFromOrd({
   decisionMode: ordTrace.decisionMode as any
 });
 
+
 // ----------------------------------------------------
 // REPLAY (DECISION MEMORY)
 // ----------------------------------------------------
@@ -2427,6 +2443,70 @@ const learningQuality = anomalyCheck.anomaly ? "LOW" : "HIGH";
 
 console.log("DEBUG execution outcome:", execution?.outcome);
 console.log("DEBUG learningEligible:", learningEligible);
+
+// --------------------------------------------------
+// 🔥 DECISION MEMORY SNAPSHOT
+// --------------------------------------------------
+
+const last = await store.getLastSnapshot(
+  req.company_id,
+  "supply_chain"
+);
+
+const decisionSnapshot = await buildDecisionMemorySnapshotV1({
+  tenant_id: "default",
+  company_id: req.company_id,
+  context_id: "supply_chain",
+
+  plan: req.plan,
+  intent: req.intent,
+  domain: req.domain,
+
+  baseline_snapshot_id: req.baseline_snapshot_id ?? "none",
+  baseline_metrics: {},
+
+  // 👉 FIX dlEvidence (fallback safe)
+  ord: {
+    pressure_score: 0,
+    confidence_score: 0,
+    ord_gate: {
+      allow_paid_llm: false,
+      recommended_tier: "OSS",
+      reason: "fallback"
+    }
+  },
+
+  previous_hash: last?.hash_chain.current_hash ?? null,
+
+  // 👉 FIX struttura corretta
+  execution: {
+  outcome:
+    execution?.outcome === "SUCCESS"
+      ? "SUCCESS"
+      : execution?.outcome === "PARTIAL"
+      ? "PARTIAL"
+      : "FAIL",
+
+  anomaly: anomalyCheck?.anomaly ?? false,
+
+  executed_actions:
+    execution?.capabilities
+      ?.map(c => c.capability_id)
+      .filter((id): id is string => typeof id === "string") ?? []
+  }
+});
+
+// safe write
+try {
+  try {
+  await store.appendSnapshot(decisionSnapshot);
+  console.log("✅ SNAPSHOT SAVED");
+} catch (err) {
+  console.error("❌ SNAPSHOT ERROR", err);
+}
+} catch (err) {
+  console.error("Decision memory write failed", err);
+}
 
   return {
     ok: true,

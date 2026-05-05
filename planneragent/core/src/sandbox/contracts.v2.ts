@@ -353,6 +353,8 @@ export interface SandboxEvaluateResponseV2 {
 
   ok: boolean;
 
+  error?: string;
+
   request_id: string;
 
   plan?: PlanTier;

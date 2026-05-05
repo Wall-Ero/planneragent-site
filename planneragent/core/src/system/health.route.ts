@@ -4,14 +4,11 @@
 // Canonical Snapshot · Source of Truth
 // =================================
 
-export interface HealthEnv {
-  ENVIRONMENT?: string;
-  VERSION?: string;
-}
+import type { Env } from "../types/env";
 
 export async function healthRoute(
   _req: Request,
-  env: HealthEnv
+  env: Env
 ): Promise<Response> {
   return new Response(
     JSON.stringify(

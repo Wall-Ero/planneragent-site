@@ -49,19 +49,27 @@ export async function buildDecisionMemorySnapshotV1(
   );
 
   const payloadForHash = stableStringify({
-    snapshot_id,
-    tenant_id: input.tenant_id,
-    company_id: input.company_id,
-    context_id: input.context_id,
-    plan: input.plan,
-    intent: input.intent,
-    domain: input.domain,
-    baseline_snapshot_id: input.baseline_snapshot_id,
-    baseline_metrics: input.baseline_metrics,
-    ord: input.ord,
-    previous_hash: input.previous_hash,
-    created_at
-  });
+  snapshot_id,
+  tenant_id: input.tenant_id,
+  company_id: input.company_id,
+  context_id: input.context_id,
+  plan: input.plan,
+  intent: input.intent,
+  domain: input.domain,
+  baseline_snapshot_id: input.baseline_snapshot_id,
+  baseline_metrics: input.baseline_metrics,
+  ord: input.ord,
+
+  // 👇 NEW (IMPORTANTISSIMO per replay deterministico)
+  execution: {
+  outcome: input.execution?.outcome ?? "FAIL",
+  anomaly: input.execution?.anomaly ?? false,
+  executed_actions: input.execution?.executed_actions ?? []
+},
+
+  previous_hash: input.previous_hash,
+  created_at
+});
 
   const current_hash = await sha256(payloadForHash);
 
@@ -78,6 +86,12 @@ export async function buildDecisionMemorySnapshotV1(
 
     baseline_snapshot_id: input.baseline_snapshot_id,
     baseline_metrics: input.baseline_metrics,
+
+    execution: {
+  outcome: input.execution?.outcome ?? "FAIL",
+  anomaly: input.execution?.anomaly ?? false,
+  executed_actions: input.execution?.executed_actions ?? []
+},
 
     ord: input.ord,
 

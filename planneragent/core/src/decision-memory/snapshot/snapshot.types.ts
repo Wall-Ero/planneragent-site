@@ -2,6 +2,11 @@
 // =====================================================
 // Decision Memory — Snapshot Types V1
 // Canonical Source of Truth
+//
+// Includes:
+// - deterministic ORD evidence
+// - append-only hash chain
+// - execution outcome (for learning & replay)
 // =====================================================
 
 import { PlanTier } from "../../sandbox/contracts.v2";
@@ -33,6 +38,20 @@ export interface OrdEvidence {
 }
 
 // -----------------------------------------------------
+// EXECUTION MEMORY (NEW — critical for replay)
+// -----------------------------------------------------
+
+export type DecisionOutcome = "SUCCESS" | "FAIL";
+
+export interface DecisionExecutionMemory {
+  outcome: DecisionOutcome;
+  anomaly: boolean;
+
+  // actions actually executed by the system
+  executed_actions: string[];
+}
+
+// -----------------------------------------------------
 // SNAPSHOT CORE STRUCTURE
 // -----------------------------------------------------
 
@@ -45,9 +64,9 @@ export interface DecisionMemorySnapshotV1 {
   context_id: string;
 
   // Planning
-  plan: string;
-  intent: string;
-  domain: string;
+  plan: PlanTier;
+  intent: Intent;
+  domain: PlanningDomain;
 
   // Baseline
   baseline_snapshot_id: string;
@@ -55,6 +74,14 @@ export interface DecisionMemorySnapshotV1 {
 
   // Evidence (Deterministic only)
   ord: OrdEvidence;
+
+  // 👇 NEW — execution memory (separato per chiarezza semantica)
+   
+  execution: {
+  outcome: "SUCCESS" | "FAIL" | "PARTIAL";
+  anomaly: boolean;
+  executed_actions: string[];
+};
 
   // Hash Chain (Append-only guarantee)
   hash_chain: DecisionMemoryHashChain;
@@ -82,6 +109,12 @@ export interface BuildDecisionMemorySnapshotInputV1 {
   ord: OrdEvidence;
 
   previous_hash: string | null;
+
+  execution?: {
+  outcome: "SUCCESS" | "FAIL" | "PARTIAL";
+  anomaly: boolean;
+  executed_actions: string[];
+};
 }
 
 // -----------------------------------------------------
@@ -92,8 +125,13 @@ export interface DecisionStore {
   appendSnapshot(snapshot: DecisionMemorySnapshotV1): Promise<void>;
 
   getLastSnapshot(
-    tenant_id: string,
+    company_id: string,
     context_id: string
   ): Promise<DecisionMemorySnapshotV1 | null>;
-}
 
+  getRecentSnapshots(
+    company_id: string,
+    context_id: string,
+    limit: number
+  ): Promise<DecisionMemorySnapshotV1[]>;
+}

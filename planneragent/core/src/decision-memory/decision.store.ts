@@ -15,7 +15,10 @@ import type {
 // ------------------------------------------------------------
 
 export interface DecisionStore {
-  appendSnapshot(snapshot: DecisionMemorySnapshotV1): Promise<void>;
+  appendSnapshot(input: {
+  table: string;
+  payload: DecisionMemorySnapshotV1;
+}): Promise<void>;
 
   getLastSnapshot(
     company_id: string,
@@ -33,6 +36,14 @@ export interface DecisionStore {
 // D1 ADAPTER
 // ------------------------------------------------------------
 
+function safeDbValue<T>(
+  value: T | undefined | null
+): T | null {
+  return value === undefined
+    ? null
+    : value;
+}
+
 export class D1DecisionStoreAdapter implements DecisionStore {
 
   constructor(private db: D1Database) {}
@@ -41,55 +52,85 @@ export class D1DecisionStoreAdapter implements DecisionStore {
   // APPEND SNAPSHOT
   // ----------------------------------------------------------
 
-  async appendSnapshot(snapshot: DecisionMemorySnapshotV1): Promise<void> {
+  async appendSnapshot(input: {
+  table: string;
+  payload: DecisionMemorySnapshotV1;
+}): Promise<void> {
 
-    await this.db.prepare(`
-  INSERT INTO decision_memory_snapshots (
-    snapshot_id,
+  const {
+    table,
+    payload: snapshot
+  } = input;
+
+  await this.db.prepare(`
+  INSERT INTO ${table} (
+    memory_id,
     tenant_id,
     company_id,
     context_id,
-    plan,
-    intent,
+
     domain,
+    subtype,
+
+    authority_plan,
+    authority_intent,
+    authority_mode,
+
+    payload_json,
+
     baseline_snapshot_id,
-    baseline_metrics_json,
-    ord_json,
 
-    -- 👇 NEW
-    decision_outcome,
-    decision_anomaly,
-    executed_actions_json,
-
-    previous_hash,
-    current_hash,
     created_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `).bind(
+
+  // memory_id
   snapshot.snapshot_id,
+
+  // tenant
   snapshot.tenant_id,
+
+  // company
   snapshot.company_id,
+
+  // context
   snapshot.context_id,
 
-  snapshot.plan,
-  snapshot.intent,
+  // domain
   snapshot.domain ?? snapshot.context_id,
 
-  snapshot.baseline_snapshot_id ?? null,
+  // subtype
+  snapshot.execution?.outcome === "SUCCESS"
+    ? "SUCCESSFUL_EXECUTION"
+    : "EXECUTION",
 
-  JSON.stringify(snapshot.baseline_metrics ?? {}),
-  JSON.stringify(snapshot.ord ?? {}),
+  // authority_plan
+  snapshot.plan,
 
-  // 👇 NEW
-  snapshot.execution?.outcome ?? "FAIL",
-  snapshot.execution?.anomaly ? 1 : 0,
-  JSON.stringify(snapshot.execution?.executed_actions ?? []),
+  // authority_intent
+  safeDbValue(snapshot.intent),
 
-  snapshot.hash_chain?.previous_hash ?? null,
-  snapshot.hash_chain?.current_hash ?? null,
+  // authority_mode
+  snapshot.plan === "SENIOR"
+    ? "DELEGATED_EXECUTION"
+    : snapshot.plan === "JUNIOR"
+    ? "APPROVED_EXECUTION"
+    : "OBSERVATION",
 
-  snapshot.created_at ?? new Date().toISOString()
+  // payload_json
+  JSON.stringify(snapshot),
+
+  // baseline
+  safeDbValue(
+    snapshot.baseline_snapshot_id
+  ),
+
+  // created_at
+  safeDbValue(
+    snapshot.created_at
+  ) ?? new Date().toISOString()
+
 ).run();
   }
 

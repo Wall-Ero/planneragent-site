@@ -4,10 +4,6 @@
 // Canonical Snapshot · Source of Truth
 // =================================
 
-import type {
-  MemoryWriteRequest
-} from "./contracts.memory";
-
 import {
   resolveMemoryPolicy
 } from "./memory.policy";
@@ -16,14 +12,19 @@ import {
   classifyMemoryWrite
 } from "./memory.classifier";
 
+import {
+  resolveMemoryTable
+} from "./memory.tables";
+
 import type {
   DecisionMemorySnapshotV1
 } from "../decision-memory/snapshot/snapshot.types";
 
 export interface MemorySnapshotAdapter {
-  appendSnapshot: (
-    payload: DecisionMemorySnapshotV1
-  ) => Promise<void>;
+  appendSnapshot(input: {
+    table: string;
+    payload: DecisionMemorySnapshotV1;
+  }): Promise<void>;
 }
 
 export async function appendMemoryRecord(
@@ -48,7 +49,9 @@ export async function appendMemoryRecord(
   // --------------------------------------------------
 
   const policy =
-    resolveMemoryPolicy(input.plan);
+    resolveMemoryPolicy(
+      input.plan
+    );
 
   if (!policy.write.allowed) {
     throw new Error(
@@ -75,6 +78,15 @@ export async function appendMemoryRecord(
     });
 
   // --------------------------------------------------
+  // GOVERNED TABLE RESOLUTION
+  // --------------------------------------------------
+
+  const table =
+    resolveMemoryTable(
+      classified.domain
+    );
+
+  // --------------------------------------------------
   // GOVERNANCE SAFETY
   // --------------------------------------------------
 
@@ -96,19 +108,18 @@ export async function appendMemoryRecord(
     {
       domain: classified.domain,
       subtype: classified.subtype,
+      table,
       plan: input.plan,
       intent: input.intent
     }
   );
 
   // --------------------------------------------------
-  // IMPORTANTISSIMO
-  // SAME RUNTIME BEHAVIOR
-  // SAME STORAGE
-  // SAME PAYLOAD
+  // GOVERNED WRITE
   // --------------------------------------------------
 
-  await input.adapter.appendSnapshot(
-    input.payload
-  );
+  await input.adapter.appendSnapshot({
+    table,
+    payload: input.payload
+  });
 }

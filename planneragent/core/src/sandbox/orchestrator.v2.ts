@@ -116,6 +116,10 @@ import { buildDecisionMemorySnapshotV1 } from "../decision-memory/snapshot/snaps
 
 import type { Env } from "../types/env";
 
+import {
+  appendMemoryRecord
+} from "../memory/memory.write";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -2453,7 +2457,8 @@ const last = await store.getLastSnapshot(
   "supply_chain"
 );
 
-const decisionSnapshot = await buildDecisionMemorySnapshotV1({
+const decisionMemorySnapshot =
+  await buildDecisionMemorySnapshotV1({
   tenant_id: "default",
   company_id: req.company_id,
   context_id: "supply_chain",
@@ -2499,7 +2504,25 @@ const decisionSnapshot = await buildDecisionMemorySnapshotV1({
 // safe write
 try {
   try {
-  await store.appendSnapshot(decisionSnapshot);
+  await appendMemoryRecord({
+  tenant_id: "default",
+
+  company_id: req.company_id,
+
+  context_id: "supply_chain",
+
+  plan: req.plan,
+
+  intent: req.intent,
+
+  anomaly:
+    anomalyCheck.anomaly,
+
+  payload: decisionMemorySnapshot,
+
+  adapter: store
+});
+
   console.log("✅ SNAPSHOT SAVED");
 } catch (err) {
   console.error("❌ SNAPSHOT ERROR", err);

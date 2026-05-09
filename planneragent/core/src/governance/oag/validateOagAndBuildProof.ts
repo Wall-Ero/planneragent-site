@@ -11,7 +11,16 @@
 // - Otherwise: a matching delegation must exist.
 // ======================================================
 
-import type { Intent, PlanTier, PlanningDomain, OagProof } from "../../sandbox/contracts.v2";
+import type {
+  Intent,
+  PlanTier,
+  PlanningDomain
+} from "../../sandbox/contracts.v2";
+
+import type {
+  OagProof
+} from "./types";
+
 import type { OagGraph } from "../authority.graph";
 import { oagStoreSingleton } from "./authority.graph.store";
 import { resolveAuthorityFromGraph } from "./authority.graph.runtime";

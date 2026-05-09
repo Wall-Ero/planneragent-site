@@ -1,83 +1,126 @@
 // core/src/governance/oag/test.authority.reconstruction.ts
 
 import {
+  createOrganizationalAuthorityLink
+} from "./organizational.authority.link";
+
+import {
   reconstructOrganizationalAuthority
-} from "./authority.reconstruction";
+} from "./organizational.authority.reconstruction";
 
-// ------------------------------------------------------
-// TEST 1 — PUBLIC USER
-// ------------------------------------------------------
+// ======================================================
+// TEST 1 — DECLARED
+// ======================================================
 
-console.log(
-  "TEST_PUBLIC",
-  reconstructOrganizationalAuthority({
-    authenticated: false
-  })
-);
+const declaredLink =
+  createOrganizationalAuthorityLink({
 
-// ------------------------------------------------------
-// TEST 2 — AUTHENTICATED ONLY
-// ------------------------------------------------------
+    tenant_id: "default",
 
-console.log(
-  "TEST_AUTHENTICATED",
-  reconstructOrganizationalAuthority({
-    authenticated: true
-  })
-);
+    company_id: "MAMI_SIM",
 
-// ------------------------------------------------------
-// TEST 3 — DECLARED AUTHORITY
-// ------------------------------------------------------
+    from_actor_id: "director_001",
+
+    to_actor_id: "planner_001",
+
+    link_type: "REPORTING_LINE",
+
+    authority_scope: [
+      "SUPPLY_CHAIN"
+    ]
+  });
+
+const declared =
+  reconstructOrganizationalAuthority([
+    declaredLink
+  ]);
 
 console.log(
   "TEST_DECLARED",
-  reconstructOrganizationalAuthority({
-    authenticated: true,
-    declared_role: "MANAGER",
-    declared_supervisor: "director_001"
-  })
+  declared
 );
 
-// ------------------------------------------------------
-// TEST 4 — RECONSTRUCTED AUTHORITY
-// ------------------------------------------------------
+// ======================================================
+// TEST 2 — RECONSTRUCTED
+// ======================================================
+
+const reconstructedLink =
+  createOrganizationalAuthorityLink({
+
+    tenant_id: "default",
+
+    company_id: "MAMI_SIM",
+
+    from_actor_id: "director_001",
+
+    to_actor_id: "planner_001",
+
+    link_type: "DELEGATION",
+
+    authority_scope: [
+      "SUPPLY_CHAIN",
+      "PROCUREMENT"
+    ],
+
+    delegated_execution: true,
+
+    reciprocal_confirmation: true,
+
+    validation_state:
+      "VALIDATED",
+
+    authority_confidence: 0.4
+  });
+
+const reconstructed =
+  reconstructOrganizationalAuthority([
+    reconstructedLink
+  ]);
 
 console.log(
   "TEST_RECONSTRUCTED",
-  reconstructOrganizationalAuthority({
-    authenticated: true,
-
-    declared_role: "MANAGER",
-    declared_supervisor: "director_001",
-
-    sponsored: true,
-    reciprocal_confirmation: true,
-
-    erp_scope_match: true,
-    execution_alignment: true
-  })
+  reconstructed
 );
 
-// ------------------------------------------------------
-// TEST 5 — FULL VALIDATED
-// ------------------------------------------------------
+// ======================================================
+// TEST 3 — VALIDATED
+// ======================================================
+
+const validatedLink =
+  createOrganizationalAuthorityLink({
+
+    tenant_id: "default",
+
+    company_id: "MAMI_SIM",
+
+    from_actor_id: "board_001",
+
+    to_actor_id: "director_001",
+
+    link_type: "BUDGET_AUTHORITY",
+
+    authority_scope: [
+      "GLOBAL_OPERATIONS"
+    ],
+
+    delegated_execution: true,
+
+    delegated_budget: true,
+
+    reciprocal_confirmation: true,
+
+    validation_state:
+      "VALIDATED",
+
+    authority_confidence: 0.5
+  });
+
+const validated =
+  reconstructOrganizationalAuthority([
+    validatedLink
+  ]);
 
 console.log(
   "TEST_VALIDATED",
-  reconstructOrganizationalAuthority({
-    authenticated: true,
-
-    declared_role: "HEAD_OF_SUPPLY_CHAIN",
-    declared_supervisor: "coo_001",
-
-    sponsored: true,
-    reciprocal_confirmation: true,
-
-    erp_scope_match: true,
-    execution_alignment: true,
-    team_alignment: true,
-    budget_alignment: true,
-    api_scope_match: true
-  })
+  validated
 );

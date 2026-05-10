@@ -120,6 +120,10 @@ import {
   appendMemoryRecord
 } from "../memory/memory.write";
 
+import {
+  createRuntimeIntelligenceCollector
+} from "../memory/intelligence.runtime.collector";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -536,6 +540,9 @@ export async function evaluateSandboxV2(
 }
 
 const store = new D1DecisionStoreAdapter(env.POLICIES_DB);
+
+const intelligenceCollector =
+  createRuntimeIntelligenceCollector();
 
   // ----------------------------------------------------
   // VALIDATION
@@ -1165,6 +1172,30 @@ console.log("PLANNING_MODE_SPLIT", {
         topologyConfidence,
         mode: planningMode
       } as any);
+
+      intelligenceCollector.collect({
+  provider: "RULE_ENGINE",
+
+  role: "OPTIMIZATION",
+
+  authority_layer: req.plan,
+
+  operational_scope: req.domain,
+
+  company_id: req.company_id,
+
+  context_id: "supply_chain",
+
+  policy_scope: "ADVISORY",
+
+  execution_scope: planningMode,
+
+  execution_contribution: "INDIRECT",
+
+  metadata: {
+    source: "optimizer.v1"
+  }
+});
     } catch {
       optimizerOutput = null;
     }
@@ -2275,6 +2306,41 @@ if (!executionAllowed) {
 };
 }
 
+//-------------------------------
+// INTELLIGENCE PARTICIPATION TRACE
+
+
+ intelligenceCollector.collect({
+  provider: "INTERNAL_DL",
+
+  role: "RISK_SCORING",
+
+  authority_layer: req.plan,
+
+  operational_scope: req.domain,
+
+  company_id: req.company_id,
+
+  context_id: "supply_chain",
+
+  policy_scope:
+    executionAllowed
+      ? "DELEGATED_EXECUTION"
+      : "ADVISORY",
+
+  execution_scope: planningMode,
+
+  execution_contribution:
+    executionAllowed
+      ? "INDIRECT"
+      : "NONE",
+
+  metadata: {
+    source: "dl.v2",
+    orchestrator: "v2"
+  }
+});
+
   // ----------------------------------------------------
   // GOVERNANCE PAYLOAD
   // ----------------------------------------------------
@@ -2587,6 +2653,11 @@ decision_trace: {
         explanation: replayResult.explanation,
       }
     : null,
+},
+
+intelligence_trace: {
+  count: intelligenceCollector.traces.length,
+  traces: intelligenceCollector.traces
 },
 
 replay: replayResult

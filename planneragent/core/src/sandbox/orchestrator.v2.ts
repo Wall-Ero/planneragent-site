@@ -124,6 +124,10 @@ import {
   createRuntimeIntelligenceCollector
 } from "../memory/intelligence.runtime.collector";
 
+import {
+  buildPlannerNarrativeState
+} from "./narrative/plannerNarrative";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -2514,6 +2518,46 @@ const learningQuality = anomalyCheck.anomaly ? "LOW" : "HIGH";
 console.log("DEBUG execution outcome:", execution?.outcome);
 console.log("DEBUG learningEligible:", learningEligible);
 
+const plannerNarrativeState =
+  buildPlannerNarrativeState({
+
+    planningMode,
+
+    pressureLevel:
+      signals.decision_pressure,
+
+    authorityLevel:
+      req.plan,
+
+    anomalyDetected:
+  governance.anomaly ?? false,
+
+    executionAllowed,
+
+    correctionEffect,
+
+    executionOutcome:
+  execution?.outcome === "SUCCESS"
+    ? "SUCCESS"
+    : execution?.outcome === "PARTIAL"
+    ? "PARTIAL"
+    : execution?.outcome === "FAILED"
+    ? "FAILED"
+    : "NONE",
+
+    hasBlockingMismatch:
+      inventoryReconciliation
+        ?.hasBlockingMismatch,
+
+    realityScore:
+  governance.reality_score ?? undefined
+  });
+
+console.log(
+  "PLANNER_NARRATIVE_STATE",
+  plannerNarrativeState
+);
+
 // --------------------------------------------------
 // 🔥 DECISION MEMORY SNAPSHOT
 // --------------------------------------------------
@@ -2659,6 +2703,9 @@ intelligence_trace: {
   count: intelligenceCollector.traces.length,
   traces: intelligenceCollector.traces
 },
+
+planner_narrative_state:
+  plannerNarrativeState,
 
 replay: replayResult
   ? {

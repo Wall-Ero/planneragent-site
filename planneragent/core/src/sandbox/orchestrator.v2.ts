@@ -128,6 +128,14 @@ import {
   buildPlannerNarrativeState
 } from "./narrative/plannerNarrative";
 
+import {
+  deriveRealityState,
+} from "../reality/reality.state";
+
+import {
+  buildPlannerCognition,
+} from "../cognition/planner.cognition";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -195,25 +203,6 @@ function normalizeDatasetDescriptor(input: unknown): DatasetDescriptor {
     hasBehavioralEvents: false,
     hasStructuralData: false,
   };
-}
-
-function deriveRealityState(params: {
-  realityScore?: number | null;
-  anomaly: boolean;
-  topologyConfidence?: number;
-}) {
-  const score =
-    typeof params.realityScore === "number" ? params.realityScore : null;
-
-  if (score !== null) {
-    if (score < 0.5) return "ASSUMED";
-    if (score < 0.75) return "DRIFTING";
-    return params.anomaly ? "DRIFTING" : "ALIGNED";
-  }
-
-  if ((params.topologyConfidence ?? 1) < 0.5) return "ASSUMED";
-  if (params.anomaly) return "DRIFTING";
-  return "ALIGNED";
 }
 
 function buildTopologyEvidenceFromTopology(topology: {
@@ -1869,11 +1858,31 @@ if (allowedExecutionTypes) {
 
  if (signals && typeof signals === "object") {
 
-(signals as any).reality = deriveRealityState({
-  realityScore,
-  anomaly,
-  topologyConfidence,
+const realityState = deriveRealityState({
+  realityScore:
+    reality?.reality_score,
+
+  topologyConfidence:
+    topologyConfidence,
+
+  assumptions:
+    reality?.assumptions,
+
+  processInstability:
+    reality?.process_instability,
+
+  bomDivergence:
+    reality?.bom_divergence,
+
+  reconciliation:
+  adaptedReconciliation,
 });
+
+(signals as any).reality =
+  realityState.realityState;
+
+  (signals as any).realityEvidence =
+  realityState;
 
 
 // --------------------------------------------------
@@ -2518,39 +2527,64 @@ const learningQuality = anomalyCheck.anomaly ? "LOW" : "HIGH";
 console.log("DEBUG execution outcome:", execution?.outcome);
 console.log("DEBUG learningEligible:", learningEligible);
 
+const plannerCognition =
+  buildPlannerCognition({
+
+    reality:
+      (signals as any).realityEvidence,
+
+    executionAllowed,
+
+    governanceState:
+      governanceReason,
+
+    anomalyDetected:
+      governance.anomaly ?? false,
+
+    hasBlockingMismatch,
+
+    pressureLevel:
+      signals.decision_pressure,
+
+    correctionEffect,
+
+    executionOutcome:
+      execution?.outcome === "SUCCESS"
+        ? "SUCCESS"
+        : execution?.outcome === "PARTIAL"
+        ? "PARTIAL"
+        : execution?.outcome === "FAILED"
+        ? "FAILED"
+        : execution?.outcome === "BLOCKED"
+        ? "BLOCKED"
+        : "NONE",
+  });
+
 const plannerNarrativeState =
   buildPlannerNarrativeState({
 
     planningMode,
 
-    pressureLevel:
-      signals.decision_pressure,
+    cognition: plannerCognition,
 
     authorityLevel:
       req.plan,
 
-    anomalyDetected:
-  governance.anomaly ?? false,
-
-    executionAllowed,
-
-    correctionEffect,
+    reconciliationStatus:
+      correctionEffect === "FULL"
+        ? "FULL"
+        : correctionEffect === "PARTIAL"
+        ? "PARTIAL"
+        : "NOT_REQUIRED",
 
     executionOutcome:
-  execution?.outcome === "SUCCESS"
-    ? "SUCCESS"
-    : execution?.outcome === "PARTIAL"
-    ? "PARTIAL"
-    : execution?.outcome === "FAILED"
-    ? "FAILED"
-    : "NONE",
-
-    hasBlockingMismatch:
-      inventoryReconciliation
-        ?.hasBlockingMismatch,
-
-    realityScore:
-  governance.reality_score ?? undefined
+      execution?.outcome === "SUCCESS"
+        ? "SUCCESS"
+        : execution?.outcome === "PARTIAL"
+        ? "PARTIAL"
+        : execution?.outcome === "FAILED"
+        ? "FAILED"
+        : "NONE",
   });
 
 console.log(

@@ -41,6 +41,10 @@
 //
 // ============================================================
 
+import type {
+  PlannerOperationalCognition,
+} from "../../cognition/planner.cognition.types";
+
 export type ExecutionPosture =
   | "OBSERVE"
   | "ADVISE"
@@ -49,8 +53,8 @@ export type ExecutionPosture =
   | "STABILIZE";
 
 export type OperationalCondition =
-  | "ALIGNED"
-  | "DRIFTING"
+  | "STABLE"
+  | "SHIFTING"
   | "UNSTABLE"
   | "CRITICAL";
 
@@ -63,7 +67,8 @@ export type ExecutionOutcome =
   | "NONE"
   | "PARTIAL"
   | "SUCCESS"
-  | "FAILED";
+  | "FAILED"
+  | "BLOCKED";
 
 export interface PlannerNarrativeState {
 
@@ -123,139 +128,35 @@ export interface PlannerNarrativeState {
 
 export interface BuildPlannerNarrativeInput {
 
+  cognition: PlannerOperationalCognition;
+
   planningMode: string;
 
-  pressureLevel:
-    | "LOW"
-    | "MEDIUM"
-    | "HIGH";
-
   authorityLevel:
-  | "VISION"
-  | "GRADUATE"
-  | "JUNIOR"
-  | "SENIOR"
-  | "PRINCIPAL"
-  | "CHARTER";
+    | "VISION"
+    | "GRADUATE"
+    | "JUNIOR"
+    | "SENIOR"
+    | "PRINCIPAL"
+    | "CHARTER";
 
-  anomalyDetected: boolean;
-
-  executionAllowed: boolean;
-
-  correctionEffect?:
-    | "NONE"
+  reconciliationStatus?:
+    | "NOT_REQUIRED"
     | "PARTIAL"
     | "FULL";
 
-  executionOutcome?: ExecutionOutcome;
-
-  hasBlockingMismatch?: boolean;
-
-  realityScore?: number;
+  executionOutcome?:
+    | "NONE"
+    | "PARTIAL"
+    | "SUCCESS"
+    | "FAILED"
+    | "BLOCKED";
 }
 
 // ============================================================
 // GOVERNANCE STATE RESOLUTION
 // ============================================================
 
-function resolveGovernanceState(
-  input: BuildPlannerNarrativeInput
-): string {
-
-  if (
-    input.planningMode === "REALITY_CORRECTION"
-    && input.hasBlockingMismatch
-  ) {
-    return "EXECUTION_DRIFT";
-  }
-
-  if (
-    input.planningMode === "FLOW_STABILIZATION"
-  ) {
-    return "FLOW_DEGRADATION";
-  }
-
-  if (
-    input.planningMode === "SUPPLY_RISK_RESPONSE"
-  ) {
-    return "SUPPLY_RISK_ESCALATION";
-  }
-
-  if (
-    input.planningMode === "CONTAINMENT"
-  ) {
-    return "CONTAINMENT_MODE";
-  }
-
-  return "OPERATIONAL_OBSERVATION";
-}
-
-// ============================================================
-// OPERATIONAL CONDITION
-// ============================================================
-
-function resolveOperationalCondition(
-  input: BuildPlannerNarrativeInput
-): OperationalCondition {
-
-  if (
-    input.pressureLevel === "HIGH"
-    && input.hasBlockingMismatch
-  ) {
-    return "CRITICAL";
-  }
-
-  if (
-    input.anomalyDetected
-  ) {
-    return "DRIFTING";
-  }
-
-  if (
-    input.realityScore !== undefined
-    && input.realityScore < 0.7
-  ) {
-    return "UNSTABLE";
-  }
-
-  return "ALIGNED";
-}
-
-// ============================================================
-// EXECUTION POSTURE
-// ============================================================
-
-function resolveExecutionPosture(
-  input: BuildPlannerNarrativeInput
-): ExecutionPosture {
-
-  if (
-    input.executionAllowed
-    && input.pressureLevel === "HIGH"
-  ) {
-    return "EXECUTE";
-  }
-
-  if (
-    input.hasBlockingMismatch
-  ) {
-    return "CONTAIN";
-  }
-
-  if (
-    input.planningMode === "FLOW_STABILIZATION"
-  ) {
-    return "STABILIZE";
-  }
-
-  if (
-    input.executionAllowed
-  ) {
-    return "ADVISE";
-  }
-
-  return "OBSERVE";
-}
 
 // ============================================================
 // RECONCILIATION STATUS
@@ -286,25 +187,25 @@ export function buildPlannerNarrativeState(
   input: BuildPlannerNarrativeInput
 ): PlannerNarrativeState {
 
-  const governanceState =
-    resolveGovernanceState(input);
+ const governanceState =
+  input.cognition.governanceState;
 
-  const operationalCondition =
-    resolveOperationalCondition(input);
+const operationalCondition =
+  input.cognition.operationalCondition;
 
-  const executionPosture =
-    resolveExecutionPosture(input);
+const executionPosture =
+  input.cognition.executionPosture;
 
   const reconciliationStatus =
-    resolveReconciliationStatus(
-      input.correctionEffect
-    );
+  input.reconciliationStatus ?? "NOT_REQUIRED";
 
-  const realityAligned =
-    !input.hasBlockingMismatch;
+ const realityAligned =
+  !input.cognition.semanticSignals.includes(
+    "inventory:blocking_mismatch"
+  );
 
   const executionActive =
-    input.executionAllowed;
+    input.cognition.executionAllowed;
 
   const recoveryPossible =
     reconciliationStatus === "FULL";
@@ -325,16 +226,18 @@ export function buildPlannerNarrativeState(
     operationalCondition,
 
     pressureLevel:
-      input.pressureLevel,
+  input.cognition.interventionUrgency,
 
     authorityLevel:
       input.authorityLevel,
 
-    anomalyDetected:
-      input.anomalyDetected,
+   anomalyDetected:
+  input.cognition.semanticSignals.includes(
+    "runtime:anomaly_detected"
+  ),
 
     executionAllowed:
-      input.executionAllowed,
+  input.cognition.executionAllowed,
 
     reconciliationStatus,
 

@@ -136,6 +136,18 @@ import {
   buildPlannerCognition,
 } from "../cognition/planner.cognition";
 
+import {
+  renderPlannerNarrative,
+} from "../sandbox/narrative/planner.narrative.render";
+
+import {
+  applyPlannerNarrativePolicy,
+} from "../sandbox/narrative/planner.narrative.policy";
+
+import {
+  buildPlannerNarrativeUiState,
+} from "../sandbox/narrative/planner.narrative.ui";
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -2592,6 +2604,37 @@ console.log(
   plannerNarrativeState
 );
 
+const plannerNarrative =
+  renderPlannerNarrative(
+    plannerNarrativeState
+  );
+
+console.log(
+  "PLANNER_NARRATIVE",
+  plannerNarrative
+);
+
+const plannerNarrativeUiState =
+  buildPlannerNarrativeUiState(
+    plannerNarrativeState
+  );
+
+const plannerNarrativePolicy =
+  applyPlannerNarrativePolicy(
+    plannerNarrativeState
+  );
+
+console.log(
+  "PLANNER_NARRATIVE_UI_STATE",
+  plannerNarrativeUiState
+);
+
+console.log(
+  "PLANNER_NARRATIVE_POLICY",
+  plannerNarrativePolicy
+);
+
+
 // --------------------------------------------------
 // 🔥 DECISION MEMORY SNAPSHOT
 // --------------------------------------------------
@@ -2738,8 +2781,10 @@ intelligence_trace: {
   traces: intelligenceCollector.traces
 },
 
-planner_narrative_state:
-  plannerNarrativeState,
+planner_narrative_state:plannerNarrativeState,
+planner_narrative: plannerNarrative,
+planner_narrative_ui: plannerNarrativeUiState,
+planner_narrative_policy: plannerNarrativePolicy,
 
 replay: replayResult
   ? {

@@ -4,17 +4,19 @@
 // Canonical Source of Truth
 // ======================================================
 
-import type { Intent, PlanTier, PlanningDomain, OagProof } from "../../sandbox/contracts.v2";
+import type { Intent, PlanTier, PlanningDomain} from "../../sandbox/contracts.v2";
 import { buildOagProof, validateOagGraph, type OagGraph } from "../authority.graph";
+
+type RuntimeOagProof = ReturnType<typeof buildOagProof>;
 
 // Constitutional matrix (plan → allowed intents)
 export const PLAN_INTENT_MATRIX: Record<PlanTier, Intent[]> = {
-  VISION: ["INFORM", "WARN"],
-  GRADUATE: ["INFORM", "WARN"],
-  JUNIOR: ["ADVISE", "EXECUTE", "WARN"],
-  SENIOR: ["ADVISE", "EXECUTE", "WARN"],
-  PRINCIPAL: ["ADVISE", "EXECUTE", "WARN"],
-  CHARTER: ["INFORM", "WARN"]
+  VISION: ["INFORM"],
+  GRADUATE: ["INFORM"],
+  JUNIOR: ["ADVISE", "EXECUTE"],
+  SENIOR: ["ADVISE", "EXECUTE"],
+  PRINCIPAL: ["ADVISE", "EXECUTE", "IMPROVE"],
+  CHARTER: ["INFORM"],
 };
 
 export type ResolveAuthorityInput = {
@@ -30,7 +32,7 @@ export type ResolveAuthorityInput = {
 
 export type ResolveAuthorityOk = {
   ok: true;
-  proof: OagProof;
+  proof: RuntimeOagProof;
 };
 
 export type ResolveAuthorityFail = {

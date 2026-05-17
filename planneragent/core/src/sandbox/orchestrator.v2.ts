@@ -148,6 +148,12 @@ import {
   buildPlannerNarrativeUiState,
 } from "../sandbox/narrative/planner.narrative.ui";
 
+import {
+  buildGovernanceEmergence,
+} from "../governance/emergence/governance.emergence.adapter";
+
+
+
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -2634,6 +2640,39 @@ console.log(
   plannerNarrativePolicy
 );
 
+// --------------------------------------------------
+// GOVERNANCE EMERGENCE
+// --------------------------------------------------
+
+const governanceEmergence =
+  buildGovernanceEmergence({
+
+    plan: req.plan,
+
+    signals,
+
+    governance,
+
+    execution,
+
+    replay: replayResult,
+
+    optimizer: {
+      best_score:
+        selectedBest?.adjustedScore ??
+        selectedBest?.score ??
+        0,
+    },
+
+    planner_narrative_state:
+      plannerNarrativeState,
+  });
+
+console.log(
+  "GOVERNANCE_EMERGENCE",
+  governanceEmergence
+);
+
 
 // --------------------------------------------------
 // 🔥 DECISION MEMORY SNAPSHOT
@@ -2785,6 +2824,7 @@ planner_narrative_state:plannerNarrativeState,
 planner_narrative: plannerNarrative,
 planner_narrative_ui: plannerNarrativeUiState,
 planner_narrative_policy: plannerNarrativePolicy,
+governance_emergence: governanceEmergence,
 
 replay: replayResult
   ? {

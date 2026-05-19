@@ -1,12 +1,13 @@
 // core/src/governance/emergence/governance.emergence.engine.ts
 // ============================================================
-// PlannerAgent — Governance Emergence Engine V1
+// PlannerAgent — Governance Emergence Engine V2
 // Canonical Source of Truth
 // ============================================================
 //
 // PURPOSE
 // ------------------------------------------------------------
-// Detect governance pressure emerging from observed reality.
+// Detect governance pressure emerging from observed operational,
+// cognitive, and longitudinal reality.
 //
 // This engine DOES NOT:
 // - upgrade authority
@@ -19,8 +20,11 @@
 // It DOES:
 // - observe operational reality
 // - observe cognitive / AI-assisted reality
+// - integrate longitudinal governance memory
+// - integrate cognitive governance bridge signals
 // - detect governance pressure
 // - classify emergence domains
+// - evaluate trust domains independently
 // - recommend human-governed authority review
 //
 // CORE PRINCIPLE
@@ -28,6 +32,23 @@
 // Authority emergence is system-observed.
 // Authority activation is always human-controlled.
 //
+// ============================================================
+
+import type {
+  CognitiveGovernanceBridgeResult,
+} from "../../cognitive-observability/cognitive.governance.bridge";
+
+import type {
+  GovernanceEmergenceTimeline,
+} from "./governance.emergence.memory";
+
+import {
+  evaluateGovernanceReview,
+  type GovernanceReviewRecommendation,
+} from "./governance.review.engine";
+
+// ============================================================
+// TYPES
 // ============================================================
 
 export type AuthorityLevel =
@@ -69,20 +90,27 @@ export type ActivationRequirement =
   | "BUDGET_ASSIGNMENT_REQUIRED"
   | "BOARD_CHARTER_REQUIRED";
 
-export interface GovernanceEmergenceEvidence {
-  // ----------------------------------------------------------
-  // Operational observation — VISION
-  // ----------------------------------------------------------
+export interface GovernanceTrustDomains {
+  advisoryTrust: number;
+  executionTrust: number;
+  delegationTrust: number;
+  improvementTrust: number;
+  constitutionalTrust: number;
+}
 
+export interface GovernanceMaturity {
+  episodic: boolean;
+  emerging: boolean;
+  stable: boolean;
+  structural: boolean;
+}
+
+export interface GovernanceEmergenceEvidence {
   observedOperationalEvents: number;
   recurringOperationalPatterns: number;
   topologyConfidence: number;
   anomalyRecurrence: number;
   replayConsistency: number;
-
-  // ----------------------------------------------------------
-  // Cognitive observability — VISION → GRADUATE pressure
-  // ----------------------------------------------------------
 
   observedAiAssistedWorkflows: number;
   shadowAiUsageDetected: boolean;
@@ -91,19 +119,11 @@ export interface GovernanceEmergenceEvidence {
   aiGeneratedOperationalArtifacts: number;
   ungovernedAiWorkflowCount: number;
 
-  // ----------------------------------------------------------
-  // Advisory trust — VISION/GRADUATE → JUNIOR advisory
-  // ----------------------------------------------------------
-
   advisoryOpportunitiesDetected: number;
   decisionAlignmentRate: number;
   optimizerConfidence: number;
   replayAgreementRate: number;
   historicalDecisionMemoryDepth: number;
-
-  // ----------------------------------------------------------
-  // Approved execution trust — VISION/GRADUATE → JUNIOR execution
-  // ----------------------------------------------------------
 
   repeatedHumanApprovedActions: number;
   microExecutionCandidates: number;
@@ -111,19 +131,11 @@ export interface GovernanceEmergenceEvidence {
   approvalPatternConsistency: number;
   rollbackCount: number;
 
-  // ----------------------------------------------------------
-  // Delegated workflow trust — JUNIOR → SENIOR pressure
-  // ----------------------------------------------------------
-
   approvedWorkflowSequences: number;
   successfulWorkflowSequences: number;
   crossSystemConsistency: number;
   humanOverrideRate: number;
   stabilizationSuccessRate: number;
-
-  // ----------------------------------------------------------
-  // Longitudinal stewardship — SENIOR → PRINCIPAL pressure
-  // ----------------------------------------------------------
 
   delegatedProcessRuns: number;
   structuralFriction: number;
@@ -132,10 +144,6 @@ export interface GovernanceEmergenceEvidence {
   exceptionRecurrence: number;
   processInstability: number;
   measurableImprovementPotential: number;
-
-  // ----------------------------------------------------------
-  // Constitutional boundary — PRINCIPAL → CHARTER pressure
-  // ----------------------------------------------------------
 
   policyModificationPressure: boolean;
   autonomousGoalPressure: boolean;
@@ -166,6 +174,12 @@ export interface GovernanceEmergenceResult {
 
   activationAlwaysHuman: true;
 
+  trustDomains: GovernanceTrustDomains;
+
+  maturity: GovernanceMaturity;
+
+  review?: GovernanceReviewRecommendation;
+
   emergenceSummary: string[];
 
   governanceConfidence: number;
@@ -178,77 +192,123 @@ export interface GovernanceEmergenceResult {
 export function evaluateGovernanceEmergence(params: {
   currentAuthority: AuthorityLevel;
   evidence: GovernanceEmergenceEvidence;
+
+  governanceTimeline?: GovernanceEmergenceTimeline | null;
+
+  cognitiveBridge?: CognitiveGovernanceBridgeResult | null;
 }): GovernanceEmergenceResult {
-  const { currentAuthority, evidence } = params;
+
+  const {
+    currentAuthority,
+    evidence,
+    governanceTimeline,
+    cognitiveBridge,
+  } = params;
 
   const pressures: GovernanceEmergenceSignal[] = [];
 
-  const aiGovernance =
-    evaluateAiGovernancePressure(evidence);
+  pushIfPresent(
+    pressures,
+    evaluateAiGovernancePressure(evidence)
+  );
 
-  if (aiGovernance) {
-    pressures.push(aiGovernance);
+  pushIfPresent(
+    pressures,
+    evaluateAdvisoryPressure(evidence)
+  );
+
+  pushIfPresent(
+    pressures,
+    evaluateExecutionPressure(evidence)
+  );
+
+  pushIfPresent(
+    pressures,
+    evaluateDelegationPressure(evidence)
+  );
+
+  pushIfPresent(
+    pressures,
+    evaluateImprovementPressure(evidence)
+  );
+
+  pushIfPresent(
+    pressures,
+    evaluateConstitutionalPressure(evidence)
+  );
+
+  if (cognitiveBridge) {
+    pressures.push(
+      ...mapCognitiveBridgeToEmergenceSignals(
+        cognitiveBridge
+      )
+    );
   }
 
-  const advisory =
-    evaluateAdvisoryPressure(evidence);
+  const trustDomains =
+    computeTrustDomains(
+      evidence,
+      cognitiveBridge
+    );
 
-  if (advisory) {
-    pressures.push(advisory);
-  }
-
-  const execution =
-    evaluateExecutionPressure(evidence);
-
-  if (execution) {
-    pressures.push(execution);
-  }
-
-  const delegation =
-    evaluateDelegationPressure(evidence);
-
-  if (delegation) {
-    pressures.push(delegation);
-  }
-
-  const improvement =
-    evaluateImprovementPressure(evidence);
-
-  if (improvement) {
-    pressures.push(improvement);
-  }
-
-  const constitutional =
-    evaluateConstitutionalPressure(evidence);
-
-  if (constitutional) {
-    pressures.push(constitutional);
-  }
+  const maturity =
+    computeGovernanceMaturity(
+      pressures,
+      governanceTimeline,
+      trustDomains
+    );
 
   const dominantPressure =
     resolveDominantPressure(pressures);
 
+  const review =
+    governanceTimeline
+      ? evaluateGovernanceReview({
+          currentAuthority,
+          timeline: governanceTimeline,
+        })
+      : undefined;
+
   return {
     currentAuthority,
-    pressures,
+
+    pressures:
+      dedupePressures(pressures),
+
     dominantPressure,
+
     activationAlwaysHuman: true,
+
+    trustDomains,
+
+    maturity,
+
+    review,
+
     emergenceSummary:
-      buildEmergenceSummary(pressures),
+      buildEmergenceSummary(
+        pressures,
+        maturity,
+        review
+      ),
+
     governanceConfidence:
-      computeGovernanceConfidence(evidence),
+      computeGovernanceConfidence(
+        evidence,
+        trustDomains,
+        cognitiveBridge
+      ),
   };
 }
 
 // ============================================================
-// AI GOVERNANCE PRESSURE
-// VISION observes uncontrolled AI usage.
-// GRADUATE governs it.
+// PRESSURE EVALUATORS
 // ============================================================
 
 function evaluateAiGovernancePressure(
   e: GovernanceEmergenceEvidence
 ): GovernanceEmergenceSignal | null {
+
   const score =
     normalizeCount(e.observedAiAssistedWorkflows, 20) * 0.25 +
     normalizeCount(e.recurringPromptPatterns, 10) * 0.2 +
@@ -287,14 +347,10 @@ function evaluateAiGovernancePressure(
   };
 }
 
-// ============================================================
-// ADVISORY PRESSURE
-// VISION/GRADUATE may reveal need for JUNIOR advisory.
-// ============================================================
-
 function evaluateAdvisoryPressure(
   e: GovernanceEmergenceEvidence
 ): GovernanceEmergenceSignal | null {
+
   const score =
     normalizeCount(e.advisoryOpportunitiesDetected, 20) * 0.25 +
     e.decisionAlignmentRate * 0.25 +
@@ -322,14 +378,10 @@ function evaluateAdvisoryPressure(
   };
 }
 
-// ============================================================
-// EXECUTION PRESSURE
-// Micro-approved execution can emerge before advisory trust.
-// ============================================================
-
 function evaluateExecutionPressure(
   e: GovernanceEmergenceEvidence
 ): GovernanceEmergenceSignal | null {
+
   const score =
     normalizeCount(e.repeatedHumanApprovedActions, 20) * 0.3 +
     normalizeCount(e.microExecutionCandidates, 20) * 0.25 +
@@ -357,14 +409,10 @@ function evaluateExecutionPressure(
   };
 }
 
-// ============================================================
-// DELEGATION PRESSURE
-// JUNIOR patterns may justify SENIOR review.
-// ============================================================
-
 function evaluateDelegationPressure(
   e: GovernanceEmergenceEvidence
 ): GovernanceEmergenceSignal | null {
+
   const successRate =
     safeRate(
       e.successfulWorkflowSequences,
@@ -397,15 +445,10 @@ function evaluateDelegationPressure(
   };
 }
 
-// ============================================================
-// IMPROVEMENT PRESSURE
-// SENIOR does not become PRINCIPAL.
-// SENIOR may reveal structural inefficiency.
-// ============================================================
-
 function evaluateImprovementPressure(
   e: GovernanceEmergenceEvidence
 ): GovernanceEmergenceSignal | null {
+
   const score =
     normalizeCount(e.delegatedProcessRuns, 100) * 0.15 +
     e.structuralFriction * 0.2 +
@@ -436,14 +479,10 @@ function evaluateImprovementPressure(
   };
 }
 
-// ============================================================
-// CONSTITUTIONAL PRESSURE
-// No authority expansion without charter review.
-// ============================================================
-
 function evaluateConstitutionalPressure(
   e: GovernanceEmergenceEvidence
 ): GovernanceEmergenceSignal | null {
+
   const triggered =
     e.policyModificationPressure ||
     e.autonomousGoalPressure ||
@@ -486,12 +525,257 @@ function evaluateConstitutionalPressure(
 }
 
 // ============================================================
+// COGNITIVE BRIDGE MAPPING
+// ============================================================
+
+function mapCognitiveBridgeToEmergenceSignals(
+  bridge: CognitiveGovernanceBridgeResult
+): GovernanceEmergenceSignal[] {
+
+  return bridge.emergenceSignals.map((s) => ({
+    pressure:
+      mapBridgePressure(s.type),
+
+    domain:
+      mapBridgeDomain(s.domain),
+
+    severity:
+      s.severity,
+
+    recommendedAuthority:
+      mapBridgeAuthority(s.domain),
+
+    activationRequired: true,
+
+    activationRequirement:
+      s.domain === "CHARTER"
+        ? "BOARD_CHARTER_REQUIRED"
+        : s.domain === "PRINCIPAL"
+        ? "BUDGET_ASSIGNMENT_REQUIRED"
+        : "HUMAN_REVIEW_REQUIRED",
+
+    reasons:
+      s.reasons,
+
+    suggestedReview:
+      s.description,
+  }));
+}
+
+function mapBridgePressure(
+  pressure: string
+): GovernancePressure {
+
+  if (pressure === "AI_GOVERNANCE_PRESSURE") {
+    return "AI_GOVERNANCE_PRESSURE";
+  }
+
+  if (pressure === "ADVISORY_PRESSURE") {
+    return "ADVISORY_PRESSURE";
+  }
+
+  if (pressure === "DELEGATION_PRESSURE") {
+    return "DELEGATION_PRESSURE";
+  }
+
+  if (pressure === "EXECUTION_PRESSURE") {
+    return "EXECUTION_PRESSURE";
+  }
+
+  if (pressure === "CONSTITUTIONAL_PRESSURE") {
+    return "CONSTITUTIONAL_PRESSURE";
+  }
+
+  return "NONE";
+}
+
+function mapBridgeDomain(
+  domain: string
+): EmergenceDomain {
+
+  if (domain === "GRADUATE") {
+    return "COGNITIVE_OBSERVABILITY";
+  }
+
+  if (domain === "JUNIOR") {
+    return "ADVISORY_TRUST";
+  }
+
+  if (domain === "SENIOR") {
+    return "DELEGATED_PROCESS_STEWARDSHIP";
+  }
+
+  if (domain === "PRINCIPAL") {
+    return "STRUCTURAL_IMPROVEMENT";
+  }
+
+  if (domain === "CHARTER") {
+    return "CONSTITUTIONAL_BOUNDARY";
+  }
+
+  return "OPERATIONAL_OBSERVATION";
+}
+
+function mapBridgeAuthority(
+  domain: string
+): AuthorityLevel | undefined {
+
+  if (
+    domain === "GRADUATE" ||
+    domain === "JUNIOR" ||
+    domain === "SENIOR" ||
+    domain === "PRINCIPAL" ||
+    domain === "CHARTER"
+  ) {
+    return domain;
+  }
+
+  return undefined;
+}
+
+// ============================================================
+// TRUST DOMAINS
+// ============================================================
+
+function computeTrustDomains(
+  e: GovernanceEmergenceEvidence,
+  bridge?: CognitiveGovernanceBridgeResult | null
+): GovernanceTrustDomains {
+
+  const advisoryTrust =
+    clamp01(
+      e.decisionAlignmentRate * 0.3 +
+      e.optimizerConfidence * 0.25 +
+      e.replayAgreementRate * 0.25 +
+      normalizeCount(e.historicalDecisionMemoryDepth, 50) * 0.2
+    );
+
+  const executionTrust =
+    clamp01(
+      e.microExecutionSuccessRate * 0.35 +
+      e.approvalPatternConsistency * 0.3 +
+      normalizeCount(e.repeatedHumanApprovedActions, 20) * 0.25 -
+      normalizeCount(e.rollbackCount, 5) * 0.2
+    );
+
+  const delegationTrust =
+    clamp01(
+      safeRate(
+        e.successfulWorkflowSequences,
+        e.approvedWorkflowSequences
+      ) * 0.35 +
+      e.crossSystemConsistency * 0.3 +
+      e.stabilizationSuccessRate * 0.25 +
+      (1 - e.humanOverrideRate) * 0.1
+    );
+
+  const improvementTrust =
+    clamp01(
+      e.measurableImprovementPotential * 0.35 +
+      e.structuralFriction * 0.25 +
+      e.exceptionRecurrence * 0.2 +
+      e.workflowFatigue * 0.2
+    );
+
+  const constitutionalTrust =
+    clamp01(
+      (
+        bridge?.constitutionalRisk === "HIGH"
+          ? 0.5
+          : bridge?.constitutionalRisk === "MEDIUM"
+          ? 0.3
+          : 0
+      ) +
+      (
+        e.policyModificationPressure ? 0.2 : 0
+      ) +
+      (
+        e.autonomousGoalPressure ? 0.2 : 0
+      ) +
+      (
+        e.autonomousResourceAllocationPressure ? 0.2 : 0
+      ) +
+      (
+        e.humanRoleImpactDetected ? 0.2 : 0
+      )
+    );
+
+  return {
+    advisoryTrust:
+      round3(advisoryTrust),
+
+    executionTrust:
+      round3(executionTrust),
+
+    delegationTrust:
+      round3(delegationTrust),
+
+    improvementTrust:
+      round3(improvementTrust),
+
+    constitutionalTrust:
+      round3(constitutionalTrust),
+  };
+}
+
+// ============================================================
+// MATURITY
+// ============================================================
+
+function computeGovernanceMaturity(
+  pressures: GovernanceEmergenceSignal[],
+  timeline: GovernanceEmergenceTimeline | null | undefined,
+  trust: GovernanceTrustDomains
+): GovernanceMaturity {
+
+  const pressureCount =
+    pressures.length;
+
+  const recurring =
+    timeline?.recurringPressures?.length ?? 0;
+
+  const stableDelegation =
+    timeline?.stableDelegationDetected === true;
+
+  const confidenceIncreasing =
+    timeline?.governanceConfidenceTrend === "INCREASING";
+
+  const maxTrust =
+    Math.max(
+      trust.advisoryTrust,
+      trust.executionTrust,
+      trust.delegationTrust,
+      trust.improvementTrust,
+      trust.constitutionalTrust
+    );
+
+  return {
+    episodic:
+      pressureCount > 0 && recurring === 0,
+
+    emerging:
+      recurring > 0 || maxTrust >= 0.55,
+
+    stable:
+      stableDelegation ||
+      confidenceIncreasing ||
+      maxTrust >= 0.75,
+
+    structural:
+      trust.constitutionalTrust >= 0.7 ||
+      trust.improvementTrust >= 0.8 ||
+      (stableDelegation && recurring >= 2),
+  };
+}
+
+// ============================================================
 // DOMINANT PRESSURE
 // ============================================================
 
 function resolveDominantPressure(
   pressures: GovernanceEmergenceSignal[]
 ): GovernancePressure {
+
   if (pressures.length === 0) {
     return "NONE";
   }
@@ -506,7 +790,11 @@ function resolveDominantPressure(
   ];
 
   for (const p of order) {
-    if (pressures.some((x) => x.pressure === p)) {
+    if (
+      pressures.some(
+        (x) => x.pressure === p
+      )
+    ) {
       return p;
     }
   }
@@ -519,19 +807,47 @@ function resolveDominantPressure(
 // ============================================================
 
 function buildEmergenceSummary(
-  pressures: GovernanceEmergenceSignal[]
+  pressures: GovernanceEmergenceSignal[],
+  maturity: GovernanceMaturity,
+  review?: GovernanceReviewRecommendation
 ): string[] {
+
   if (pressures.length === 0) {
     return [
       "no_governance_pressure_detected",
     ];
   }
 
-  return pressures.flatMap((p) => [
-    `pressure:${p.pressure}`,
-    `domain:${p.domain}`,
-    `severity:${p.severity}`,
-  ]);
+  const summary =
+    pressures.flatMap((p) => [
+      `pressure:${p.pressure}`,
+      `domain:${p.domain}`,
+      `severity:${p.severity}`,
+    ]);
+
+  if (maturity.episodic) {
+    summary.push("maturity:episodic");
+  }
+
+  if (maturity.emerging) {
+    summary.push("maturity:emerging");
+  }
+
+  if (maturity.stable) {
+    summary.push("maturity:stable");
+  }
+
+  if (maturity.structural) {
+    summary.push("maturity:structural");
+  }
+
+  if (review?.recommended) {
+    summary.push(
+      `review:${review.reviewDomain}`
+    );
+  }
+
+  return summary;
 }
 
 // ============================================================
@@ -539,23 +855,44 @@ function buildEmergenceSummary(
 // ============================================================
 
 function computeGovernanceConfidence(
-  e: GovernanceEmergenceEvidence
+  e: GovernanceEmergenceEvidence,
+  trust: GovernanceTrustDomains,
+  bridge?: CognitiveGovernanceBridgeResult | null
 ): number {
-  const positive =
+
+  const operational =
     e.topologyConfidence * 0.25 +
     e.replayConsistency * 0.2 +
-    e.decisionAlignmentRate * 0.15 +
-    e.microExecutionSuccessRate * 0.15 +
     e.crossSystemConsistency * 0.15 +
-    e.stabilizationSuccessRate * 0.1;
+    e.stabilizationSuccessRate * 0.15;
+
+  const trustAvg =
+    (
+      trust.advisoryTrust +
+      trust.executionTrust +
+      trust.delegationTrust +
+      trust.improvementTrust +
+      trust.constitutionalTrust
+    ) / 5;
+
+  const bridgeBoost =
+    bridge?.governanceRelevant
+      ? bridge.governanceConfidence * 0.15
+      : 0;
 
   const penalty =
-    normalizeCount(e.rollbackCount, 5) * 0.35 +
-    e.humanOverrideRate * 0.35 +
-    e.processInstability * 0.3;
+    normalizeCount(e.rollbackCount, 5) * 0.2 +
+    e.humanOverrideRate * 0.25 +
+    e.processInstability * 0.25;
 
   return round3(
-    clamp01(positive - penalty + 0.35)
+    clamp01(
+      operational +
+      trustAvg * 0.35 +
+      bridgeBoost -
+      penalty +
+      0.25
+    )
   );
 }
 
@@ -563,14 +900,82 @@ function computeGovernanceConfidence(
 // HELPERS
 // ============================================================
 
+function pushIfPresent(
+  arr: GovernanceEmergenceSignal[],
+  value: GovernanceEmergenceSignal | null
+): void {
+
+  if (value) {
+    arr.push(value);
+  }
+}
+
+function dedupePressures(
+  pressures: GovernanceEmergenceSignal[]
+): GovernanceEmergenceSignal[] {
+
+  const map =
+    new Map<string, GovernanceEmergenceSignal>();
+
+  for (const p of pressures) {
+    const key =
+      `${p.pressure}:${p.domain}:${p.recommendedAuthority ?? "none"}`;
+
+    const existing =
+      map.get(key);
+
+    if (!existing) {
+      map.set(key, p);
+      continue;
+    }
+
+    map.set(key, {
+      ...existing,
+      severity:
+        severityRank(p.severity) >
+        severityRank(existing.severity)
+          ? p.severity
+          : existing.severity,
+
+      reasons:
+        Array.from(
+          new Set([
+            ...existing.reasons,
+            ...p.reasons,
+          ])
+        ),
+    });
+  }
+
+  return Array.from(map.values());
+}
+
+function severityRank(
+  s: EmergenceSeverity
+): number {
+
+  switch (s) {
+    case "CRITICAL":
+      return 4;
+    case "HIGH":
+      return 3;
+    case "MEDIUM":
+      return 2;
+    default:
+      return 1;
+  }
+}
+
 function severityFromScore(
   score: number
 ): EmergenceSeverity {
+
   const s = clamp01(score);
 
   if (s >= 0.9) return "CRITICAL";
   if (s >= 0.75) return "HIGH";
   if (s >= 0.55) return "MEDIUM";
+
   return "LOW";
 }
 
@@ -578,6 +983,7 @@ function normalizeCount(
   value: number,
   target: number
 ): number {
+
   if (target <= 0) {
     return 0;
   }
@@ -589,6 +995,7 @@ function safeRate(
   num: number,
   den: number
 ): number {
+
   if (den <= 0) {
     return 0;
   }
@@ -599,6 +1006,7 @@ function safeRate(
 function clamp01(
   value: number
 ): number {
+
   return Math.max(
     0,
     Math.min(1, value)
@@ -608,5 +1016,6 @@ function clamp01(
 function round3(
   value: number
 ): number {
+
   return Math.round(value * 1000) / 1000;
 }

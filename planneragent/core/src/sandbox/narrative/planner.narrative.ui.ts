@@ -1,52 +1,53 @@
 // core/src/sandbox/narrative/planner.narrative.ui.ts
 // ============================================================
-// PlannerAgent — Narrative UI Semantic Layer
-// Canonical Snapshot · Source of Truth · Chat WIP
+// PlannerAgent — Narrative UI Semantic Layer V2
+// Canonical Source of Truth
 // ============================================================
 //
 // PURPOSE
 // ------------------------------------------------------------
-// Transforms planner narrative cognition into
-// deterministic cockpit behavior semantics.
+// Transforms operational runtime cognition into
+// deterministic constitutional cockpit semantics.
 //
 // This layer DOES NOT:
-// - render UI
-// - generate frontend components
-// - control styling systems
+// - render frontend UI
+// - generate components
+// - define styling systems
 // - create animations
+// - infer frontend behavior
 //
 // This layer DOES:
-// - determine cockpit semantic mode
-// - determine visual pressure semantics
-// - determine interaction posture
-// - determine focus zones
-// - determine operational urgency behavior
+// - determine cockpit semantic posture
+// - determine governance visibility semantics
+// - determine constitutional pressure visibility
+// - determine operational focus dominance
+// - determine traceability visibility
+// - determine runtime interaction posture
 //
 // CORE PRINCIPLE
 // ------------------------------------------------------------
-// UI must emerge from operational reality,
-// not from frontend preferences.
+// Visual dominance must emerge from:
 //
-// Reality
-// → cognition
-// → narrative
-// → UI semantics
+// operational reality
+// governance pressure
+// reconciliation state
+// constitutional runtime posture
 //
 // NOT:
 //
-// frontend state
-// → guessed UX behavior
+// frontend assumptions
+// guessed UX behavior
+// arbitrary visualization choices
 //
 // ============================================================
 
 import type {
   PlannerNarrativeState,
-  ExecutionPosture,
   OperationalCondition,
 } from "./plannerNarrative";
 
 // ============================================================
-// UI SEMANTIC TYPES
+// COCKPIT TONE
 // ============================================================
 
 export type CockpitTone =
@@ -55,22 +56,39 @@ export type CockpitTone =
   | "ELEVATED"
   | "CRITICAL";
 
+// ============================================================
+// VISUAL PRESSURE
+// ============================================================
+
 export type VisualPressure =
   | "LOW"
   | "MEDIUM"
   | "HIGH";
 
+// ============================================================
+// FOCUS ZONE
+// ============================================================
+
 export type FocusZone =
   | "PLAN"
   | "REALITY"
   | "EXECUTION"
+  | "RECONCILIATION"
   | "GOVERNANCE"
-  | "RECONCILIATION";
+  | "GOVERNANCE_PRESSURE";
+
+// ============================================================
+// CHAT PRIORITY
+// ============================================================
 
 export type ChatPriority =
   | "NORMAL"
   | "IMPORTANT"
   | "URGENT";
+
+// ============================================================
+// INTERACTION POLICY
+// ============================================================
 
 export type InteractionPolicy =
   | "NORMAL"
@@ -78,10 +96,35 @@ export type InteractionPolicy =
   | "LOCK_EXECUTION"
   | "GUIDED_RECOVERY";
 
+// ============================================================
+// GOVERNANCE VISIBILITY
+// ============================================================
+
+export type GovernanceVisibilityMode =
+  | "HIDDEN"
+  | "PASSIVE"
+  | "PRESSURE_VISIBLE"
+  | "REVIEW_VISIBLE"
+  | "CONSTITUTIONAL_ALERT";
+
+// ============================================================
+// TRACE PRIORITY
+// ============================================================
+
+export type TracePriority =
+  | "NONE"
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH";
+
+// ============================================================
+// UI STATE
+// ============================================================
+
 export interface PlannerNarrativeUiState {
 
   // ----------------------------------------------------------
-  // Cockpit semantic state
+  // Cockpit semantics
   // ----------------------------------------------------------
 
   cockpitTone: CockpitTone;
@@ -99,7 +142,17 @@ export interface PlannerNarrativeUiState {
   interactionPolicy: InteractionPolicy;
 
   // ----------------------------------------------------------
-  // Semantic runtime flags
+  // Governance visibility
+  // ----------------------------------------------------------
+
+  governanceVisibility:
+    GovernanceVisibilityMode;
+
+  tracePriority:
+    TracePriority;
+
+  // ----------------------------------------------------------
+  // Runtime semantic flags
   // ----------------------------------------------------------
 
   executionHighlight: boolean;
@@ -149,6 +202,12 @@ function resolveFocusZone(
 ): FocusZone {
 
   if (
+    state.governanceState !== "NORMAL"
+  ) {
+    return "GOVERNANCE_PRESSURE";
+  }
+
+  if (
     state.reconciliationStatus === "FULL"
     || state.reconciliationStatus === "PARTIAL"
   ) {
@@ -165,12 +224,6 @@ function resolveFocusZone(
     state.executionActive
   ) {
     return "EXECUTION";
-  }
-
-  if (
-    state.governanceState !== "NORMAL"
-  ) {
-    return "GOVERNANCE";
   }
 
   return "PLAN";
@@ -230,6 +283,65 @@ function resolveInteractionPolicy(
 }
 
 // ============================================================
+// GOVERNANCE VISIBILITY
+// ============================================================
+
+function resolveGovernanceVisibility(
+  state: PlannerNarrativeState
+): GovernanceVisibilityMode {
+
+  if (
+    state.governanceState ===
+    "CONSTITUTIONAL_REVIEW_REQUIRED"
+  ) {
+    return "CONSTITUTIONAL_ALERT";
+  }
+
+  if (
+    state.governanceState !== "NORMAL"
+  ) {
+    return "REVIEW_VISIBLE";
+  }
+
+  if (
+    state.anomalyDetected
+  ) {
+    return "PRESSURE_VISIBLE";
+  }
+
+  return "PASSIVE";
+}
+
+// ============================================================
+// TRACE PRIORITY
+// ============================================================
+
+function resolveTracePriority(
+  state: PlannerNarrativeState
+): TracePriority {
+
+  if (
+    state.operationalCondition === "CRITICAL"
+  ) {
+    return "HIGH";
+  }
+
+  if (
+    state.pressureLevel === "HIGH"
+  ) {
+    return "MEDIUM";
+  }
+
+  if (
+    state.anomalyDetected
+  ) {
+    return "LOW";
+  }
+
+  return "NONE";
+}
+
+// ============================================================
 // MAIN BUILDER
 // ============================================================
 
@@ -265,6 +377,18 @@ export function buildPlannerNarrativeUiState(
 
     interactionPolicy:
       resolveInteractionPolicy(state),
+
+    // --------------------------------------------------------
+    // Governance semantics
+    // --------------------------------------------------------
+
+    governanceVisibility:
+      resolveGovernanceVisibility(
+        state
+      ),
+
+    tracePriority:
+      resolveTracePriority(state),
 
     // --------------------------------------------------------
     // Runtime semantic flags

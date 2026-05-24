@@ -2591,9 +2591,50 @@ executionAllowed
 });
 
 console.log(
-"RUNTIME_COGNITION",
-runtimeCognition
+  "RUNTIME_COGNITION",
+  runtimeCognition
 );
+
+// --------------------------------------------------
+// RUNTIME COGNITION → EXECUTION SEQUENCING ONLY
+// --------------------------------------------------
+
+if (
+  runtimeCognition.runtime.participationMode === "EXECUTION" &&
+  runtimeCognition.runtime.runtimeTrust >= 0.8 &&
+  selectedBest?.actions?.length
+) {
+  const correctionActionTypes =
+    new Set(
+      (correction.actions ?? []).map((a: any) =>
+        String(a.action)
+      )
+    );
+
+  selectedBest.actions =
+    selectedBest.actions.sort((a: any, b: any) => {
+      const aType = safeActionType(a);
+      const bType = safeActionType(b);
+
+      const aCorrection =
+        correctionActionTypes.has(aType) ? 1 : 0;
+
+      const bCorrection =
+        correctionActionTypes.has(bType) ? 1 : 0;
+
+      return bCorrection - aCorrection;
+    });
+
+  console.log("RUNTIME_COGNITION_SEQUENCING", {
+    runtimeTrust:
+      runtimeCognition.runtime.runtimeTrust,
+
+    reorderedActions:
+      selectedBest.actions.map((a: any) =>
+        safeActionType(a)
+      ),
+  });
+}
 
 const plannerCognition =
   buildPlannerCognition({
@@ -2721,6 +2762,40 @@ const governanceEmergence =
 console.log(
   "GOVERNANCE_EMERGENCE",
   governanceEmergence
+);
+
+
+
+// --------------------------------------------------
+// EFFECTIVE EXECUTION TRUST
+// --------------------------------------------------
+
+const effectiveExecutionTrust =
+Math.max(
+governanceEmergence
+?.trustDomains
+?.executionTrust ?? 0,
+
+runtimeCognition
+?.runtime
+?.runtimeTrust ?? 0
+);
+
+console.log(
+"EFFECTIVE_EXECUTION_TRUST",
+{
+governanceExecutionTrust:
+governanceEmergence
+?.trustDomains
+?.executionTrust,
+
+runtimeTrust:
+runtimeCognition
+?.runtime
+?.runtimeTrust,
+
+effectiveExecutionTrust
+}
 );
 
 
@@ -2878,7 +2953,19 @@ planner_narrative_state:plannerNarrativeState,
 planner_narrative: plannerNarrative,
 planner_narrative_ui: plannerNarrativeUiState,
 planner_narrative_policy: plannerNarrativePolicy,
-governance_emergence: governanceEmergence,
+governance_emergence: {
+
+...governanceEmergence,
+
+trustDomains:{
+
+...governanceEmergence.trustDomains,
+
+effectiveExecutionTrust
+
+}
+
+},
 
 replay: replayResult
   ? {

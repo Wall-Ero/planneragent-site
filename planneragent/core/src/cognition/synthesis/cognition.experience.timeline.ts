@@ -200,11 +200,18 @@ transferability
 ),
 
 state:
-resolveExperienceState(
+preserveExperienceState({
+
+previous:
+item.state,
+
 observations,
+
 confidence,
+
 transferability
-),
+
+}),
 
 updated_at:
 new Date()
@@ -303,6 +310,73 @@ return "EMERGING";
 }
 
 return "EPISODIC";
+
+}
+
+// ============================================================
+// EXPERIENCE PERSISTENCE
+// ============================================================
+
+function preserveExperienceState(
+params:{
+
+previous:ExperienceState;
+
+observations:number;
+
+confidence:number;
+
+transferability:number;
+
+}
+):ExperienceState{
+
+const computed=
+
+resolveExperienceState(
+params.observations,
+params.confidence,
+params.transferability
+);
+
+const rank:Record<
+ExperienceState,
+number
+>={
+
+EPISODIC:0,
+EMERGING:1,
+REPEATED:2,
+STABLE:3,
+STRUCTURAL:4
+
+};
+
+const previousRank=
+rank[
+params.previous
+];
+
+const computedRank=
+rank[
+computed
+];
+
+
+// --------------------------------------
+// Never downgrade acquired cognition
+// --------------------------------------
+
+if(
+computedRank<
+previousRank
+){
+
+return params.previous;
+
+}
+
+return computed;
 
 }
 

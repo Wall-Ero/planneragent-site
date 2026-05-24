@@ -2798,6 +2798,94 @@ effectiveExecutionTrust
 }
 );
 
+// --------------------------------------------------
+// RUNTIME COGNITION → CONFIDENCE ADAPTATION
+// Memory influences execution confidence,
+// never creates certainty.
+// --------------------------------------------------
+
+if (
+  effectiveExecutionTrust > 0.8 &&
+  correction.actions?.length
+) {
+  correction.actions =
+    correction.actions.map((a: any) => {
+      const baseConfidence =
+        Number(a.confidence ?? 0);
+
+      const boostedConfidence =
+        baseConfidence +
+        (
+          (1 - baseConfidence) *
+          effectiveExecutionTrust *
+          0.40
+        );
+
+      return {
+        ...a,
+
+        confidence:
+          Number(
+            Math.min(
+              0.99,
+              boostedConfidence
+            ).toFixed(3)
+          ),
+
+        confidence_before_runtime_cognition:
+          Number(baseConfidence.toFixed(3)),
+      };
+    });
+
+  console.log(
+    "RUNTIME_COGNITION_CONFIDENCE",
+    {
+      effectiveExecutionTrust,
+
+      adaptedActions:
+        correction.actions.map((a: any) => ({
+          action: a.action,
+          before:
+            a.confidence_before_runtime_cognition,
+          after:
+            a.confidence,
+        })),
+    }
+  );
+
+  console.log(
+"RUNTIME_COGNITION_EFFECT",
+{
+experience:
+runtimeCognition.runtime.experienceId,
+
+pattern:
+runtimeCognition.runtime.patternId,
+
+trust:
+runtimeCognition.runtime.runtimeTrust,
+
+confidenceDelta:
+correction.actions.map(
+(a:any)=>({
+
+action:a.action,
+
+delta:
+Number(
+(
+a.confidence -
+a.confidence_before_runtime_cognition
+).toFixed(3)
+)
+
+})
+)
+
+}
+);
+}
+
 
 // --------------------------------------------------
 // 🔥 DECISION MEMORY SNAPSHOT

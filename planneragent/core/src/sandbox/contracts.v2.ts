@@ -136,6 +136,40 @@ export interface SandboxEvaluateRequestV2 {
   bom_reference?: "MASTER" | "PLAN" | "REALITY";
 
   selected_bom_reference?: "MASTER" | "PLAN" | "REALITY";
+
+  cognition?:{
+
+  experiences:{
+
+    id:string;
+
+    patternId:string;
+
+    state:
+      | "EPISODIC"
+      | "EMERGING"
+      | "STABLE"
+      | "STRUCTURAL";
+
+    experienceConfidence:number;
+
+    transferability:number;
+
+    observedRealities:number;
+
+    observations:number;
+
+    successfulStabilizations:number;
+
+    failedStabilizations:number;
+
+    created_at:string;
+
+    updated_at:string;
+
+  }[];
+
+};
 }
 
 /* =====================================================

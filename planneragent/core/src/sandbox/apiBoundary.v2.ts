@@ -131,8 +131,9 @@ return {
 
   dataset_descriptor: normalizeDatasetDescriptor(body.dataset_descriptor),
 
-  // 👇 AGGIUNGI QUI
   behavior_override: body.behavior_override ?? undefined,
+
+  cognition: body.cognition ?? undefined,
 
   // pass-through datasets
   orders: body.orders ?? [],
@@ -192,6 +193,8 @@ export function parseSandboxEvaluateRequestV2(body: any): SandboxEvaluateRequest
     snapshot: body.snapshot,
 
     behavior_override: body.behavior_override ?? undefined,
+
+    cognition: body.cognition ?? undefined,
 
     // pass-through datasets
     orders: body.orders ?? [],

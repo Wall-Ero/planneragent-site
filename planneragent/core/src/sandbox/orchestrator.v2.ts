@@ -152,6 +152,14 @@ import {
   buildGovernanceEmergence,
 } from "../governance/emergence/governance.emergence.adapter";
 
+import {
+  buildRuntimeCognition
+} from "../cognition/runtime/runtime.cognition.integrator";
+
+import type {
+  CognitiveExperienceRecord
+} from "../cognition/synthesis/cognition.experience.timeline";
+
 
 
 
@@ -2545,6 +2553,48 @@ const learningQuality = anomalyCheck.anomaly ? "LOW" : "HIGH";
 console.log("DEBUG execution outcome:", execution?.outcome);
 console.log("DEBUG learningEligible:", learningEligible);
 
+  
+// --------------------------------------------------
+// RUNTIME COGNITION
+// --------------------------------------------------
+
+// source 1 → explicit cognition input
+const cognitionExperiences =
+(
+  req.cognition?.experiences ?? []
+) as CognitiveExperienceRecord[];
+
+
+// source 2 → future runtime enrichment
+// (decision memory → cognition bridge)
+const runtimeExperiences: CognitiveExperienceRecord[] = [
+  ...cognitionExperiences
+];
+
+console.log(
+"COGNITION_INPUT",
+JSON.stringify(
+runtimeExperiences,
+null,
+2
+)
+);
+
+const runtimeCognition =
+buildRuntimeCognition({
+
+experiences:
+runtimeExperiences,
+
+executionAllowed
+
+});
+
+console.log(
+"RUNTIME_COGNITION",
+runtimeCognition
+);
+
 const plannerCognition =
   buildPlannerCognition({
 
@@ -2804,6 +2854,7 @@ plan_source_debug: {
 },
 decision_pressure_debug: dp.breakdown,
 problem_type_debug: problemType,
+
 decision_trace: {
   ...decisionTrace,
   replay: replayResult
@@ -2814,6 +2865,9 @@ decision_trace: {
       }
     : null,
 },
+
+runtime_cognition:
+runtimeCognition,
 
 intelligence_trace: {
   count: intelligenceCollector.traces.length,

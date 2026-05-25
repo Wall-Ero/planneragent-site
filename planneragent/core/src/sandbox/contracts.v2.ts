@@ -7,6 +7,10 @@
 
 import type { DataAwarenessLevel } from "../reality/reality.types";
 
+import type {
+  AttentionSubscription
+} from "../attention/attention.types";
+
 /* =====================================================
  PLAN TIERS
 ===================================================== */
@@ -420,6 +424,16 @@ export interface SandboxEvaluateResponseV2 {
   reason?: string;
 
   policy_used?: import("../decision/policy/policy.schema.v1").PolicyRules;
+
+  attention?:{
+
+subscriptions:number;
+
+events:any[];
+
+notifications:any[];
+};
+
 }
 
 /* =====================================================
@@ -466,4 +480,10 @@ export type SignedSnapshotV1 = {
   };
 
   signature: string;
+
+  metadata?: {
+
+  attentionSubscriptions?: AttentionSubscription[];
+
+};
 };

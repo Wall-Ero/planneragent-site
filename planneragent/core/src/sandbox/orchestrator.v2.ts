@@ -160,6 +160,18 @@ import type {
   CognitiveExperienceRecord
 } from "../cognition/synthesis/cognition.experience.timeline";
 
+import {
+  evaluateAttentionSubscriptions
+} from "../attention/attention.engine";
+
+import {
+  buildAttentionNotificationPayloads
+} from "../attention/attention.notification.bridge";
+
+import type {
+  AttentionSubscription
+} from "../attention/attention.types";
+
 
 
 
@@ -2765,7 +2777,6 @@ console.log(
 );
 
 
-
 // --------------------------------------------------
 // EFFECTIVE EXECUTION TRUST
 // --------------------------------------------------
@@ -2970,6 +2981,106 @@ try {
   console.error("Decision memory write failed", err);
 }
 
+// --------------------------------------------------
+// WORKING ATTENTION
+// --------------------------------------------------
+//
+// PURPOSE
+// Human-guided operational focus.
+//
+// Attention:
+//
+// DOES NOT
+// - change reality
+// - change governance
+// - change optimizer
+// - authorize execution
+//
+// DOES
+// - observe selected runtime conditions
+// - generate focused operational events
+// - create notification payloads only when requested
+//
+// --------------------------------------------------
+
+const activeAttentionSubscriptions =
+  (
+    snapshot.metadata?.attentionSubscriptions ??
+    []
+  ) as AttentionSubscription[];
+
+const attentionResult =
+  evaluateAttentionSubscriptions({
+
+    subscriptions:
+      activeAttentionSubscriptions,
+
+    context: {
+
+      tenant_id:
+        "default",
+
+      company_id:
+        req.company_id,
+
+      context_id:
+        "supply_chain",
+
+      actor_id:
+        req.actor_id,
+
+      now_iso:
+        nowIso(),
+
+      signals,
+
+      governance,
+
+      execution,
+
+      reality,
+
+      plan: {
+        planningMode,
+        planState,
+        planSource,
+        planConfidence,
+        planCoherence,
+      },
+
+      previous_snapshot:
+        last,
+
+      current_snapshot:
+        decisionMemorySnapshot,
+    },
+  });
+
+const attentionNotifications =
+  buildAttentionNotificationPayloads(
+    attentionResult.triggered
+  );
+
+console.log(
+  "WORKING_ATTENTION",
+  {
+    subscriptions:
+      activeAttentionSubscriptions.length,
+
+    checked:
+      attentionResult.checked,
+
+    triggered:
+      attentionResult.triggered.length,
+
+    suppressed:
+      attentionResult.suppressed.length,
+
+    notifications:
+      attentionNotifications.length,
+  }
+);
+
   return {
     ok: true,
     request_id: req.request_id,
@@ -3053,6 +3164,28 @@ effectiveExecutionTrust
 
 }
 
+},
+
+
+attention:{
+
+subscriptions:
+activeAttentionSubscriptions.length,
+
+checked:
+attentionResult.checked,
+
+triggered:
+attentionResult.triggered,
+
+suppressed:
+attentionResult.suppressed,
+
+notifications:
+attentionNotifications,
+
+summary:
+attentionResult.summary
 },
 
 replay: replayResult

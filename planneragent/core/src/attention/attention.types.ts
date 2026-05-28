@@ -62,10 +62,12 @@ export type AttentionPriority =
   | "CRITICAL";
 
 export type AttentionStatus =
-  | "ACTIVE"
-  | "PAUSED"
-  | "EXPIRED"
-  | "DISABLED";
+| "ACTIVE"
+| "PAUSED"
+| "RESOLVED"
+| "OBSOLETE"
+| "EXPIRED"
+| "DISABLED";
 
 export type AttentionNoisePolicy =
   | "SILENT_UNLESS_TRIGGERED"

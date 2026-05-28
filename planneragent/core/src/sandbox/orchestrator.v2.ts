@@ -173,7 +173,21 @@ import type {
 } from "../attention/attention.types";
 
 
+import {
+  verifyRuntimeSnapshot,
+} from "../security/snapshot.verification";
 
+import {
+  resolveEncryptionPolicy,
+} from "../security/encryption.policy";
+
+import {
+  appendImmutableRecord,
+} from "../ledger/immutable.chain";
+
+import {
+  evaluateTenantBoundary,
+} from "../security/tenant.boundary";
 
 // ======================================================
 // TYPES / CONSTANTS
@@ -604,6 +618,64 @@ const intelligenceCollector =
   }
 
   const snapshot = req.snapshot as SignedSnapshotV1;
+
+  // ----------------------------------------------------
+// SNAPSHOT CONSTITUTIONAL VERIFICATION
+// ----------------------------------------------------
+
+const snapshotVerification =
+  await verifyRuntimeSnapshot({
+
+    snapshot,
+
+    secret:
+      env?.SNAPSHOT_HMAC_SECRET ??
+      "dev-secret",
+
+    sourceTenant:
+      snapshot.company_id ??
+      req.company_id,
+
+    targetTenant:
+      req.company_id,
+
+    maxSnapshotAgeMs:
+      1000 * 60 * 30,
+  });
+
+if (!snapshotVerification.valid) {
+
+  return {
+
+    ok: false,
+
+    request_id:
+      req.request_id,
+
+    reason:
+      "SNAPSHOT_VERIFICATION_FAILED",
+
+    security: {
+
+      layer:
+        "SNAPSHOT_VERIFICATION",
+
+      status:
+        snapshotVerification.status,
+
+      severity:
+        snapshotVerification.severity,
+
+      summary:
+        snapshotVerification.summary,
+
+      details:
+        snapshotVerification.reason,
+    },
+
+  } as any;
+}
+
   const auth = authoritySandboxGuard(snapshot);
   if (!auth.ok) {
     return {
@@ -613,6 +685,54 @@ const intelligenceCollector =
     } as any;
   }
 
+// ----------------------------------------------------
+// TENANT BOUNDARY ENFORCEMENT
+// ----------------------------------------------------
+
+const tenantBoundary =
+  evaluateTenantBoundary({
+
+    sourceTenant:
+      snapshot.company_id ??
+      req.company_id,
+
+    targetTenant:
+      req.company_id,
+
+    domain:
+      "COGNITION_SYNTHESIS",
+  });
+
+if (!tenantBoundary.allowed) {
+
+  return {
+
+    ok: false,
+
+    request_id:
+      req.request_id,
+
+    reason:
+      "TENANT_BOUNDARY_VIOLATION",
+
+    security: {
+
+      layer:
+        "TENANT_BOUNDARY",
+
+      severity:
+        "CRITICAL",
+
+      summary:
+        tenantBoundary.summary,
+
+      details:
+        tenantBoundary.reason,
+    },
+
+  } as any;
+}
+  
   // ----------------------------------------------------
 // MOVEMENT QUALITY ENGINE (CANONICAL)
 // ----------------------------------------------------
@@ -3078,6 +3198,75 @@ console.log(
 
     notifications:
       attentionNotifications.length,
+  }
+);
+
+// --------------------------------------------------
+// IMMUTABLE GOVERNANCE CHAIN
+// --------------------------------------------------
+
+const immutableGovernanceRecord =
+  await appendImmutableRecord({
+
+    tenant_id:
+      "default",
+
+    company_id:
+      req.company_id,
+
+    domain:
+      "GOVERNANCE",
+
+    encryption_domain:
+      "GOVERNANCE",
+
+    payload: {
+
+      request_id:
+        req.request_id,
+
+      plan:
+        req.plan,
+
+      intent:
+        req.intent,
+
+      governanceReason,
+
+      executionAllowed,
+
+      anomaly,
+
+      plannerNarrative:
+        plannerNarrative?.headline,
+
+      signals,
+
+      attention:
+        attentionResult.summary,
+    },
+
+    metadata: {
+
+      authority_level:
+        req.plan,
+
+      operation:
+        req.intent,
+    },
+  });
+
+console.log(
+  "IMMUTABLE_GOVERNANCE_CHAIN",
+  {
+    chain:
+      immutableGovernanceRecord.chain_id,
+
+    hash:
+      immutableGovernanceRecord.current_hash,
+
+    sequence:
+      immutableGovernanceRecord.sequence_number,
   }
 );
 

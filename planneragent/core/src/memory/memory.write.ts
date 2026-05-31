@@ -20,6 +20,47 @@ import type {
   DecisionMemorySnapshotV1
 } from "../decision-memory/snapshot/snapshot.types";
 
+import type {
+  EncryptionDomain,
+} from "../security/encryption.domains";
+
+import {
+  assertEncryptionPolicy,
+} from "../security/encryption.policy";
+
+// --------------------------------------------------
+// MEMORY → ENCRYPTION DOMAIN MAP
+// --------------------------------------------------
+
+function mapMemoryDomainToEncryptionDomain(
+  domain: string
+): EncryptionDomain {
+
+  switch (domain) {
+
+    case "DECISION":
+      return "DECISION_MEMORY";
+
+    case "EXECUTION":
+      return "EXECUTION_MEMORY";
+
+    case "AI_GOVERNANCE":
+      return "GOVERNANCE";
+
+    case "CHARTER":
+      return "CHARTER";
+
+    case "IMPROVEMENT":
+      return "GOVERNANCE";
+
+    case "OBSERVATION":
+      return "COGNITION_SYNTHESIS";
+
+    default:
+      return "COGNITION_SYNTHESIS";
+  }
+}
+
 export interface MemorySnapshotAdapter {
   appendSnapshot(input: {
     table: string;
@@ -113,6 +154,21 @@ export async function appendMemoryRecord(
       intent: input.intent
     }
   );
+
+  const encryptionDomain =
+  mapMemoryDomainToEncryptionDomain(
+    classified.domain
+  );
+
+  assertEncryptionPolicy({
+  domain:
+    encryptionDomain,
+  operation:
+    "WRITE",
+  tenant_id:
+    input.tenant_id ??
+    "default",
+});
 
   // --------------------------------------------------
   // GOVERNED WRITE

@@ -90,10 +90,17 @@ const tenantId =
   input.payload?.context?.tenantId ??
   input.payload?.company_id;
 
+if (!tenantId) {
+  throw new Error("MISSING_TENANT_ID");
+}
+
 const sourceRegion =
   input.payload?.context?.source_region ??
-  input.payload?.source_region ??
-  "EU";
+  input.payload?.source_region;
+
+if (!sourceRegion) {
+  throw new Error("MISSING_SOURCE_REGION");
+}
 
 const targetRegion =
   input.payload?.context?.target_region ??

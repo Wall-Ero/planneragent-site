@@ -42,6 +42,10 @@ import {
   getEncryptionDomainPolicy,
 } from "./encryption.domains";
 
+import {
+  createRuntimeGovernanceEvidence,
+} from "../governance/evidence/governance.evidence.runtime";
+
 // ============================================================
 // SOVEREIGNTY OPERATION
 // ============================================================
@@ -408,6 +412,30 @@ export function assertSovereigntyPolicy(
     evaluateSovereigntyPolicy(
       request
     );
+
+    createRuntimeGovernanceEvidence({
+
+  source:
+    "SOVEREIGNTY_POLICY",
+
+  allowed:
+    result.allowed,
+
+  tenant_id:
+    request.tenant_id,
+
+  domain:
+    request.domain,
+
+  severity:
+    result.severity,
+
+  reason:
+    result.reason,
+
+  summary:
+    result.summary,
+});
 
   if (!result.allowed) {
 

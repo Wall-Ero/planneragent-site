@@ -40,6 +40,12 @@ import {
   getEncryptionDomainPolicy,
 } from "./encryption.domains";
 
+import {
+  createRuntimeGovernanceEvidence,
+} from "../governance/evidence/governance.evidence.runtime";
+
+
+
 // ============================================================
 // ENCRYPTION OPERATION
 // ============================================================
@@ -366,6 +372,30 @@ export function assertEncryptionPolicy(
     resolveEncryptionPolicy(
       request
     );
+
+    createRuntimeGovernanceEvidence({
+
+  source:
+    "ENCRYPTION_POLICY",
+
+  allowed:
+    result.allowed,
+
+  tenant_id:
+    request.tenant_id,
+
+  domain:
+    request.domain,
+
+  severity:
+    result.severity,
+
+  reason:
+    result.reason,
+
+  summary:
+    result.summary,
+});
 
   if (!result.allowed) {
 

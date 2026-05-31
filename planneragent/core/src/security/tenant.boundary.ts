@@ -37,6 +37,10 @@ import {
   getEncryptionDomainPolicy,
 } from "./encryption.domains";
 
+import {
+  createRuntimeGovernanceEvidence,
+} from "../governance/evidence/governance.evidence.runtime";
+
 // ============================================================
 // TENANT ACCESS MODE
 // ============================================================
@@ -329,6 +333,30 @@ export function assertTenantBoundary(
     evaluateTenantBoundary(
       request
     );
+
+    createRuntimeGovernanceEvidence({
+
+  source:
+    "TENANT_BOUNDARY",
+
+  allowed:
+    result.allowed,
+
+  tenant_id:
+    request.sourceTenant,
+
+  domain:
+    request.domain,
+
+  severity:
+    result.severity,
+
+  reason:
+    result.reason,
+
+  summary:
+    result.summary,
+});
 
   if (!result.allowed) {
 

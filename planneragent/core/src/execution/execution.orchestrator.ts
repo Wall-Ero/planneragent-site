@@ -4,6 +4,11 @@ import { CAPABILITY_REGISTRY } from "./capability.registry";
 
 import type { CapabilityLevel } from "./capability.types";
 
+import {
+  assertSovereigntyPolicy,
+  type RuntimeLocality,
+} from "../security/sovereignty.policy";
+
 /* =====================================================
  TYPES — 🔥 CANONICAL CONTRACT
 ===================================================== */
@@ -77,8 +82,43 @@ export async function executeCapability(input: {
 
   const provider = capability.providers.primary;
 
-  try {
-    const result = await executeWithProvider(provider, input.payload);
+// ----------------------------------------------------
+// SOVEREIGNTY RUNTIME ENFORCEMENT
+// ----------------------------------------------------
+
+const tenantId =
+  input.payload?.context?.tenantId ??
+  input.payload?.company_id;
+
+const sourceRegion =
+  input.payload?.context?.source_region ??
+  input.payload?.source_region ??
+  "EU";
+
+const targetRegion =
+  input.payload?.context?.target_region ??
+  input.payload?.target_region ??
+  sourceRegion;
+
+const runtimeLocality: RuntimeLocality =
+  targetRegion === sourceRegion
+    ? "REGION_LOCAL"
+    : "GLOBAL_RUNTIME";
+
+assertSovereigntyPolicy({
+  domain: "EXECUTION_MEMORY",
+  operation: "EXECUTE",
+  tenant_id: tenantId,
+  source_region: sourceRegion,
+  target_region: targetRegion,
+  runtime_locality: runtimeLocality,
+  involves_authority: true,
+  involves_execution: true,
+  involves_cognition: false,
+});
+
+try {
+  const result = await executeWithProvider(provider, input.payload);
 
     return {
       status: "EXECUTED",
@@ -93,8 +133,21 @@ export async function executeCapability(input: {
     // ----------------------------------------------------
 
     for (const fallback of getFallbacks(capability.providers)) {
-      try {
-        const result = await executeWithProvider(fallback, input.payload);
+
+  assertSovereigntyPolicy({
+    domain: "EXECUTION_MEMORY",
+    operation: "EXECUTE",
+    tenant_id: tenantId,
+    source_region: sourceRegion,
+    target_region: targetRegion,
+    runtime_locality: runtimeLocality,
+    involves_authority: true,
+    involves_execution: true,
+    involves_cognition: false,
+  });
+
+  try {
+    const result = await executeWithProvider(fallback, input.payload);
 
         return {
           status: "EXECUTED",

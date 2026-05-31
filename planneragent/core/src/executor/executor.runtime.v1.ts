@@ -18,6 +18,11 @@ import {
 
 import "./agents/index";
 
+import {
+  assertSovereigntyPolicy,
+  type RuntimeLocality,
+} from "../security/sovereignty.policy";
+
 // ======================================================
 // TYPES
 // ======================================================
@@ -87,6 +92,44 @@ export async function executeRuntimeV1(
       traces.push(trace);
       continue;
     }
+
+    // --------------------------------------------------
+// SOVEREIGNTY RUNTIME ENFORCEMENT
+// --------------------------------------------------
+
+const tenantId = env.tenantId;
+
+if (!tenantId) {
+  throw new Error("MISSING_TENANT_ID");
+}
+
+const sourceRegion =
+  (env as any).source_region;
+
+if (!sourceRegion) {
+  throw new Error("MISSING_SOURCE_REGION");
+}
+
+const targetRegion =
+  (env as any).target_region ??
+  sourceRegion;
+
+const runtimeLocality: RuntimeLocality =
+  targetRegion === sourceRegion
+    ? "REGION_LOCAL"
+    : "GLOBAL_RUNTIME";
+
+assertSovereigntyPolicy({
+  domain: "EXECUTION_MEMORY",
+  operation: "EXECUTE",
+  tenant_id: tenantId,
+  source_region: sourceRegion,
+  target_region: targetRegion,
+  runtime_locality: runtimeLocality,
+  involves_authority: true,
+  involves_execution: true,
+  involves_cognition: false,
+});
 
     let agent: ExecutionAgent;
 

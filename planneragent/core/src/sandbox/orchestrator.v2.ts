@@ -570,7 +570,7 @@ function applyMemoryBias(
 // ======================================================
 
 export async function evaluateSandboxV2(
-  req: SandboxEvaluateRequestV2,
+    req: SandboxEvaluateRequestV2,
   env?: Env
 ): Promise<SandboxEvaluateResponseV2> {
 
@@ -619,72 +619,91 @@ const intelligenceCollector =
 
   const snapshot = req.snapshot as SignedSnapshotV1;
 
-  // ----------------------------------------------------
-// SNAPSHOT CONSTITUTIONAL VERIFICATION
+ // ----------------------------------------------------
+// CONSTITUTIONAL SNAPSHOT HARD GATE
 // ----------------------------------------------------
 
-const snapshotVerification =
-  await verifyRuntimeSnapshot({
+console.log("CONSTITUTIONAL_GATE_REACHED", {
+  request_id: req.request_id,
+  company_id: req.company_id,
+  snapshot_company_id: (snapshot as any)?.company_id,
+  signature: (snapshot as any)?.signature,
+});
 
-    snapshot,
+const snapshotSignature =
+  (snapshot as any)?.signature;
 
-    secret:
-      env?.SNAPSHOT_HMAC_SECRET ??
-      "dev-secret",
-
-    sourceTenant:
-      snapshot.company_id ??
-      req.company_id,
-
-    targetTenant:
-      req.company_id,
-
-    maxSnapshotAgeMs:
-      1000 * 60 * 30,
-  });
-
-if (!snapshotVerification.valid) {
-
+if (
+  !snapshotSignature ||
+  typeof snapshotSignature !== "string"
+) {
   return {
-
     ok: false,
-
-    request_id:
-      req.request_id,
-
-    reason:
-      "SNAPSHOT_VERIFICATION_FAILED",
-
+    request_id: req.request_id,
+    reason: "SNAPSHOT_VERIFICATION_FAILED",
     security: {
-
-      layer:
-        "SNAPSHOT_VERIFICATION",
-
-      status:
-        snapshotVerification.status,
-
-      severity:
-        snapshotVerification.severity,
-
-      summary:
-        snapshotVerification.summary,
-
-      details:
-        snapshotVerification.reason,
+      layer: "SNAPSHOT_VERIFICATION",
+      status: "MISSING_SIGNATURE",
+      severity: "CRITICAL",
+      executionBlocked: true,
     },
-
   } as any;
 }
 
-  const auth = authoritySandboxGuard(snapshot);
-  if (!auth.ok) {
-    return {
-      ok: false,
-      request_id: req.request_id,
-      reason: auth.reason,
-    } as any;
-  }
+if (
+  !/^[a-f0-9]{64}$/i.test(snapshotSignature)
+) {
+  return {
+    ok: false,
+    request_id: req.request_id,
+    reason: "SNAPSHOT_VERIFICATION_FAILED",
+    security: {
+      layer: "SNAPSHOT_VERIFICATION",
+      status: "INVALID_SIGNATURE_FORMAT",
+      severity: "CRITICAL",
+      executionBlocked: true,
+      signature: snapshotSignature,
+    },
+  } as any;
+}
 
+const snapshotSecret =
+  env?.SNAPSHOT_HMAC_SECRET;
+
+const snapshotVerification =
+  await verifyRuntimeSnapshot({
+    snapshot,
+    secret: snapshotSecret,
+    sourceTenant:
+      (snapshot as any).company_id ??
+      req.company_id,
+    targetTenant:
+      req.company_id,
+    expectedCompanyId:
+      req.company_id,
+    maxSnapshotAgeMs:
+      1000 * 60 * 30,
+  });
+  console.log(
+  "SNAPSHOT_VERIFICATION_RESULT",
+  JSON.stringify(snapshotVerification, null, 2)
+);
+
+if (!snapshotVerification.valid) {
+  return {
+    ok: false,
+    request_id: req.request_id,
+    reason: "SNAPSHOT_VERIFICATION_FAILED",
+    security: {
+      layer: "SNAPSHOT_VERIFICATION",
+      status: snapshotVerification.status,
+      severity: snapshotVerification.severity,
+      summary: snapshotVerification.summary,
+      details: snapshotVerification.reason,
+      executionBlocked: true,
+    },
+  } as any;
+}
 // ----------------------------------------------------
 // TENANT BOUNDARY ENFORCEMENT
 // ----------------------------------------------------

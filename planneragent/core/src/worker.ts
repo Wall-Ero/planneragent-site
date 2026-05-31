@@ -68,8 +68,15 @@ export default {
         return json({ ok: false, reason: "METHOD_NOT_ALLOWED" }, 405);
       }
 
-      const raw = await req.json();
+ const raw = await req.json() as any;
+
+console.log(
+  "CLIENT_SNAPSHOT_SIGNATURE",
+  raw.snapshot?.signature
+);
       const parsed = parseEdgeRequestV2(raw);
+
+      
 
       // --------------------------------------------
       // OAG VALIDATION
@@ -124,10 +131,9 @@ export default {
       // SIGN + VERIFY SNAPSHOT
       // --------------------------------------------
       const snapshot = await signSnapshotV1(
-        env.SNAPSHOT_HMAC_SECRET,
-        snapshotUnsigned
-      );
-
+  env.SNAPSHOT_HMAC_SECRET,
+  snapshotUnsigned
+);
       const valid = await verifySnapshotV1(
         env.SNAPSHOT_HMAC_SECRET,
         snapshot

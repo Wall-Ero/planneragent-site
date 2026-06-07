@@ -4,8 +4,7 @@
 //
 // PATH
 // ------------------------------------------------------------
-// core/src/cryptography/governance/__tests__/
-// cryptography.governance.threat-model.runner.ts
+// core/src/cryptography/governance/__tests__/cryptography.governance.threat-model.runner.ts
 //
 // STATUS
 // ------------------------------------------------------------

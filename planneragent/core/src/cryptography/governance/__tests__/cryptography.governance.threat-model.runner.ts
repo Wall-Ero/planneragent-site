@@ -36,7 +36,7 @@
 
 import {
   CRYPTOGRAPHIC_THREAT_MODEL,
-} from "../../cryptography.governance.threat-model";
+} from "../cryptography.governance.threat-model";
 
 // ============================================================
 // ASSERT

@@ -1,3 +1,5 @@
+
+// core/src/cryptography/infrastructure/__tests__/P9F.infrastructure.family.runner.ts
 // ============================================================
 // PlannerAgent
 // P9F Infrastructure Family Runner
@@ -5,8 +7,6 @@
 //
 // PATH
 // ------------------------------------------------------------
-// core/src/cryptography/infrastructure/__tests__/
-// P9F.infrastructure.family.runner.ts
 //
 // PURPOSE
 // ------------------------------------------------------------

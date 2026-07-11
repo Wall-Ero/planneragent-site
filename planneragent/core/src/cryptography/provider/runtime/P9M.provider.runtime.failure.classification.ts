@@ -24,6 +24,52 @@
 // Classify provider runtime failure
 // after P9L runtime verification.
 //
+// P9M receives:
+//
+// - ProviderRuntimeIntegrationResult
+// - ProviderRuntimeVerificationResult
+// - ProviderRuntimeFailureIntakeTranslationResult
+// - optional ProviderRuntimeRecoveryIntakeAssessmentResult
+//
+// P9M classifies runtime failure.
+//
+// P9M does not verify runtime.
+//
+// P9M does not decide retry.
+//
+// P9M does not decide recovery.
+//
+// P9M does not decide failover.
+//
+// P9M does not decide degradation.
+//
+// P9M does not decide stop.
+//
+// P9M does not execute recovery.
+//
+// P9M does not write evidence, ledger,
+// or audit.
+//
+// CORE PRINCIPLE
+// ------------------------------------------------------------
+// P9K prepares runtime intake.
+//
+// P9L verifies runtime outcome.
+//
+// P9M classifies runtime failure.
+//
+// P9N decides runtime response.
+//
+// P9O executes governed response.
+//
+// Runtime Not Verified
+// ≠
+// Runtime Failure Classified
+//
+// Failure Classified
+// ≠
+// Recovery Decided
+//
 // ============================================================
 
 import type {
@@ -70,7 +116,6 @@ export type ProviderRuntimeFailureClassificationDecision =
 export type ProviderRuntimeFailureClassificationDenialReason =
   | "RUNTIME_FAILURE_CLASSIFICATION_NOT_ALLOWED"
   | "RUNTIME_VERIFICATION_DENIED"
-  | "RUNTIME_FAILURE_CLASSIFICATION_NOT_REQUIRED"
   | "FAILURE_INTAKE_NOT_TRANSLATED"
   | "FAILURE_INTAKE_NOT_READY";
 
@@ -562,9 +607,6 @@ function buildNotRequiredResult(
 
     runtimeFailureClassificationNotRequired:
       true,
-
-    classificationDenialReason:
-      "RUNTIME_FAILURE_CLASSIFICATION_NOT_REQUIRED",
 
     classificationFailureReason:
       "RUNTIME_VERIFIED",

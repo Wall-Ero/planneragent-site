@@ -4,33 +4,33 @@
 
 ## Automatically generated repository state
 
-**Generated:** 2026-07-13 23:12:21 +02:00
+**Generated:** 2026-07-13 23:18:46 +02:00
 
 ### Git
 
 - Branch: `main`
-- HEAD: `aa117ed`
-- Full commit: `aa117ed8864f9d30e7544feadda8370bb2a42331`
+- HEAD: `08fd1d5`
+- Full commit: `08fd1d54d6a4f06dee157f39cc98895e8d63c793`
 - Working tree: **DIRTY**
 - Staged changes: 0
-- Unstaged changes: 3
-- Untracked entries: 3
-- Modified entries: 0
-- Added/untracked entries: 3
+- Unstaged changes: 1
+- Untracked entries: 0
+- Modified entries: 1
+- Added/untracked entries: 0
 - Deleted entries: 0
 - Renamed entries: 0
 
 Latest commit:
 
-- aa117ed | 2026-07-13T23:11:12+02:00 | chore(repo): stop tracking generated dependencies
+- 08fd1d5 | 2026-07-13T23:14:41+02:00 | docs(project-memory): establish repository-grounded continuity
 
 Recent commits:
 
+- 08fd1d5 - docs(project-memory): establish repository-grounded continuity
 - aa117ed - chore(repo): stop tracking generated dependencies
 - f5d9c85 - feat(p9v): bind provider cryptographic operations to runtime ledger facts
 - a1fc3d6 - feat(p9u): complete provider runtime cryptographic ledger binding
 - db9de86 - harden immutable governance chain integrity
-- 0a2d5d1 - feat(cryptography): complete provider runtime audit execution family
 
 ### Repository inventory
 
@@ -80,18 +80,17 @@ Complete the remaining PlannerAgent implementation required for an operational l
 
 ### Current focus
 
-Complete the minimal project-memory bootstrap, then determine the canonical responsibility of P9W from repository evidence before implementation begins.
+Validate the repository-grounded continuity workflow in a fresh session, then determine the canonical responsibility of the next development step after P9V.
 
 ### Next authorized step
 
-1. Commit the repository cleanup that removes `ui/node_modules` from Git tracking.
-2. Commit the minimal project-memory bootstrap.
-3. Start a fresh-session alignment test using repository access only.
+1. Commit this final current-state update.
+2. Open a fresh development session with repository access.
+3. Require the new session to reconstruct the current state using `AGENTS.md`, `CURRENT_STATE.md`, the repository tree, Git history, and relevant source files.
 4. Inspect the existing P9 provider-runtime family and determine the canonical responsibility of the next development step after P9V.
 
 ### Current blockers
 
-- Project-memory bootstrap is not yet committed.
 - P9W responsibility has not yet been derived and approved from existing repository evidence.
 
 ### Decisions not inferable from the repository
@@ -101,6 +100,7 @@ Complete the minimal project-memory bootstrap, then determine the canonical resp
 - Repository evidence has priority over conversational memory.
 - New abstractions must not be proposed before checking whether the responsibility already exists.
 - P9U and P9V are complete and committed; they must not be reopened without concrete repository evidence of a defect.
+- The project-memory bootstrap is complete and operational.
 
 ### Maintenance rule
 
@@ -108,5 +108,4 @@ Only edit the `Founder-maintained intent` section manually.
 
 Never edit content between `AUTO:START` and `AUTO:END`.
 That block is regenerated automatically.
-
 

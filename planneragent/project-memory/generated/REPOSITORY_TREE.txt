@@ -236,6 +236,7 @@ core/src/cryptography/provider/runtime/__tests__/P9T.provider.runtime.family.run
 core/src/cryptography/provider/runtime/__tests__/P9U.provider.runtime.cryptographic.ledger.binding.chain.verification.runner.ts
 core/src/cryptography/provider/runtime/__tests__/P9U.provider.runtime.family.runner.ts
 core/src/cryptography/provider/runtime/__tests__/P9V.provider.cryptographic.operation.binding.runner.ts
+core/src/cryptography/provider/runtime/__tests__/P9W.provider.cryptographic.attestation.verification.admission.runner.ts
 core/src/cryptography/provider/runtime/P9L.provider.runtime.verification.ts
 core/src/cryptography/provider/runtime/P9M.provider.runtime.failure.classification.ts
 core/src/cryptography/provider/runtime/P9N.provider.runtime.response.decision.ts
@@ -247,6 +248,7 @@ core/src/cryptography/provider/runtime/P9S.provider.runtime.ledger.integrity.aud
 core/src/cryptography/provider/runtime/P9T.provider.runtime.audit.execution.audit.record.write.ts
 core/src/cryptography/provider/runtime/P9U.provider.runtime.cryptographic.ledger.binding.chain.verification.ts
 core/src/cryptography/provider/runtime/P9V.provider.cryptographic.operation.binding.ts
+core/src/cryptography/provider/runtime/P9W.provider.cryptographic.attestation.verification.admission.ts
 core/src/cryptography/provider/runtime-integration/__tests__/P9K.provider.runtime.failure.intake.translation.runner.ts
 core/src/cryptography/provider/runtime-integration/__tests__/P9K.provider.runtime.integration.family.runner.ts
 core/src/cryptography/provider/runtime-integration/__tests__/P9K.provider.runtime.recovery.intake.assessment.runner.ts

@@ -4,39 +4,39 @@
 
 ## Automatically generated repository state
 
-**Generated:** 2026-07-13 23:18:46 +02:00
+**Generated:** 2026-07-21 20:33:42 +02:00
 
 ### Git
 
 - Branch: `main`
-- HEAD: `08fd1d5`
-- Full commit: `08fd1d54d6a4f06dee157f39cc98895e8d63c793`
+- HEAD: `9a87fcc`
+- Full commit: `9a87fccfc1c526821dd9e976cc22b616cb9d09af`
 - Working tree: **DIRTY**
 - Staged changes: 0
-- Unstaged changes: 1
+- Unstaged changes: 2
 - Untracked entries: 0
-- Modified entries: 1
+- Modified entries: 2
 - Added/untracked entries: 0
 - Deleted entries: 0
 - Renamed entries: 0
 
 Latest commit:
 
-- 08fd1d5 | 2026-07-13T23:14:41+02:00 | docs(project-memory): establish repository-grounded continuity
+- 9a87fcc | 2026-07-14T00:24:46+02:00 | feat(p9w): admit provider cryptographic attestations against operation bindings
 
 Recent commits:
 
+- 9a87fcc - feat(p9w): admit provider cryptographic attestations against operation bindings
+- 34d0c0d - docs(project-memory): align state after bootstrap
 - 08fd1d5 - docs(project-memory): establish repository-grounded continuity
 - aa117ed - chore(repo): stop tracking generated dependencies
 - f5d9c85 - feat(p9v): bind provider cryptographic operations to runtime ledger facts
-- a1fc3d6 - feat(p9u): complete provider runtime cryptographic ledger binding
-- db9de86 - harden immutable governance chain integrity
 
 ### Repository inventory
 
-- Indexed PlannerAgent paths: 738
-- TypeScript/JavaScript source paths: 651
-- Test/runner paths: 128
+- Indexed PlannerAgent paths: 740
+- TypeScript/JavaScript source paths: 653
+- Test/runner paths: 129
 - SQL paths: 21
 - JSON paths: 28
 - Repository tree: `project-memory/generated/REPOSITORY_TREE.txt`
@@ -62,6 +62,7 @@ Recent commits:
 - **P9T** — 1 source file(s), 2 runner/test file(s)
 - **P9U** — 1 source file(s), 2 runner/test file(s)
 - **P9V** — 1 source file(s), 1 runner/test file(s)
+- **P9W** — 1 source file(s), 1 runner/test file(s)
 
 Presence in the repository does not by itself prove successful verification.
 Runner results and Git history must still be inspected before declaring a family complete.
@@ -108,4 +109,5 @@ Only edit the `Founder-maintained intent` section manually.
 
 Never edit content between `AUTO:START` and `AUTO:END`.
 That block is regenerated automatically.
+
 

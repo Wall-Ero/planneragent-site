@@ -16,6 +16,8 @@ Use sources in this order:
 
 Conversation memory is supplementary and must never override current repository evidence.
 
+---
+
 ## Mandatory startup sequence
 
 Before answering any PlannerAgent development question:
@@ -30,6 +32,8 @@ Before answering any PlannerAgent development question:
 8. Read related tests, runners, and end-to-end integrations
 9. Only then propose or modify code
 
+---
+
 ## Repository reality principle
 
 The repository is the source of truth for what has been implemented.
@@ -40,6 +44,8 @@ Do not assume that something is implemented merely because it was discussed prev
 
 Always verify directly in the repository.
 
+---
+
 ## Minimum reading principle
 
 Read the smallest set of repository files sufficient to answer correctly.
@@ -47,6 +53,8 @@ Read the smallest set of repository files sufficient to answer correctly.
 Do not read the whole repository without need.
 
 Do not answer from memory when repository evidence is available.
+
+---
 
 ## Semantic reading rule
 
@@ -81,6 +89,8 @@ Distinguish clearly between:
 - inferred architectural meaning
 - planned or deferred behavior
 
+---
+
 ## Architectural boundary rule
 
 Preserve existing family boundaries.
@@ -91,10 +101,12 @@ Do not create parallel abstractions when an existing family already owns the res
 
 Before creating a new file or family:
 
-1. Search the repository tree
-2. Search by domain name, responsibility, terminology, and exports
-3. Read any potentially overlapping implementation
-4. Verify that the capability does not already exist
+1. Search the repository tree.
+2. Search by domain name, responsibility, terminology and exports.
+3. Read any potentially overlapping implementation.
+4. Verify that the capability does not already exist.
+
+---
 
 ## PlannerAgent product doctrine
 
@@ -102,7 +114,7 @@ PlannerAgent is an authority layer.
 
 It begins from operational reality.
 
-It helps organizations observe, govern, authorize, delegate, execute, and verify operational decisions across systems, teams, workflows, tools, and AI participation.
+It helps organizations observe, govern, authorize, delegate, execute and verify operational decisions across systems, teams, workflows, tools and AI participation.
 
 Human intent must remain in control.
 
@@ -118,11 +130,15 @@ Mechanisms execute.
 
 The implementation must remain aligned with the founder-approved FAQ.
 
+---
+
 ## Fail-closed rule
 
-Incomplete, ambiguous, malformed, unauthorized, incoherent, cross-boundary, or unverifiable states must be rejected unless an existing canonical contract explicitly defines otherwise.
+Incomplete, ambiguous, malformed, unauthorized, incoherent, cross-boundary or unverifiable states must be rejected unless an existing canonical contract explicitly defines otherwise.
 
-Missing evidence must not be interpreted as authorization.
+Missing evidence must never be interpreted as authorization.
+
+---
 
 ## Immutability and lineage
 
@@ -141,19 +157,23 @@ Preserve:
 - audit lineage
 - cryptographic lineage
 
+---
+
 ## Development completion sequence
 
 A development unit is not complete until all applicable steps are finished:
 
 1. Implementation
 2. Dedicated runner or test
-3. Family runner
-4. End-to-end integration
+3. Family runner (when applicable)
+4. End-to-end integration (when applicable)
 5. Direct verification of negative boundaries
 6. `git diff` review
-7. Repository tree regeneration
-8. `CURRENT_STATE.md` update
-9. Focused commit
+7. Focused implementation commit
+
+Repository continuity refresh is performed only when an architectural milestone has been completed.
+
+---
 
 ## Current-state discipline
 
@@ -169,11 +189,30 @@ A development unit is not complete until all applicable steps are finished:
 
 Keep it concise and current.
 
+Do not duplicate information already recoverable from the repository or Git history.
+
+---
+
+## Repository continuity maintenance
+
+Whenever a complete architectural milestone is committed (for example, completion of a P-family), regenerate:
+
+- `project-memory/generated/REPOSITORY_TREE.txt`
+- `project-memory/state/CURRENT_STATE.md`
+
+Review the generated changes before committing them.
+
+Commit the repository continuity refresh separately from the implementation milestone whenever practical.
+
+Do not regenerate repository continuity artifacts after ordinary implementation commits.
+
+---
+
 ## Prohibited behavior
 
 Do not:
 
-- reconstruct implementation state primarily from chat history
+- reconstruct implementation state primarily from conversation history
 - ask the user to reattach files that are already accessible in the repository
 - propose a new abstraction before checking for an existing one
 - treat planned work as implemented
@@ -181,7 +220,9 @@ Do not:
 - change product doctrine without explicit founder approval
 - redesign completed architecture without explicit approval
 - mix unrelated architectural families in one commit
-- include `node_modules`, build output, coverage, or generated dependencies in commits
+- include `node_modules`, build output, coverage or generated dependencies in commits
+
+---
 
 ## Response discipline
 
@@ -193,5 +234,12 @@ When resuming development, report:
 - existing implementation relevant to the request
 - next permitted action
 - architectural constraints that must be preserved
+
+Clearly distinguish between:
+
+- verified repository evidence
+- architectural inference
+- planned work
+- user instructions
 
 Do not begin code changes until repository evidence has been examined.

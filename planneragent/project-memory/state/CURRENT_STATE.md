@@ -4,38 +4,38 @@
 
 ## Automatically generated repository state
 
-**Generated:** 2026-07-21 20:33:42 +02:00
+**Generated:** 2026-07-22 18:51:06 +02:00
 
 ### Git
 
 - Branch: `main`
-- HEAD: `9a87fcc`
-- Full commit: `9a87fccfc1c526821dd9e976cc22b616cb9d09af`
+- HEAD: `24fbdc0`
+- Full commit: `24fbdc0c8d80c1b2b25a7c54f48f1233a05160f8`
 - Working tree: **DIRTY**
 - Staged changes: 0
 - Unstaged changes: 2
-- Untracked entries: 0
-- Modified entries: 2
-- Added/untracked entries: 0
+- Untracked entries: 1
+- Modified entries: 1
+- Added/untracked entries: 1
 - Deleted entries: 0
 - Renamed entries: 0
 
 Latest commit:
 
-- 9a87fcc | 2026-07-14T00:24:46+02:00 | feat(p9w): admit provider cryptographic attestations against operation bindings
+- 24fbdc0 | 2026-07-22T18:50:36+02:00 | feat(p9v): introduce deterministic canonicalization capability
 
 Recent commits:
 
+- 24fbdc0 - feat(p9v): introduce deterministic canonicalization capability
+- ff63328 - docs(agents): improve document structure
+- 3f64431 - docs(project-memory): refresh state after p9w
 - 9a87fcc - feat(p9w): admit provider cryptographic attestations against operation bindings
 - 34d0c0d - docs(project-memory): align state after bootstrap
-- 08fd1d5 - docs(project-memory): establish repository-grounded continuity
-- aa117ed - chore(repo): stop tracking generated dependencies
-- f5d9c85 - feat(p9v): bind provider cryptographic operations to runtime ledger facts
 
 ### Repository inventory
 
-- Indexed PlannerAgent paths: 740
-- TypeScript/JavaScript source paths: 653
+- Indexed PlannerAgent paths: 741
+- TypeScript/JavaScript source paths: 654
 - Test/runner paths: 129
 - SQL paths: 21
 - JSON paths: 28
@@ -61,7 +61,7 @@ Recent commits:
 - **P9S** — 1 source file(s), 2 runner/test file(s)
 - **P9T** — 1 source file(s), 2 runner/test file(s)
 - **P9U** — 1 source file(s), 2 runner/test file(s)
-- **P9V** — 1 source file(s), 1 runner/test file(s)
+- **P9V** — 2 source file(s), 1 runner/test file(s)
 - **P9W** — 1 source file(s), 1 runner/test file(s)
 
 Presence in the repository does not by itself prove successful verification.
@@ -81,18 +81,17 @@ Complete the remaining PlannerAgent implementation required for an operational l
 
 ### Current focus
 
-Validate the repository-grounded continuity workflow in a fresh session, then determine the canonical responsibility of the next development step after P9V.
+Phase 1 is complete: P9V now owns one repository-internal deterministic canonicalization capability that produces the exact canonical UTF-8 bytes consumed by the existing P9V binding digest pipeline.
 
 ### Next authorized step
 
-1. Commit this final current-state update.
-2. Open a fresh development session with repository access.
-3. Require the new session to reconstruct the current state using `AGENTS.md`, `CURRENT_STATE.md`, the repository tree, Git history, and relevant source files.
-4. Inspect the existing P9 provider-runtime family and determine the canonical responsibility of the next development step after P9V.
+Phase 2 — Verification Material Infrastructure Control.
+
+Do not begin Phase 2 until a new architectural and implementation review has been provided.
 
 ### Current blockers
 
-- P9W responsibility has not yet been derived and approved from existing repository evidence.
+- Phase 2 implementation is awaiting the required architectural and implementation review.
 
 ### Decisions not inferable from the repository
 
@@ -100,7 +99,11 @@ Validate the repository-grounded continuity workflow in a fresh session, then de
 - Project-memory must remain minimal and must not become a parallel development project.
 - Repository evidence has priority over conversational memory.
 - New abstractions must not be proposed before checking whether the responsibility already exists.
-- P9U and P9V are complete and committed; they must not be reopened without concrete repository evidence of a defect.
+- Phase 1 is complete and committed as `24fbdc0`.
+- The Architecture Freeze is approved: architecture, ownership and boundaries must remain unchanged.
+- P9V owns canonical operation-binding normalization and canonical UTF-8 byte production through one repository-internal deterministic pipeline.
+- The official TypeScript baseline remains 83 pre-existing failures in 37 files and must not be worsened or corrected outside authorized scope.
+- P9U, P9V and P9W must not be reopened or semantically changed without explicit authorization or concrete repository evidence of a defect.
 - The project-memory bootstrap is complete and operational.
 
 ### Maintenance rule
@@ -109,5 +112,3 @@ Only edit the `Founder-maintained intent` section manually.
 
 Never edit content between `AUTO:START` and `AUTO:END`.
 That block is regenerated automatically.
-
-

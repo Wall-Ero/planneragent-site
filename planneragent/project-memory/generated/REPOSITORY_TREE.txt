@@ -247,6 +247,7 @@ core/src/cryptography/provider/runtime/P9R.provider.runtime.evidence.persistence
 core/src/cryptography/provider/runtime/P9S.provider.runtime.ledger.integrity.audit.admission.ts
 core/src/cryptography/provider/runtime/P9T.provider.runtime.audit.execution.audit.record.write.ts
 core/src/cryptography/provider/runtime/P9U.provider.runtime.cryptographic.ledger.binding.chain.verification.ts
+core/src/cryptography/provider/runtime/P9V.provider.cryptographic.operation.binding.canonicalization.internal.ts
 core/src/cryptography/provider/runtime/P9V.provider.cryptographic.operation.binding.ts
 core/src/cryptography/provider/runtime/P9W.provider.cryptographic.attestation.verification.admission.ts
 core/src/cryptography/provider/runtime-integration/__tests__/P9K.provider.runtime.failure.intake.translation.runner.ts

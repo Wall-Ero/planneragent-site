@@ -67,13 +67,22 @@
 import assert from "node:assert/strict";
 
 import {
+  createHash,
+} from "node:crypto";
+
+import {
   bindProviderCryptographicOperation,
 } from "../P9V.provider.cryptographic.operation.binding";
+
+import {
+  canonicalizeProviderCryptographicOperationBindingToUtf8Bytes,
+} from "../P9V.provider.cryptographic.operation.binding.canonicalization.internal";
 
 import type {
   ProviderCryptographicArtifactIdentity,
   ProviderCryptographicOperationBindingInput,
   ProviderCryptographicOperationBindingResult,
+  ProviderCryptographicOperationCanonicalBinding,
   ProviderCryptographicOperationFact,
 } from "../P9V.provider.cryptographic.operation.binding";
 
@@ -1908,6 +1917,83 @@ function runDeterministicDigestChecks(): void {
 
 
 // ============================================================
+// CANONICAL UTF-8 BYTE CHECKS
+// ============================================================
+
+function runCanonicalUtf8ByteChecks(
+  result:
+    ProviderCryptographicOperationBindingResult
+): void {
+
+  assertBound(
+    result,
+    "canonical UTF-8 byte checks"
+  );
+
+  const canonicalBinding =
+    result.canonicalBinding as
+      ProviderCryptographicOperationCanonicalBinding;
+
+  const canonicalBindingBefore =
+    cloneValue(
+      canonicalBinding
+    );
+
+  const firstBytes =
+    canonicalizeProviderCryptographicOperationBindingToUtf8Bytes(
+      canonicalBinding
+    );
+
+  const secondBytes =
+    canonicalizeProviderCryptographicOperationBindingToUtf8Bytes(
+      canonicalBinding
+    );
+
+  assert.deepEqual(
+    firstBytes,
+    secondBytes,
+    "same canonical binding produces same canonical UTF-8 bytes"
+  );
+
+  assert.notStrictEqual(
+    firstBytes,
+    secondBytes,
+    "canonical UTF-8 byte results are independent values"
+  );
+
+  const digestFromCanonicalBytes =
+    createHash(
+      "sha256"
+    )
+      .update(
+        firstBytes
+      )
+      .digest(
+        "hex"
+      );
+
+  assert.equal(
+    digestFromCanonicalBytes,
+    result.cryptographicOperationBindingDigest,
+    "canonical UTF-8 bytes produce the P9V binding digest"
+  );
+
+  assert.deepEqual(
+    canonicalBinding,
+    canonicalBindingBefore,
+    "canonical UTF-8 byte production does not mutate its input"
+  );
+
+  pass("same binding produces same canonical UTF-8 bytes");
+  pass("canonical UTF-8 bytes produce the P9V binding digest");
+  pass("canonical UTF-8 byte production is deterministic");
+  pass("canonical UTF-8 byte production preserves its input");
+  pass("P9V canonicalization remains the single digest source");
+
+}
+
+
+// ============================================================
 // CONTEXT PROPAGATION CHECKS
 // ============================================================
 
@@ -2295,6 +2381,10 @@ function main(): void {
   );
 
   runDeterministicDigestChecks();
+
+  runCanonicalUtf8ByteChecks(
+    happyPath
+  );
 
   runContextPropagationChecks(
     happyPath

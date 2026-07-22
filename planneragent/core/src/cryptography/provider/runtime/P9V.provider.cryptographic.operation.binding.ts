@@ -103,6 +103,10 @@ import {
   createHash,
 } from "node:crypto";
 
+import {
+  canonicalizeProviderCryptographicOperationBindingToUtf8Bytes,
+} from "./P9V.provider.cryptographic.operation.binding.canonicalization.internal";
+
 import type {
   ProviderRuntimeCryptographicLedgerBindingResult,
 } from "./P9U.provider.runtime.cryptographic.ledger.binding.chain.verification";
@@ -1168,102 +1172,6 @@ function cryptographicOperationKindIsCoherent(
 
 
 // ============================================================
-// CANONICAL VALUE NORMALIZATION
-// ============================================================
-//
-// The canonical serializer:
-//
-// - sorts object keys recursively
-// - preserves array order
-// - preserves primitive values
-// - omits undefined object properties
-//
-// P9V hashes the canonical binding representation.
-//
-// This digest proves deterministic binding integrity.
-//
-// It does not prove provider authenticity or signer identity.
-//
-// ============================================================
-
-function normalizeCanonicalValue(
-  value:
-    unknown
-): unknown {
-
-  if (Array.isArray(value)) {
-
-    return value.map(
-      item =>
-        normalizeCanonicalValue(
-          item
-        )
-    );
-
-  }
-
-  if (
-    value &&
-    typeof value === "object"
-  ) {
-
-    const source =
-      value as Record<string, unknown>;
-
-    const normalized:
-      Record<string, unknown> = {};
-
-    const keys =
-      Object.keys(
-        source
-      ).sort();
-
-    for (const key of keys) {
-
-      const item =
-        source[key];
-
-      if (item === undefined) {
-
-        continue;
-
-      }
-
-      normalized[key] =
-        normalizeCanonicalValue(
-          item
-        );
-
-    }
-
-    return normalized;
-
-  }
-
-  return value;
-
-}
-
-
-// ============================================================
-// CANONICAL SERIALIZATION
-// ============================================================
-
-function serializeCanonicalBinding(
-  binding:
-    ProviderCryptographicOperationCanonicalBinding
-): string {
-
-  return JSON.stringify(
-    normalizeCanonicalValue(
-      binding
-    )
-  );
-
-}
-
-
-// ============================================================
 // BINDING DIGEST
 // ============================================================
 
@@ -1278,10 +1186,9 @@ function createBindingDigest(
       "sha256"
     )
       .update(
-        serializeCanonicalBinding(
+        canonicalizeProviderCryptographicOperationBindingToUtf8Bytes(
           binding
-        ),
-        "utf8"
+        )
       )
       .digest(
         "hex"

@@ -4,13 +4,13 @@
 
 ## Automatically generated repository state
 
-**Generated:** 2026-07-22 18:51:06 +02:00
+**Generated:** 2026-07-22 19:11:08 +02:00
 
 ### Git
 
 - Branch: `main`
-- HEAD: `24fbdc0`
-- Full commit: `24fbdc0c8d80c1b2b25a7c54f48f1233a05160f8`
+- HEAD: `04dabca`
+- Full commit: `04dabca169424f00da57a66f8ef9c7405d242839`
 - Working tree: **DIRTY**
 - Staged changes: 0
 - Unstaged changes: 2
@@ -22,21 +22,21 @@
 
 Latest commit:
 
-- 24fbdc0 | 2026-07-22T18:50:36+02:00 | feat(p9v): introduce deterministic canonicalization capability
+- 04dabca | 2026-07-22T19:10:57+02:00 | feat(crypto): introduce verification material infrastructure control
 
 Recent commits:
 
+- 04dabca - feat(crypto): introduce verification material infrastructure control
+- a830950 - docs(project-memory): record p9v phase 1 completion
 - 24fbdc0 - feat(p9v): introduce deterministic canonicalization capability
 - ff63328 - docs(agents): improve document structure
 - 3f64431 - docs(project-memory): refresh state after p9w
-- 9a87fcc - feat(p9w): admit provider cryptographic attestations against operation bindings
-- 34d0c0d - docs(project-memory): align state after bootstrap
 
 ### Repository inventory
 
-- Indexed PlannerAgent paths: 741
-- TypeScript/JavaScript source paths: 654
-- Test/runner paths: 129
+- Indexed PlannerAgent paths: 743
+- TypeScript/JavaScript source paths: 656
+- Test/runner paths: 130
 - SQL paths: 21
 - JSON paths: 28
 - Repository tree: `project-memory/generated/REPOSITORY_TREE.txt`
@@ -81,17 +81,17 @@ Complete the remaining PlannerAgent implementation required for an operational l
 
 ### Current focus
 
-Phase 1 is complete: P9V now owns one repository-internal deterministic canonicalization capability that produces the exact canonical UTF-8 bytes consumed by the existing P9V binding digest pipeline.
+Phase 2 is complete: Verification Material Infrastructure Control owns deterministic, fail-closed resolution of immutable verification-material references without performing evaluation.
 
 ### Next authorized step
 
-Phase 2 — Verification Material Infrastructure Control.
+Phase 3 — Mathematical Verification.
 
-Do not begin Phase 2 until a new architectural and implementation review has been provided.
+Complete the repository-first architectural and integration analysis, then wait for review before beginning Phase 3 implementation.
 
 ### Current blockers
 
-- Phase 2 implementation is awaiting the required architectural and implementation review.
+- Phase 3 implementation is awaiting review and explicit authorization after the repository-first analysis.
 
 ### Decisions not inferable from the repository
 
@@ -100,9 +100,14 @@ Do not begin Phase 2 until a new architectural and implementation review has bee
 - Repository evidence has priority over conversational memory.
 - New abstractions must not be proposed before checking whether the responsibility already exists.
 - Phase 1 is complete and committed as `24fbdc0`.
+- Phase 2 is complete and committed as `04dabca`.
 - The Architecture Freeze is approved: architecture, ownership and boundaries must remain unchanged.
 - P9V owns canonical operation-binding normalization and canonical UTF-8 byte production through one repository-internal deterministic pipeline.
+- Verification Material Infrastructure Control owns material resolution only; resolution must remain separate from mathematical evaluation.
 - The official TypeScript baseline remains 83 pre-existing failures in 37 files and must not be worsened or corrected outside authorized scope.
+- Mechanisms is the exclusive owner of Mathematical Verification.
+- Governance and Trust Admission remain outside Phase 3.
+- P9X Authenticity Certification remains outside Phase 3.
 - P9U, P9V and P9W must not be reopened or semantically changed without explicit authorization or concrete repository evidence of a defect.
 - The project-memory bootstrap is complete and operational.
 

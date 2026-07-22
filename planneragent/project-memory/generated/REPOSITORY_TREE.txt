@@ -159,6 +159,7 @@ core/src/cryptography/infrastructure/__tests__/cryptography.infrastructure.provi
 core/src/cryptography/infrastructure/__tests__/cryptography.infrastructure.recovery.runner.ts
 core/src/cryptography/infrastructure/__tests__/cryptography.infrastructure.usage.runner.ts
 core/src/cryptography/infrastructure/__tests__/P9F.infrastructure.family.runner.ts
+core/src/cryptography/infrastructure/__tests__/verification.material.infrastructure.control.runner.ts
 core/src/cryptography/infrastructure/cryptography.infrastructure.accessControl.ts
 core/src/cryptography/infrastructure/cryptography.infrastructure.assessment.ts
 core/src/cryptography/infrastructure/cryptography.infrastructure.policy.ts
@@ -171,6 +172,7 @@ core/src/cryptography/infrastructure/P9F.key.rotation.infrastructure.policy.ts
 core/src/cryptography/infrastructure/P9F.key.rotation.infrastructure.provisioning.ts
 core/src/cryptography/infrastructure/P9F.key.rotation.infrastructure.recovery.ts
 core/src/cryptography/infrastructure/P9F.key.rotation.infrastructure.usage.ts
+core/src/cryptography/infrastructure/verification.material.infrastructure.control.ts
 core/src/cryptography/mechanisms/__tests__/cryptography.mechanism.assessment.runner.ts
 core/src/cryptography/mechanisms/__tests__/cryptography.verification.runner.ts
 core/src/cryptography/mechanisms/cryptography.execution.runtime.ts

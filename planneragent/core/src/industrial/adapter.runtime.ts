@@ -48,6 +48,11 @@ export type AdapterExecutionResult =
       capability_id: string;
       connector_id: string;
       connector_identity_id: string;
+      connector_revision: number;
+      acquisition_reference: string;
+      authorization_reference: string;
+      tenant_id: string;
+      source_system: string;
       output: unknown;
       executed_at: string;
     }>
@@ -435,6 +440,11 @@ export async function executeAdapter(
     capability_id: input.capability_id,
     connector_id: connector.connectorId,
     connector_identity_id: connector.identity.identityId,
+    connector_revision: connector.revision,
+    acquisition_reference: policyAdmission.context.contextId,
+    authorization_reference: policyAdmission.authorizationReference,
+    tenant_id: policyAdmission.context.tenantId,
+    source_system: policyAdmission.context.sourceSystem,
     output: execution.output,
     executed_at: new Date(now).toISOString(),
   });

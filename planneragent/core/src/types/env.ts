@@ -32,6 +32,8 @@ VERSION?: string;
   // Production industrial connector
   INDUSTRIAL_ERP_BASE_URL?: string;
   INDUSTRIAL_ERP_TENANT_ID?: string;
+  INDUSTRIAL_ERP_COMPANY_ID?: string;
+  INDUSTRIAL_ERP_OWNER_ID?: string;
   INDUSTRIAL_ERP_SOURCE_SYSTEM?: string;
   INDUSTRIAL_ERP_SOURCE_REGION?: string;
   INDUSTRIAL_ERP_CREDENTIAL_REFERENCE?: string;

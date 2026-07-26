@@ -8,6 +8,8 @@ import {
 export type ProductionErpConnectorConfig = Readonly<{
   baseUrl: string;
   tenantId: string;
+  companyId: string;
+  ownerId: string;
   sourceSystem: string;
   sourceRegion: string;
   credentialReference: string;
@@ -22,6 +24,8 @@ export type ProductionErpConnectorDependencies = Readonly<{
 type ProductionErpEnv = Readonly<{
   INDUSTRIAL_ERP_BASE_URL?: string;
   INDUSTRIAL_ERP_TENANT_ID?: string;
+  INDUSTRIAL_ERP_COMPANY_ID?: string;
+  INDUSTRIAL_ERP_OWNER_ID?: string;
   INDUSTRIAL_ERP_SOURCE_SYSTEM?: string;
   INDUSTRIAL_ERP_SOURCE_REGION?: string;
   INDUSTRIAL_ERP_CREDENTIAL_REFERENCE?: string;
@@ -30,6 +34,8 @@ type ProductionErpEnv = Readonly<{
 
 const CONNECTOR_ID = "erp-production-rest";
 const CONNECTOR_IDENTITY_ID = "connector-identity:erp-production-rest";
+export const PRODUCTION_ERP_ORDER_SOURCE_REPRESENTATION =
+  "PRODUCTION_REST_ERP_ORDERS_V1";
 const MAX_RESPONSE_BYTES = 1_000_000;
 let initializedConfiguration: string | undefined;
 
@@ -38,6 +44,18 @@ class ProductionErpConnectorError extends Error {
     super("Production ERP connector request failed");
     this.name = "ProductionErpConnectorError";
   }
+}
+
+function deepFreezeProviderValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    value.forEach(deepFreezeProviderValue);
+    return Object.freeze(value);
+  }
+  if (value && typeof value === "object") {
+    Object.values(value).forEach(deepFreezeProviderValue);
+    return Object.freeze(value);
+  }
+  return value;
 }
 
 function requireIdentifier(value: string, field: string): string {
@@ -81,6 +99,8 @@ export function validateProductionErpConnectorConfig(
   return Object.freeze({
     baseUrl: url.toString().replace(/\/$/, ""),
     tenantId: requireIdentifier(config.tenantId, "tenant"),
+    companyId: requireIdentifier(config.companyId, "company"),
+    ownerId: requireIdentifier(config.ownerId, "owner"),
     sourceSystem: requireIdentifier(config.sourceSystem, "source system"),
     sourceRegion: requireRegion(config.sourceRegion),
     credentialReference: requireCredentialReference(
@@ -110,7 +130,12 @@ async function fetchWithTimeout(
   }
 }
 
-async function readOrdersResponse(response: Response) {
+async function readOrdersResponse(
+  response: Response,
+  config: ProductionErpConnectorConfig,
+  access: ConnectorExecutionAccess,
+  acquiredAt: string
+) {
   if (
     !response.ok ||
     !response.headers.get("content-type")?.toLowerCase().includes(
@@ -140,14 +165,33 @@ async function readOrdersResponse(response: Response) {
     !payload ||
     typeof payload !== "object" ||
     Array.isArray(payload) ||
+    (payload as { schema_version?: unknown }).schema_version !==
+      PRODUCTION_ERP_ORDER_SOURCE_REPRESENTATION ||
     !Array.isArray((payload as { orders?: unknown }).orders)
   ) {
     throw new ProductionErpConnectorError();
   }
 
   return Object.freeze({
+    sourceRepresentation: PRODUCTION_ERP_ORDER_SOURCE_REPRESENTATION,
+    acquisition: Object.freeze({
+      acquisitionReference:
+        access.dataPolicyAdmission.context.contextId,
+      acquiredAt,
+      tenantId: access.dataPolicyAdmission.context.tenantId,
+      companyId: config.companyId,
+      ownerId: config.ownerId,
+      sourceSystem: config.sourceSystem,
+      connectorIdentityId: access.dataPolicyAdmission.connectorIdentityId,
+      connectorRevision: access.dataPolicyAdmission.connectorRevision,
+      authorizationReference:
+        access.dataPolicyAdmission.authorizationReference,
+      capabilityId: access.dataPolicyAdmission.capabilityId,
+    }),
     orders: Object.freeze([
-      ...(payload as { orders: unknown[] }).orders,
+      ...(payload as { orders: unknown[] }).orders.map(
+        deepFreezeProviderValue
+      ),
     ]),
   });
 }
@@ -243,7 +287,12 @@ export function createProductionErpConnector(
         },
         config.requestTimeoutMs
       );
-      return readOrdersResponse(response);
+      return readOrdersResponse(
+        response,
+        config,
+        access,
+        new Date(dependencies.now()).toISOString()
+      );
     },
   };
 }
@@ -254,6 +303,8 @@ export function initializeProductionErpConnector(
   const values = [
     env.INDUSTRIAL_ERP_BASE_URL,
     env.INDUSTRIAL_ERP_TENANT_ID,
+    env.INDUSTRIAL_ERP_COMPANY_ID,
+    env.INDUSTRIAL_ERP_OWNER_ID,
     env.INDUSTRIAL_ERP_SOURCE_SYSTEM,
     env.INDUSTRIAL_ERP_SOURCE_REGION,
     env.INDUSTRIAL_ERP_CREDENTIAL_REFERENCE,
@@ -269,6 +320,8 @@ export function initializeProductionErpConnector(
   const config: ProductionErpConnectorConfig = {
     baseUrl: env.INDUSTRIAL_ERP_BASE_URL as string,
     tenantId: env.INDUSTRIAL_ERP_TENANT_ID as string,
+    companyId: env.INDUSTRIAL_ERP_COMPANY_ID as string,
+    ownerId: env.INDUSTRIAL_ERP_OWNER_ID as string,
     sourceSystem: env.INDUSTRIAL_ERP_SOURCE_SYSTEM as string,
     sourceRegion: env.INDUSTRIAL_ERP_SOURCE_REGION as string,
     credentialReference: env.INDUSTRIAL_ERP_CREDENTIAL_REFERENCE as string,

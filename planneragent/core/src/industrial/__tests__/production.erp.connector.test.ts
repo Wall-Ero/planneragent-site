@@ -75,8 +75,21 @@ const providerFetch: typeof fetch = async (input, init) => {
 
   return new Response(
     JSON.stringify({
+      schema_version: "PRODUCTION_REST_ERP_ORDERS_V1",
       orders: [
-        { external_order_id: "ERP-1001", status: "OPEN" },
+        {
+          external_order_id: "ERP-1001",
+          external_order_version: "7",
+          company_id: "company-001",
+          owner_id: "procurement-owner-001",
+          sku: "MATERIAL-001",
+          quantity_value: 12,
+          quantity_unit: "EA",
+          status: "OPEN",
+          observed_at: "2026-07-26T19:55:00.000Z",
+          effective_at: "2026-07-26T19:00:00.000Z",
+          due_at: "2026-08-01T00:00:00.000Z",
+        },
       ],
     }),
     {
@@ -157,6 +170,8 @@ describe.sequential(
         {
           baseUrl: "https://erp.production.example/api/v1",
           tenantId: "tenant-001",
+          companyId: "company-001",
+          ownerId: "procurement-owner-001",
           sourceSystem: "PRODUCTION_ERP",
           sourceRegion: "EU",
           credentialReference: CREDENTIAL_REFERENCE,
@@ -184,13 +199,29 @@ describe.sequential(
         ok: true,
         connector_identity_id: CONNECTOR_IDENTITY,
         output: {
+          sourceRepresentation: "PRODUCTION_REST_ERP_ORDERS_V1",
           orders: [
-            { external_order_id: "ERP-1001", status: "OPEN" },
+            {
+              external_order_id: "ERP-1001",
+              external_order_version: "7",
+              company_id: "company-001",
+              owner_id: "procurement-owner-001",
+              sku: "MATERIAL-001",
+              quantity_value: 12,
+              quantity_unit: "EA",
+              status: "OPEN",
+              observed_at: "2026-07-26T19:55:00.000Z",
+              effective_at: "2026-07-26T19:00:00.000Z",
+              due_at: "2026-08-01T00:00:00.000Z",
+            },
           ],
         },
       });
       expect(acquisitionCalls).toBe(1);
       expect(lastAuthorization).toBe("Bearer production-credential");
+      expect(Object.isFrozen(
+        (result.ok ? (result.output as any).orders[0] : undefined)
+      )).toBe(true);
     });
 
     it("fails closed for invalid credentials", async () => {
@@ -292,15 +323,18 @@ describe.sequential(
         access(),
         { now: () => NOW }
       );
+      if (!("denial" in first) || !("denial" in second)) {
+        throw new Error("Expected deterministic denied provider results");
+      }
 
       expect({
         ok: first.ok,
-        denial: first.ok ? undefined : first.denial,
-        reason: first.ok ? undefined : first.reason,
+        denial: first.denial,
+        reason: first.reason,
       }).toEqual({
         ok: second.ok,
-        denial: second.ok ? undefined : second.denial,
-        reason: second.ok ? undefined : second.reason,
+        denial: second.denial,
+        reason: second.reason,
       });
     });
 
@@ -322,6 +356,8 @@ describe.sequential(
       expect(() => validateProductionErpConnectorConfig({
         baseUrl: "http://erp.production.example",
         tenantId: "tenant-001",
+        companyId: "company-001",
+        ownerId: "procurement-owner-001",
         sourceSystem: "PRODUCTION_ERP",
         sourceRegion: "EU",
         credentialReference: CREDENTIAL_REFERENCE,

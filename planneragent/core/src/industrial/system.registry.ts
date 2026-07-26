@@ -5,6 +5,11 @@
 // =====================================================
 
 import type { CapabilityMap, IndustrialCapability } from "./uic.interface";
+import {
+  isConnectorIdentityCoherent,
+  type ConnectorExecutionAccess,
+  type ConnectorIdentity,
+} from "./connector.access";
 
 export type ConnectorHealth = {
   ok: boolean;
@@ -15,6 +20,7 @@ export type ConnectorHealth = {
 export type IndustrialConnector = {
   id: string;
   vendor: string;
+  identity: ConnectorIdentity;
 
   capabilities: IndustrialCapability[];
 
@@ -22,7 +28,8 @@ export type IndustrialConnector = {
 
   execute(
     capability_id: string,
-    payload: Record<string, unknown>
+    payload: Record<string, unknown>,
+    access: ConnectorExecutionAccess
   ): Promise<Record<string, unknown>>;
 };
 
@@ -33,6 +40,11 @@ const connectors: IndustrialConnector[] = [];
 // -----------------------------------------------------
 
 export function registerConnector(connector: IndustrialConnector) {
+  if (!isConnectorIdentityCoherent(connector.id, connector.identity)) {
+    throw new Error(`Connector '${connector.id}' has an incoherent identity`);
+  }
+
+  connector.identity = Object.freeze({ ...connector.identity });
   connectors.push(connector);
 }
 
@@ -62,6 +74,7 @@ export async function getSystemRegistry() {
       connectors.map(async c => ({
         id: c.id,
         vendor: c.vendor,
+        identity_id: c.identity.identityId,
         health: await c.health(),
         capabilities: c.capabilities.map(cap => cap.id),
       }))

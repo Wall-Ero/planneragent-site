@@ -56,6 +56,12 @@ const genericERPAdapter: IndustrialConnector = {
 
   vendor: "GENERIC",
 
+  identity: Object.freeze({
+    connectorId: "erp-generic",
+    identityId: "connector-identity:erp-generic",
+    credentialReference: "secret://connectors/erp-generic",
+  }),
+
   capabilities: [
     READ_ORDERS,
     READ_INVENTORY,

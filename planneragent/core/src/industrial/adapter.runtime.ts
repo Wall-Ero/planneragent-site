@@ -8,10 +8,16 @@ import {
   getCapabilityMap,
   getLiveConnectors,
 } from "./system.registry";
+import type {
+  ConnectorAccessDenial,
+  ConnectorAccessServices,
+  WorkloadIdentityEvidence,
+} from "./connector.access";
 
 export type AdapterExecutionInput = {
   capability_id: string;
   payload: Record<string, unknown>;
+  workload_identity: WorkloadIdentityEvidence;
 };
 
 export type AdapterExecutionResult =
@@ -25,10 +31,12 @@ export type AdapterExecutionResult =
   | {
       ok: false;
       reason: string;
+      denial?: ConnectorAccessDenial;
     };
 
 export async function executeAdapter(
-  input: AdapterExecutionInput
+  input: AdapterExecutionInput,
+  accessServices?: ConnectorAccessServices
 ): Promise<AdapterExecutionResult> {
 
   const capabilityMap = getCapabilityMap();
@@ -63,6 +71,71 @@ export async function executeAdapter(
     };
   }
 
+  if (!accessServices) {
+    return {
+      ok: false,
+      reason: "Connector access services are required",
+      denial: "ACCESS_SERVICES_REQUIRED",
+    };
+  }
+
+  let executionAccess;
+
+  try {
+    const workload = await accessServices.authenticateWorkload(
+      input.workload_identity
+    );
+
+    if (!workload) {
+      return {
+        ok: false,
+        reason: "Workload authentication failed",
+        denial: "WORKLOAD_AUTHENTICATION_FAILED",
+      };
+    }
+
+    const authorized = await accessServices.authorizeConnectorUse({
+      workload,
+      connectorIdentity: connector.identity,
+      capability,
+    });
+
+    if (!authorized) {
+      return {
+        ok: false,
+        reason: "Connector use is not authorized",
+        denial: "CONNECTOR_AUTHORIZATION_DENIED",
+      };
+    }
+
+    const credential = await accessServices.resolveConnectorCredential(
+      connector.identity.credentialReference
+    );
+
+    if (
+      !credential ||
+      credential.credentialReference !== connector.identity.credentialReference ||
+      credential.secret.length === 0
+    ) {
+      return {
+        ok: false,
+        reason: "Connector credential is unavailable",
+        denial: "CONNECTOR_CREDENTIAL_UNAVAILABLE",
+      };
+    }
+
+    executionAccess = Object.freeze({
+      workload: Object.freeze({ ...workload }),
+      credential: Object.freeze({ ...credential }),
+    });
+  } catch {
+    return {
+      ok: false,
+      reason: "Connector access evaluation failed",
+      denial: "CONNECTOR_ACCESS_EVALUATION_FAILED",
+    };
+  }
+
   // --------------------------------------------------
   // Health check
   // --------------------------------------------------
@@ -82,7 +155,8 @@ export async function executeAdapter(
 
   const output = await connector.execute(
     input.capability_id,
-    input.payload
+    input.payload,
+    executionAccess
   );
 
   return {

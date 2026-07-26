@@ -15,6 +15,12 @@ const sapAdapter: IndustrialConnector = {
 
   vendor: "SAP",
 
+  identity: Object.freeze({
+    connectorId: "erp-sap",
+    identityId: "connector-identity:erp-sap",
+    credentialReference: "secret://connectors/erp-sap",
+  }),
+
   capabilities: [
 
     {

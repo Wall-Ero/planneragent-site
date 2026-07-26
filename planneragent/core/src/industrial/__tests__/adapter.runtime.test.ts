@@ -1,19 +1,34 @@
-// core/src/industrial/__tests__/adapter.runtime.test.ts
-// =====================================================
-// P6.2 — Industrial Adapter Runtime
-// Verifies:
-// - capability resolution
-// - connector selection
-// - single-action execution
-// =====================================================
-
-import { describe, it, expect, beforeAll } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { executeAdapter } from "../adapter.runtime";
+import type { ConnectorAccessServices } from "../connector.access";
 import { getSystemRegistry } from "../system.registry";
 
-// side-effect imports (register connectors)
 import "../../connectors/erp.sap.adapter";
 import "../../connectors/mail.smtp.adapter";
+
+const accessServices: ConnectorAccessServices = {
+  async authenticateWorkload(evidence) {
+    return evidence.authenticationEvidence === "valid"
+      ? {
+          workloadId: evidence.workloadId,
+          tenantId: evidence.tenantId,
+          authenticationId: "auth-001",
+        }
+      : null;
+  },
+  async authorizeConnectorUse() {
+    return true;
+  },
+  async resolveConnectorCredential(credentialReference) {
+    return { credentialReference, secret: "test-secret" };
+  },
+};
+
+const workloadIdentity = {
+  workloadId: "planner-worker",
+  tenantId: "tenant-001",
+  authenticationEvidence: "valid",
+} as const;
 
 describe("P6.2 — Industrial Adapter Runtime", () => {
   beforeAll(async () => {
@@ -28,7 +43,8 @@ describe("P6.2 — Industrial Adapter Runtime", () => {
         supplier_id: "SUP-001",
         message: "Delay confirmed",
       },
-    });
+      workload_identity: workloadIdentity,
+    }, accessServices);
 
     expect(res.ok).toBe(true);
 
@@ -44,7 +60,8 @@ describe("P6.2 — Industrial Adapter Runtime", () => {
     const res = await executeAdapter({
       capability_id: "non_existing_capability",
       payload: {},
-    });
+      workload_identity: workloadIdentity,
+    }, accessServices);
 
     expect(res.ok).toBe(false);
   });

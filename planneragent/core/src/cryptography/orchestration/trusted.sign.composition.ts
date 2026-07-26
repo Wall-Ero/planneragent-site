@@ -30,6 +30,8 @@ export type TrustedSignCompositionResult =
       infrastructureAuthorizationId: string;
       mechanismsAuthorizationId: string;
       subjectId: string;
+      tenantId: string;
+      companyId: string;
       proofProfileId: string;
       proofProfileVersion: string;
       providerKeyReference: string;
@@ -133,6 +135,8 @@ export function composeTrustedSignPreCall(
     infrastructureAuthorizationId: infrastructure.authorizationId,
     mechanismsAuthorizationId: input.mechanismsAuthorization.authorizationId,
     subjectId: subject.subjectId,
+    tenantId: subject.tenantId,
+    companyId: subject.companyId,
     proofProfileId: profile.profileId,
     proofProfileVersion: profile.profileVersion,
     providerKeyReference: infrastructure.providerMapping.providerKeyReference,

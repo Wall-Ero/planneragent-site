@@ -13,6 +13,8 @@ const composition: TrustedSignCompositionResult = Object.freeze({
   infrastructureAuthorizationId: "30000000-0000-4000-8000-000000000001",
   mechanismsAuthorizationId: "60000000-0000-4000-8000-000000000001",
   subjectId: "80000000-0000-4000-8000-000000000001",
+  tenantId: "tenant-1",
+  companyId: "company-1",
   proofProfileId: "PLANNERAGENT_FDC_SIGN_V1",
   proofProfileVersion: "1",
   providerKeyReference: "arn:aws:kms:eu-west-1:111122223333:key/example",

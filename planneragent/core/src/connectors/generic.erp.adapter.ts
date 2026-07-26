@@ -31,7 +31,7 @@ const ERP_BASE_URL = "https://example-erp.api";
 async function callERP(
   endpoint: string,
   payload?: Record<string, unknown>
-) {
+): Promise<Record<string, unknown>> {
 
   const response = await fetch(`${ERP_BASE_URL}/${endpoint}`, {
     method: payload ? "POST" : "GET",
@@ -45,7 +45,12 @@ async function callERP(
     throw new Error(`ERP request failed: ${response.status}`);
   }
 
-  return response.json();
+  const result: unknown = await response.json();
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    throw new Error("ERP response is not an object");
+  }
+
+  return result as Record<string, unknown>;
 }
 
 // -----------------------------------------------------
@@ -76,8 +81,9 @@ const genericERPAdapter: IndustrialConnector = {
 
     return {
       ok: true,
-      vendor: "GENERIC",
-      latency_ms: 0
+      connectorIdentityId: "connector-identity:erp-generic",
+      checkedAt: new Date().toISOString(),
+      latencyMs: 0
     };
 
   },

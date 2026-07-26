@@ -8,6 +8,12 @@ import {
   registerConnector,
   IndustrialConnector,
 } from "../industrial/system.registry";
+import {
+  NOTIFY_SUPPLIER,
+  READ_INVENTORY,
+  READ_MOVEMENTS,
+  READ_ORDERS,
+} from "../industrial/capabilities";
 
 const sapAdapter: IndustrialConnector = {
 
@@ -22,42 +28,18 @@ const sapAdapter: IndustrialConnector = {
   }),
 
   capabilities: [
-
-    {
-      id: "read_orders",
-      domain: "supply_chain",
-      verb: "read",
-      description: "Read sales orders from SAP",
-    },
-
-    {
-      id: "read_inventory",
-      domain: "supply_chain",
-      verb: "read",
-      description: "Read inventory levels from SAP",
-    },
-
-    {
-      id: "read_movements",
-      domain: "supply_chain",
-      verb: "read",
-      description: "Read inventory movements",
-    },
-
-    {
-      id: "notify_supplier",
-      domain: "procurement",
-      verb: "execute",
-      description: "Notify supplier about expedite request",
-    },
-
+    READ_ORDERS,
+    READ_INVENTORY,
+    READ_MOVEMENTS,
+    NOTIFY_SUPPLIER,
   ],
 
   async health() {
     return {
       ok: true,
-      vendor: "SAP",
-      latency_ms: 120,
+      connectorIdentityId: "connector-identity:erp-sap",
+      checkedAt: new Date().toISOString(),
+      latencyMs: 120,
     };
   },
 

@@ -16,8 +16,9 @@ const accessServices: ConnectorAccessServices = {
         }
       : null;
   },
-  async authorizeConnectorUse() {
-    return true;
+  async authorizeConnectorUse(request) {
+    return request.connectorIdentity.identityId ===
+      "connector-identity:erp-sap";
   },
   async resolveConnectorCredential(credentialReference) {
     return { credentialReference, secret: "test-secret" };
@@ -52,6 +53,7 @@ describe("P6.2 — Industrial Adapter Runtime", () => {
 
     expect(res.capability_id).toBe("notify_supplier");
     expect(typeof res.connector_id).toBe("string");
+    expect(res.connector_identity_id).toBe("connector-identity:erp-sap");
     expect(res.executed_at).toBeDefined();
     expect(res.output).toBeDefined();
   });

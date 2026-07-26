@@ -1,6 +1,7 @@
 // core/src/connectors/mail.smtp.adapter.ts
 import { registerConnector } from "../industrial/system.registry";
 import type { IndustrialConnector } from "../industrial/system.registry";
+import { NOTIFY_SUPPLIER } from "../industrial/capabilities";
 
 const smtpAdapter: IndustrialConnector = {
   id: "mail-smtp",
@@ -10,16 +11,14 @@ const smtpAdapter: IndustrialConnector = {
     identityId: "connector-identity:mail-smtp",
     credentialReference: "secret://connectors/mail-smtp",
   }),
-  capabilities: [
-    {
-      id: "notify_supplier",
-      domain: "communication",
-      verb: "notify",
-      description: "Send email notification to supplier",
-    },
-  ],
+  capabilities: [NOTIFY_SUPPLIER],
   async health() {
-    return { ok: true, vendor: "SMTP", latency_ms: 40 };
+    return {
+      ok: true,
+      connectorIdentityId: "connector-identity:mail-smtp",
+      checkedAt: new Date().toISOString(),
+      latencyMs: 40,
+    };
   },
   async execute(
     capability_id: string,

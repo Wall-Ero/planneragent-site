@@ -13,7 +13,10 @@ export async function connectorsRoute(): Promise<Response> {
       registry.connectors.map(c => ({
         id: c.id,
         vendor: c.vendor,
-        health: c.health,
+        identity_id: c.identity_id,
+        lifecycle: c.lifecycle,
+        revision: c.revision,
+        capabilities: c.capabilities,
       })),
       null,
       2

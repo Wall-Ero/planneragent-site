@@ -128,11 +128,15 @@ describe("Data Acquisition — Connector Identity & Access", () => {
       },
       capabilities: [],
       async health() {
-        return { ok: true, vendor: "TEST" };
+        return {
+          ok: true,
+          connectorIdentityId: "connector-identity:incoherent",
+          checkedAt: new Date().toISOString(),
+        };
       },
       async execute() {
         return {};
       },
-    })).toThrow("incoherent identity");
+    })).toThrow("incoherent implementation");
   });
 });

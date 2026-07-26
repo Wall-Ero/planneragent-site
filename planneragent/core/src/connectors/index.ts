@@ -7,4 +7,4 @@
 // =====================================================
 
 import "./erp.sap.adapter";
-import "./generic.erp.adapter";
+export { initializeProductionErpConnector } from "./generic.erp.adapter";

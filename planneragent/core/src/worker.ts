@@ -4,7 +4,7 @@
 // Canonical Snapshot · Source of Truth
 // ============================================
 
-import "./connectors";
+import { initializeProductionErpConnector } from "./connectors";
 import { parseEdgeRequestV2, normalizeDomain } from "./sandbox/apiBoundary.v2";
 import { evaluateSandboxV2 } from "./sandbox/orchestrator.v2";
 import { validateOagAndBuildProof } from "./governance/oag/validateOag";
@@ -31,6 +31,7 @@ function json(body: unknown, status = 200): Response {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     try {
+      initializeProductionErpConnector(env);
       const url = new URL(req.url);
 
       // --------------------------------------------

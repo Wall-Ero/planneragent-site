@@ -28,4 +28,12 @@ export interface Env {
   //health
   ENVIRONMENT?: string;
 VERSION?: string;
+
+  // Production industrial connector
+  INDUSTRIAL_ERP_BASE_URL?: string;
+  INDUSTRIAL_ERP_TENANT_ID?: string;
+  INDUSTRIAL_ERP_SOURCE_SYSTEM?: string;
+  INDUSTRIAL_ERP_SOURCE_REGION?: string;
+  INDUSTRIAL_ERP_CREDENTIAL_REFERENCE?: string;
+  INDUSTRIAL_ERP_REQUEST_TIMEOUT_MS?: string;
 }

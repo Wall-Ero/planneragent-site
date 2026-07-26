@@ -78,6 +78,7 @@ import {
 // ============================================================
 
 export type ProviderOperation =
+  | "SIGN"
   | "ROTATE_KEY"
   | "REWRAP_KEY"
   | "DISABLE_OLD_KEY"

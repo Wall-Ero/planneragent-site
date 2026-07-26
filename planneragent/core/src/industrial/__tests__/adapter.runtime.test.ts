@@ -31,6 +31,30 @@ const workloadIdentity = {
   authenticationEvidence: "valid",
 } as const;
 
+const dataAccessContext = {
+  contextId: "data-access:adapter-test",
+  tenantId: "tenant-001",
+  targetTenantId: "tenant-001",
+  sourceSystem: "SAP",
+  sourceRegion: "EU",
+  targetRegion: "EU",
+  runtimeLocality: "TENANT_LOCAL",
+  encryptionDomain: "EXECUTION_MEMORY",
+  encryptionEvidence: {
+    contextId: "data-access:adapter-test",
+    connectorIdentityId: "connector-identity:erp-sap",
+    domain: "EXECUTION_MEMORY",
+    encryptedInTransit: true,
+    encryptedAtRest: true,
+  },
+  transportEvidence: {
+    contextId: "data-access:adapter-test",
+    connectorIdentityId: "connector-identity:erp-sap",
+    scheme: "HTTPS",
+    secure: true,
+  },
+} as const;
+
 describe("P6.2 — Industrial Adapter Runtime", () => {
   beforeAll(async () => {
     const registry = await getSystemRegistry();
@@ -45,6 +69,7 @@ describe("P6.2 — Industrial Adapter Runtime", () => {
         message: "Delay confirmed",
       },
       workload_identity: workloadIdentity,
+      data_access_context: dataAccessContext,
     }, accessServices);
 
     expect(res.ok).toBe(true);
@@ -63,6 +88,7 @@ describe("P6.2 — Industrial Adapter Runtime", () => {
       capability_id: "non_existing_capability",
       payload: {},
       workload_identity: workloadIdentity,
+      data_access_context: dataAccessContext,
     }, accessServices);
 
     expect(res.ok).toBe(false);

@@ -5,6 +5,7 @@ import {
   type ConnectorExecutionAccess,
   type ConnectorIdentity,
 } from "./connector.access";
+import type { ConnectorDataPolicyBinding } from "./data.access.policy";
 
 export type ConnectorLifecycleState = "ENABLED" | "DISABLED" | "RETIRED";
 
@@ -19,6 +20,7 @@ export type IndustrialConnector = {
   id: string;
   vendor: string;
   identity: ConnectorIdentity;
+  dataPolicyBinding: ConnectorDataPolicyBinding;
   capabilities: readonly IndustrialCapability[];
   health(): Promise<ConnectorHealth>;
   execute(
@@ -47,6 +49,7 @@ export type ConnectorInvocationSnapshot = Readonly<{
   connectorId: string;
   vendor: string;
   identity: ConnectorIdentity;
+  dataPolicyBinding: ConnectorDataPolicyBinding;
   lifecycle: ConnectorLifecycleState;
   revision: number;
   capability: IndustrialCapability;
@@ -91,7 +94,12 @@ export function registerConnector(
     !isConnectorIdentityCoherent(connector.id, connector.identity) ||
     connector.vendor.trim().length === 0 ||
     typeof connector.health !== "function" ||
-    typeof connector.execute !== "function"
+    typeof connector.execute !== "function" ||
+    !connector.dataPolicyBinding ||
+    connector.dataPolicyBinding.tenantId.trim().length === 0 ||
+    connector.dataPolicyBinding.sourceSystem.trim().length === 0 ||
+    connector.dataPolicyBinding.sourceRegion.trim().length === 0 ||
+    connector.dataPolicyBinding.transportScheme !== "HTTPS"
   ) {
     throw new Error(`Connector '${connector.id}' has an incoherent implementation`);
   }
@@ -122,6 +130,7 @@ export function registerConnector(
   }
 
   const identity = Object.freeze({ ...connector.identity });
+  const dataPolicyBinding = Object.freeze({ ...connector.dataPolicyBinding });
   const capabilities = Object.freeze(
     connector.capabilities.map(copyCapability)
   );
@@ -129,6 +138,7 @@ export function registerConnector(
     id: connector.id,
     vendor: connector.vendor,
     identity,
+    dataPolicyBinding,
     capabilities,
     health: connector.health,
     execute: connector.execute,
@@ -247,6 +257,7 @@ export function getInvocationCandidates(
         connectorId: record.connector.id,
         vendor: record.connector.vendor,
         identity: record.connector.identity,
+        dataPolicyBinding: record.connector.dataPolicyBinding,
         lifecycle: record.lifecycle,
         revision: record.revision,
         capability,

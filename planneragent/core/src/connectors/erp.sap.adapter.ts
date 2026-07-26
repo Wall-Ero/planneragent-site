@@ -26,6 +26,12 @@ const sapAdapter: IndustrialConnector = {
     identityId: "connector-identity:erp-sap",
     credentialReference: "secret://connectors/erp-sap",
   }),
+  dataPolicyBinding: Object.freeze({
+    tenantId: "tenant-001",
+    sourceSystem: "SAP",
+    sourceRegion: "EU",
+    transportScheme: "HTTPS",
+  }),
 
   capabilities: [
     READ_ORDERS,

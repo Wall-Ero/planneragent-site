@@ -66,6 +66,12 @@ const genericERPAdapter: IndustrialConnector = {
     identityId: "connector-identity:erp-generic",
     credentialReference: "secret://connectors/erp-generic",
   }),
+  dataPolicyBinding: Object.freeze({
+    tenantId: "tenant-001",
+    sourceSystem: "GENERIC_ERP",
+    sourceRegion: "EU",
+    transportScheme: "HTTPS",
+  }),
 
   capabilities: [
     READ_ORDERS,

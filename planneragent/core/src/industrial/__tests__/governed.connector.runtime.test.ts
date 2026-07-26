@@ -38,6 +38,12 @@ function connector(
       identityId,
       credentialReference: `secret://connectors/${connectorId}`,
     },
+    dataPolicyBinding: {
+      tenantId: "tenant-001",
+      sourceSystem: "TEST_SYSTEM",
+      sourceRegion: "EU",
+      transportScheme: "HTTPS",
+    },
     capabilities: [capability],
     async health(): Promise<ConnectorHealth> {
       return { ok: true, connectorIdentityId: identityId, checkedAt: NOW_ISO };
@@ -71,7 +77,11 @@ function access(
   };
 }
 
-function request(capabilityId: string) {
+function request(
+  capabilityId: string,
+  connectorIdentityId: string = ids.primary
+) {
+  const contextId = `data-access:${capabilityId}`;
   return {
     capability_id: capabilityId,
     payload: {},
@@ -79,6 +89,29 @@ function request(capabilityId: string) {
       workloadId: "planner-worker",
       tenantId: "tenant-001",
       authenticationEvidence: "valid",
+    },
+    data_access_context: {
+      contextId,
+      tenantId: "tenant-001",
+      targetTenantId: "tenant-001",
+      sourceSystem: "TEST_SYSTEM",
+      sourceRegion: "EU",
+      targetRegion: "EU",
+      runtimeLocality: "TENANT_LOCAL" as const,
+      encryptionDomain: "EXECUTION_MEMORY" as const,
+      encryptionEvidence: {
+        contextId,
+        connectorIdentityId,
+        domain: "EXECUTION_MEMORY" as const,
+        encryptedInTransit: true,
+        encryptedAtRest: true,
+      },
+      transportEvidence: {
+        contextId,
+        connectorIdentityId,
+        scheme: "HTTPS",
+        secure: true,
+      },
     },
   };
 }
@@ -239,7 +272,7 @@ describe("Data Acquisition — Governed Connector Runtime", () => {
 
   it("rejects an unhealthy connector", async () => {
     expect(await executeAdapter(
-      request("read_supply_plan"),
+      request("read_supply_plan", ids.unhealthy),
       access([ids.unhealthy]),
       { now: () => NOW }
     )).toMatchObject({ ok: false, denial: "CONNECTOR_HEALTH_FAILED" });
@@ -247,7 +280,7 @@ describe("Data Acquisition — Governed Connector Runtime", () => {
 
   it("rejects a malformed health identity", async () => {
     expect(await executeAdapter(
-      request("update_order"),
+      request("update_order", ids.malformed),
       access([ids.malformed]),
       { now: () => NOW }
     )).toMatchObject({ ok: false, denial: "CONNECTOR_HEALTH_INVALID" });
@@ -255,7 +288,7 @@ describe("Data Acquisition — Governed Connector Runtime", () => {
 
   it("contains a health exception", async () => {
     expect(await executeAdapter(
-      request("notify_supplier"),
+      request("notify_supplier", ids.healthException),
       access([ids.healthException]),
       { now: () => NOW }
     )).toMatchObject({ ok: false, denial: "CONNECTOR_HEALTH_FAILED" });
@@ -263,7 +296,7 @@ describe("Data Acquisition — Governed Connector Runtime", () => {
 
   it("contains and sanitizes an execution exception", async () => {
     const result = await executeAdapter(
-      request("read_orders"),
+      request("read_orders", ids.executionException),
       access([ids.executionException]),
       { now: () => NOW }
     );
@@ -276,7 +309,7 @@ describe("Data Acquisition — Governed Connector Runtime", () => {
 
   it("rejects an execution timeout", async () => {
     expect(await executeAdapter(
-      request("read_orders"),
+      request("read_orders", ids.executionTimeout),
       access([ids.executionTimeout]),
       { now: () => NOW, executionTimeoutMs: 5 }
     )).toMatchObject({
@@ -287,7 +320,7 @@ describe("Data Acquisition — Governed Connector Runtime", () => {
 
   it("rejects lifecycle substitution across the invocation", async () => {
     expect(await executeAdapter(
-      request("read_orders"),
+      request("read_orders", ids.substitution),
       access([ids.substitution]),
       { now: () => NOW }
     )).toMatchObject({

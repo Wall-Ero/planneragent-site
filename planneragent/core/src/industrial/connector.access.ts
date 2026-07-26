@@ -1,4 +1,5 @@
 import type { IndustrialCapability } from "./uic.interface";
+import type { DataAccessPolicyAdmission } from "./data.access.policy";
 
 export type ConnectorIdentity = Readonly<{
   connectorId: string;
@@ -44,6 +45,10 @@ export type ConnectorAccessServices = Readonly<{
 export type ConnectorExecutionAccess = Readonly<{
   workload: AuthenticatedWorkloadIdentity;
   credential: ResolvedConnectorCredential;
+  dataPolicyAdmission: Extract<
+    DataAccessPolicyAdmission,
+    { decision: "ADMITTED" }
+  >;
 }>;
 
 export type ConnectorAccessDenial =

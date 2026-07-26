@@ -12,11 +12,21 @@ import type {
   ConnectorExecutionAccess,
   WorkloadIdentityEvidence,
 } from "./connector.access";
+import {
+  DEFAULT_DATA_POLICY_EVALUATORS,
+  evaluateDataAccessPolicy,
+  isDataAccessAdmissionCurrent,
+  type DataAccessContext,
+  type DataAccessPolicyDenial,
+  type DataAccessPolicyInput,
+  type DataPolicyEvaluators,
+} from "./data.access.policy";
 
 export type AdapterExecutionInput = {
   capability_id: string;
   payload: Record<string, unknown>;
   workload_identity: WorkloadIdentityEvidence;
+  data_access_context: DataAccessContext;
 };
 
 export type AdapterRuntimeDenial =
@@ -29,7 +39,8 @@ export type AdapterRuntimeDenial =
   | "CONNECTOR_HEALTH_INVALID"
   | "CONNECTOR_HEALTH_STALE"
   | "CONNECTOR_EXECUTION_FAILED"
-  | "CONNECTOR_EXECUTION_TIMEOUT";
+  | "CONNECTOR_EXECUTION_TIMEOUT"
+  | DataAccessPolicyDenial;
 
 export type AdapterExecutionResult =
   | Readonly<{
@@ -50,7 +61,7 @@ export type AdapterExecutionResult =
 export type ConnectorRuntimeDiagnostic = Readonly<{
   diagnosticId: string;
   connectorIdentityId?: string;
-  phase: "ACCESS" | "HEALTH" | "EXECUTION";
+  phase: "ACCESS" | "POLICY" | "HEALTH" | "EXECUTION";
   code: AdapterRuntimeDenial;
   errorType?: string;
 }>;
@@ -60,6 +71,7 @@ export type AdapterRuntimeOptions = Readonly<{
   healthMaxAgeMs?: number;
   now?: () => number;
   recordDiagnostic?: (diagnostic: ConnectorRuntimeDiagnostic) => void;
+  policyEvaluators?: DataPolicyEvaluators;
 }>;
 
 const DEFAULT_EXECUTION_TIMEOUT_MS = 5_000;
@@ -80,13 +92,17 @@ function denial(
 
   diagnosticSequence += 1;
   const diagnosticId = `connector-diagnostic-${diagnosticSequence}`;
-  options.recordDiagnostic?.(Object.freeze({
-    diagnosticId,
-    connectorIdentityId,
-    phase,
-    code,
-    errorType: error instanceof Error ? error.constructor.name : undefined,
-  }));
+  try {
+    options.recordDiagnostic?.(Object.freeze({
+      diagnosticId,
+      connectorIdentityId,
+      phase,
+      code,
+      errorType: error instanceof Error ? error.constructor.name : undefined,
+    }));
+  } catch {
+    // Diagnostics cannot alter a fail-closed public result.
+  }
 
   return Object.freeze({
     ok: false,
@@ -180,7 +196,12 @@ export async function executeAdapter(
       error
     );
   }
-  if (!workload) {
+  if (
+    !workload ||
+    workload.workloadId !== input.workload_identity.workloadId ||
+    workload.tenantId !== input.workload_identity.tenantId ||
+    workload.authenticationId.length === 0
+  ) {
     return denial(
       "WORKLOAD_AUTHENTICATION_FAILED",
       "Workload authentication failed",
@@ -239,6 +260,39 @@ export async function executeAdapter(
     );
   }
 
+  const evaluatedAt = new Date(options.now?.() ?? Date.now()).toISOString();
+  const policyInput: DataAccessPolicyInput = {
+    context: input.data_access_context,
+    connectorIdentityId: connector.identity.identityId,
+    connectorRevision: connector.revision,
+    connectorCredentialReference: connector.identity.credentialReference,
+    connectorBinding: connector.dataPolicyBinding,
+    capability: connector.capability,
+    authenticatedTenantId: workload.tenantId,
+    authorizationReference: workload.authenticationId,
+    evaluatedAt,
+  };
+  const policyAdmission = evaluateDataAccessPolicy(
+    policyInput,
+    options.policyEvaluators ?? DEFAULT_DATA_POLICY_EVALUATORS
+  );
+  if (policyAdmission.decision !== "ADMITTED") {
+    return denial(
+      policyAdmission.denial,
+      "Data access policy admission denied",
+      options,
+      "POLICY",
+      connector.identity.identityId
+    );
+  }
+  if (!isDataAccessAdmissionCurrent(policyAdmission, policyInput)) {
+    return denial(
+      "DATA_ACCESS_CONTEXT_CONTRADICTORY",
+      "Data access policy admission is incoherent",
+      options
+    );
+  }
+
   let executionAccess: ConnectorExecutionAccess;
   try {
     const credential = await accessServices.resolveConnectorCredential(
@@ -259,6 +313,7 @@ export async function executeAdapter(
     executionAccess = Object.freeze({
       workload: Object.freeze({ ...workload }),
       credential: Object.freeze({ ...credential }),
+      dataPolicyAdmission: policyAdmission,
     });
   } catch (error) {
     return denial(
@@ -268,6 +323,13 @@ export async function executeAdapter(
       "ACCESS",
       connector.identity.identityId,
       error
+    );
+  }
+  if (!isDataAccessAdmissionCurrent(policyAdmission, policyInput)) {
+    return denial(
+      "DATA_ACCESS_CONTEXT_CONTRADICTORY",
+      "Data access context changed before connector evaluation",
+      options
     );
   }
 
@@ -320,6 +382,13 @@ export async function executeAdapter(
       options
     );
   }
+  if (!isDataAccessAdmissionCurrent(policyAdmission, policyInput)) {
+    return denial(
+      "DATA_ACCESS_CONTEXT_CONTRADICTORY",
+      "Data access context changed before execution",
+      options
+    );
+  }
 
   const execution = await executeWithTimeout(
     connector,
@@ -350,6 +419,13 @@ export async function executeAdapter(
     return denial(
       "CONNECTOR_RUNTIME_INTEGRITY_FAILED",
       "Connector invocation identity changed during execution",
+      options
+    );
+  }
+  if (!isDataAccessAdmissionCurrent(policyAdmission, policyInput)) {
+    return denial(
+      "DATA_ACCESS_CONTEXT_CONTRADICTORY",
+      "Data access context changed during execution",
       options
     );
   }

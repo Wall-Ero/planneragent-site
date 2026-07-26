@@ -11,6 +11,12 @@ const smtpAdapter: IndustrialConnector = {
     identityId: "connector-identity:mail-smtp",
     credentialReference: "secret://connectors/mail-smtp",
   }),
+  dataPolicyBinding: Object.freeze({
+    tenantId: "tenant-001",
+    sourceSystem: "SMTP",
+    sourceRegion: "EU",
+    transportScheme: "HTTPS",
+  }),
   capabilities: [NOTIFY_SUPPLIER],
   async health() {
     return {

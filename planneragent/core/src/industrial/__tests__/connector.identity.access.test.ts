@@ -40,6 +40,29 @@ function request() {
     capability_id: "read_orders",
     payload: {},
     workload_identity: identityEvidence,
+    data_access_context: {
+      contextId: "data-access:identity-test",
+      tenantId: "tenant-001",
+      targetTenantId: "tenant-001",
+      sourceSystem: "SAP",
+      sourceRegion: "EU",
+      targetRegion: "EU",
+      runtimeLocality: "TENANT_LOCAL" as const,
+      encryptionDomain: "EXECUTION_MEMORY" as const,
+      encryptionEvidence: {
+        contextId: "data-access:identity-test",
+        connectorIdentityId: "connector-identity:erp-sap",
+        domain: "EXECUTION_MEMORY" as const,
+        encryptedInTransit: true,
+        encryptedAtRest: true,
+      },
+      transportEvidence: {
+        contextId: "data-access:identity-test",
+        connectorIdentityId: "connector-identity:erp-sap",
+        scheme: "HTTPS",
+        secure: true,
+      },
+    },
   };
 }
 
@@ -125,6 +148,12 @@ describe("Data Acquisition — Connector Identity & Access", () => {
         connectorId: "different-id",
         identityId: "connector-identity:incoherent",
         credentialReference: "secret://connectors/incoherent",
+      },
+      dataPolicyBinding: {
+        tenantId: "tenant-001",
+        sourceSystem: "TEST",
+        sourceRegion: "EU",
+        transportScheme: "HTTPS",
       },
       capabilities: [],
       async health() {

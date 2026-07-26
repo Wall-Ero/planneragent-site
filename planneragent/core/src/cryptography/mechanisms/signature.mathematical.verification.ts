@@ -1,5 +1,6 @@
 import {
   constants,
+  createHash,
   createPublicKey,
   verify,
 } from "node:crypto";
@@ -15,6 +16,8 @@ export type MathematicalSignatureVerificationResult =
       messageType: "RAW";
       providerKeyReference: string;
       verificationMaterialDigest: string;
+      signatureArtifactDigest: string;
+      signatureArtifactDigestAlgorithm: "SHA-256";
       verifiedAt: string;
     }>
   | Readonly<{
@@ -95,6 +98,9 @@ export function verifySignatureMathematically(
     messageType: "RAW",
     providerKeyReference: composition.providerKeyReference,
     verificationMaterialDigest: material.verificationMaterialDigest,
+    signatureArtifactDigest:
+      createHash("sha256").update(execution.signature).digest("hex"),
+    signatureArtifactDigestAlgorithm: "SHA-256",
     verifiedAt,
   });
 }

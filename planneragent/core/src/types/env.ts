@@ -3,9 +3,14 @@
 export interface Env {
   // D1
   POLICIES_DB: D1Database;
+  TRUSTED_SIGN_REPLAY_DB?: D1Database;
+  TRUSTED_SIGN_EVIDENCE_DB?: D1Database;
 
   // Security
   SNAPSHOT_HMAC_SECRET: string;
+  TRUSTED_SIGN_AWS_REGION?: string;
+  TRUSTED_SIGN_AWS_KMS_KEY_ARN?: string;
+  TRUSTED_SIGN_AWS_CREDENTIAL_REFERENCE?: string;
 
   // AI
   OPENROUTER_API_KEY?: string;

@@ -19,6 +19,7 @@ import { resolveLegalState } from "./governance/legal/legalState";
 import { onboardingRoutes } from "./onboarding/routes.onboarding";
 
 import type { Env } from "./types/env";
+import { trustSovereigntyReadinessResponse } from "./cryptography/release/trust.sovereignty.readiness.route";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
@@ -47,6 +48,13 @@ export default {
       if (req.method === "GET" && url.pathname === "/system/connectors") {
         const registry = await getSystemRegistry();
         return json({ ok: true, connectors: registry.connectors });
+      }
+
+      if (
+        req.method === "GET" &&
+        url.pathname === "/system/trust-sovereignty/readiness"
+      ) {
+        return trustSovereigntyReadinessResponse(env);
       }
 
       // --------------------------------------------

@@ -11,6 +11,8 @@ import {
 } from "../../connectors/generic.erp.adapter";
 
 export const CANONICAL_ORDER_SERIALIZATION_VERSION = "1.0.0" as const;
+export const CANONICAL_ORDER_SERIALIZATION_PROFILE =
+  "INDUSTRIAL_ORDER_CANONICAL_JSON_V1" as const;
 export const CANONICAL_ORDER_INTEGRITY_PROFILE =
   "INDUSTRIAL_ORDER_SHA_256_V1" as const;
 
@@ -203,7 +205,7 @@ function validFact(fact: unknown, requireFrozen: boolean): fact is CanonicalOrde
 
 function projection(f: CanonicalOrderFact) {
   return {
-    serializationProfile: "INDUSTRIAL_ORDER_CANONICAL_JSON_V1",
+    serializationProfile: CANONICAL_ORDER_SERIALIZATION_PROFILE,
     serializationVersion: CANONICAL_ORDER_SERIALIZATION_VERSION,
     fact: {
       factId: f.factId,
@@ -398,7 +400,7 @@ function parseStoredFact(canonicalJson: string): CanonicalOrderFact | null {
     !exactKeys(envelope, [
       "serializationProfile", "serializationVersion", "fact",
     ]) ||
-    envelope.serializationProfile !== "INDUSTRIAL_ORDER_CANONICAL_JSON_V1" ||
+    envelope.serializationProfile !== CANONICAL_ORDER_SERIALIZATION_PROFILE ||
     envelope.serializationVersion !== CANONICAL_ORDER_SERIALIZATION_VERSION ||
     !validFact(envelope.fact, false) ||
     JSON.stringify(projection(envelope.fact)) !== canonicalJson

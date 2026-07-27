@@ -7,7 +7,8 @@ import {
 import {
   AUTHORITATIVE_EXTERNAL_DATA_VERSION,
   type AuthoritativeExternalData,
-} from "./governed.csv.interpretation";
+  type AuthoritativeExternalDataMetadata,
+} from "./authoritative.external.data";
 
 export const DELIMITED_TXT_DAT_INTERPRETATION_PROFILE =
   "GOVERNED_PASSIVE_DELIMITED_TXT_DAT_V1" as const;
@@ -76,16 +77,17 @@ export interface AdmittedTxtDatContentReader {
   ): Promise<AdmittedTxtDatContent | null>;
 }
 
-export interface PassiveTxtDatExtractionMetadata {
-  readonly delimiter: string | null;
-  readonly quote: null;
-  readonly newline: "\n" | "\r\n";
-  readonly encoding: "UTF-8";
-  readonly headerCount: number;
-  readonly rowCount: number;
-  readonly byteLength: number;
-  readonly formulaSafety: "REJECT_LEADING_FORMULA_MARKERS";
-}
+export type PassiveTxtDatExtractionMetadata =
+  AuthoritativeExternalDataMetadata & Readonly<{
+    readonly delimiter: string | null;
+    readonly quote: null;
+    readonly newline: "\n" | "\r\n";
+    readonly encoding: "UTF-8";
+    readonly headerCount: number;
+    readonly rowCount: number;
+    readonly byteLength: number;
+    readonly formulaSafety: "REJECT_LEADING_FORMULA_MARKERS";
+  }>;
 
 export interface PassiveTxtDatExtraction {
   readonly profile: TxtDatProfile;
@@ -102,19 +104,6 @@ export interface PassiveTxtDatExtraction {
   readonly rows: readonly (readonly string[])[];
   readonly metadata: PassiveTxtDatExtractionMetadata;
 }
-
-/**
- * The exact WU9 AED field set, widened only where WU9 used CSV-specific
- * literal types. No TXT/DAT-specific field crosses this boundary.
- */
-export type TxtDatAuthoritativeExternalData = Omit<
-  AuthoritativeExternalData,
-  "interpretationProfile" | "interpretationVersion" | "extractionMetadata"
-> & Readonly<{
-  interpretationProfile: TxtDatProfile;
-  interpretationVersion: typeof TXT_DAT_INTERPRETATION_VERSION;
-  extractionMetadata: PassiveTxtDatExtractionMetadata;
-}>;
 
 export type TxtDatInterpretationDenial =
   | "TXT_DAT_ADMISSION_INVALID"
@@ -142,7 +131,7 @@ export type TxtDatInterpretationResult =
   | Readonly<{ interpreted: false; denial: TxtDatInterpretationDenial }>;
 
 export type TxtDatAuthoritativeExternalDataResult =
-  | Readonly<{ constructed: true; data: TxtDatAuthoritativeExternalData }>
+  | Readonly<{ constructed: true; data: AuthoritativeExternalData }>
   | Readonly<{
       constructed: false;
       denial: "TXT_DAT_EXTRACTION_INVALID";
@@ -464,6 +453,6 @@ export function constructTxtDatAuthoritativeExternalData(
       interpretationIdentity: extraction.interpretationIdentity,
       datasetIdentity: extraction.datasetIdentity,
     },
-  }) as TxtDatAuthoritativeExternalData;
+  }) as AuthoritativeExternalData;
   return Object.freeze({ constructed: true, data });
 }

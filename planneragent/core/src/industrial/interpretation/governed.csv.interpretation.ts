@@ -4,11 +4,21 @@ import {
   SECURE_FILE_ACQUISITION_PROFILE,
   type SecureFileAcquisitionResult,
 } from "../acquisition/secure.file.acquisition";
+import {
+  AUTHORITATIVE_EXTERNAL_DATA_VERSION,
+  type AuthoritativeExternalData,
+} from "./authoritative.external.data";
+
+export {
+  AUTHORITATIVE_EXTERNAL_DATA_VERSION,
+} from "./authoritative.external.data";
+export type {
+  AuthoritativeExternalData,
+} from "./authoritative.external.data";
 
 export const CSV_INTERPRETATION_PROFILE =
   "GOVERNED_PASSIVE_CSV_V1" as const;
 export const CSV_INTERPRETATION_VERSION = "1" as const;
-export const AUTHORITATIVE_EXTERNAL_DATA_VERSION = "1" as const;
 
 type AdmittedUpload = Extract<
   SecureFileAcquisitionResult,
@@ -68,28 +78,6 @@ export interface PassiveCsvExtraction {
     rowCount: number;
     byteLength: number;
     formulaSafety: "REJECT_LEADING_FORMULA_MARKERS";
-  }>;
-}
-
-export interface AuthoritativeExternalData {
-  readonly contractVersion: typeof AUTHORITATIVE_EXTERNAL_DATA_VERSION;
-  readonly tenantId: string;
-  readonly sourceIdentity: string;
-  readonly acquisitionIdentity: string;
-  readonly interpretationIdentity: string;
-  readonly interpretationProfile: typeof CSV_INTERPRETATION_PROFILE;
-  readonly interpretationVersion: typeof CSV_INTERPRETATION_VERSION;
-  readonly datasetIdentity: string;
-  readonly headers: readonly string[];
-  readonly rows: readonly (readonly string[])[];
-  readonly extractionMetadata: PassiveCsvExtraction["metadata"];
-  readonly lineage: Readonly<{
-    uploadId: string;
-    uploadDigestAlgorithm: "SHA-256";
-    uploadDigest: string;
-    acquisitionIdentity: string;
-    interpretationIdentity: string;
-    datasetIdentity: string;
   }>;
 }
 

@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
-import {
-  INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION,
-  SECURE_FILE_ACQUISITION_PROFILE,
-  type SecureFileAcquisitionResult,
-} from "../acquisition/secure.file.acquisition";
+import type {
+  CanonicalGovernedUploadProvenanceV1,
+  VerifiedGovernedInterpretationInputV1,
+} from "../provenance";
 import {
   AUTHORITATIVE_EXTERNAL_DATA_VERSION,
   type AuthoritativeExternalData,
@@ -20,11 +19,6 @@ export const CSV_INTERPRETATION_PROFILE =
   "GOVERNED_PASSIVE_CSV_V1" as const;
 export const CSV_INTERPRETATION_VERSION = "1" as const;
 
-type AdmittedUpload = Extract<
-  SecureFileAcquisitionResult,
-  { processed: true; disposition: "ADMITTED_FOR_GOVERNED_INTERPRETATION" }
->;
-
 export interface CsvInterpretationConfiguration {
   readonly delimiter: "," | ";" | "\t" | "|";
   readonly quote: '"' | "'";
@@ -34,27 +28,15 @@ export interface CsvInterpretationConfiguration {
   readonly maxCellLength: number;
 }
 
-export interface AdmittedCsvContent {
-  readonly acquisitionProfile: typeof SECURE_FILE_ACQUISITION_PROFILE;
-  readonly interpretationRegistryVersion:
-    typeof INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION;
-  readonly uploadId: string;
-  readonly tenantId: string;
-  readonly companyId: string;
-  readonly quarantineReference: string;
-  readonly inspectionId: string;
-  readonly malwareScanId: string;
-  readonly byteDigestAlgorithm: "SHA-256";
-  readonly byteDigest: string;
-  readonly byteLength: number;
+export interface VerifiedCsvContent {
   readonly bytes: Uint8Array;
 }
 
-export interface AdmittedCsvContentReader {
-  readAdmittedCsv(
-    admission: AdmittedUpload["reference"],
-  ): Promise<AdmittedCsvContent | null>;
-}
+export type VerifiedGovernedCsvInterpretationInputV1 =
+  VerifiedGovernedInterpretationInputV1<
+    VerifiedCsvContent,
+    CsvInterpretationConfiguration
+  >;
 
 export interface PassiveCsvExtraction {
   readonly profile: typeof CSV_INTERPRETATION_PROFILE;
@@ -65,6 +47,7 @@ export interface PassiveCsvExtraction {
   readonly uploadId: string;
   readonly uploadDigest: string;
   readonly acquisitionIdentity: string;
+  readonly canonicalProvenance: CanonicalGovernedUploadProvenanceV1;
   readonly interpretationIdentity: string;
   readonly datasetIdentity: string;
   readonly headers: readonly string[];
@@ -84,7 +67,6 @@ export interface PassiveCsvExtraction {
 export type CsvInterpretationDenial =
   | "CSV_ADMISSION_INVALID"
   | "CSV_CONTENT_UNAVAILABLE"
-  | "CSV_LINEAGE_INVALID"
   | "CSV_BYTE_INTEGRITY_INVALID"
   | "CSV_CONFIGURATION_UNSUPPORTED"
   | "CSV_UTF8_INVALID"
@@ -157,26 +139,6 @@ function supportedConfiguration(
     configuration.maxColumns > 0 &&
     Number.isSafeInteger(configuration?.maxCellLength) &&
     configuration.maxCellLength > 0
-  );
-}
-
-function lineageMatches(
-  admission: AdmittedUpload["reference"],
-  content: AdmittedCsvContent,
-): boolean {
-  return (
-    content.acquisitionProfile === admission.acquisitionProfile &&
-    content.interpretationRegistryVersion ===
-      admission.interpretationRegistryVersion &&
-    content.uploadId === admission.uploadId &&
-    content.tenantId === admission.tenantId &&
-    content.companyId === admission.companyId &&
-    content.quarantineReference === admission.quarantineReference &&
-    content.inspectionId === admission.inspectionId &&
-    content.malwareScanId === admission.malwareScanId &&
-    content.byteDigestAlgorithm === admission.byteDigestAlgorithm &&
-    content.byteDigest === admission.byteDigest &&
-    content.byteLength === admission.byteLength
   );
 }
 
@@ -282,37 +244,41 @@ function parseCsv(
 }
 
 export async function interpretAdmittedCsv(
-  admission: AdmittedUpload,
-  reader: AdmittedCsvContentReader,
-  configuration: CsvInterpretationConfiguration,
+  input: VerifiedGovernedCsvInterpretationInputV1,
 ): Promise<CsvInterpretationResult> {
   if (
-    admission?.processed !== true ||
-    admission.disposition !== "ADMITTED_FOR_GOVERNED_INTERPRETATION" ||
-    admission.reference?.detectedFormat !== "CSV" ||
-    !Object.isFrozen(admission) ||
-    !Object.isFrozen(admission.reference)
+    input?.version !== 1 ||
+    input.admission?.reference?.detectedFormat !== "CSV" ||
+    input.acquisition_provenance?.facts?.detected_format !== "CSV" ||
+    !Object.isFrozen(input) ||
+    !Object.isFrozen(input.canonical_provenance) ||
+    !Object.isFrozen(input.acquisition_provenance) ||
+    input.canonical_provenance.chain_head !== input.acquisition_provenance
   ) return deny("CSV_ADMISSION_INVALID");
-  if (!supportedConfiguration(configuration)) {
+  if (!supportedConfiguration(input.adapter_configuration)) {
     return deny("CSV_CONFIGURATION_UNSUPPORTED");
   }
-  const profile = Object.freeze({ ...configuration });
+  const profile = input.adapter_configuration;
+  const acquisition = input.acquisition_provenance.facts;
+  const identity = input.acquisition_provenance.previous.previous.facts;
   try {
-    const content = await reader.readAdmittedCsv(admission.reference);
+    const content = await input.content_reader.readVerifiedContent(
+      input.content_read_request,
+    );
     if (!content) return deny("CSV_CONTENT_UNAVAILABLE");
-    if (!lineageMatches(admission.reference, content)) {
-      return deny("CSV_LINEAGE_INVALID");
-    }
     if (
       !(content.bytes instanceof Uint8Array) ||
-      content.bytes.byteLength !== admission.reference.byteLength ||
-      !HEX.test(content.byteDigest) ||
-      digest(content.bytes) !== admission.reference.byteDigest
+      content.bytes.byteLength !== acquisition.byte_length ||
+      !HEX.test(acquisition.source_byte_digest.value) ||
+      digest(content.bytes) !== acquisition.source_byte_digest.value
     ) return deny("CSV_BYTE_INTEGRITY_INVALID");
 
     let text: string;
     try {
-      text = new TextDecoder("utf-8", { fatal: true }).decode(content.bytes);
+      text = new TextDecoder("utf-8", {
+        fatal: true,
+        ignoreBOM: false,
+      }).decode(content.bytes);
     } catch {
       return deny("CSV_UTF8_INVALID");
     }
@@ -339,18 +305,7 @@ export async function interpretAdmittedCsv(
       return deny("CSV_COLUMN_COUNT_INCONSISTENT");
     }
 
-    const acquisitionIdentity = stableIdentity("acquisition", [
-      admission.reference.acquisitionProfile,
-      admission.reference.interpretationRegistryVersion,
-      admission.reference.tenantId,
-      admission.reference.companyId,
-      admission.reference.uploadId,
-      admission.reference.quarantineReference,
-      admission.reference.inspectionId,
-      admission.reference.malwareScanId,
-      admission.reference.byteDigest,
-      admission.reference.byteLength,
-    ]);
+    const acquisitionIdentity = acquisition.acquisition_id;
     const profileFields = [
       CSV_INTERPRETATION_PROFILE,
       CSV_INTERPRETATION_VERSION,
@@ -374,11 +329,12 @@ export async function interpretAdmittedCsv(
       profile: CSV_INTERPRETATION_PROFILE,
       version: CSV_INTERPRETATION_VERSION,
       sourceFormat: "CSV" as const,
-      tenantId: admission.reference.tenantId,
-      sourceIdentity: `upload:sha256:${admission.reference.byteDigest}`,
-      uploadId: admission.reference.uploadId,
-      uploadDigest: admission.reference.byteDigest,
+      tenantId: identity.tenant_id,
+      sourceIdentity: `upload:sha256:${acquisition.source_byte_digest.value}`,
+      uploadId: acquisition.upload_id,
+      uploadDigest: acquisition.source_byte_digest.value,
       acquisitionIdentity,
+      canonicalProvenance: input.canonical_provenance,
       interpretationIdentity,
       datasetIdentity,
       headers: headers.slice(),
@@ -390,7 +346,7 @@ export async function interpretAdmittedCsv(
         encoding: "UTF-8" as const,
         headerCount: headers.length,
         rowCount: rows.length,
-        byteLength: admission.reference.byteLength,
+        byteLength: acquisition.byte_length,
         formulaSafety: "REJECT_LEADING_FORMULA_MARKERS" as const,
       },
     }) as PassiveCsvExtraction;

@@ -1,19 +1,13 @@
-import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import {
-  INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION,
-  SECURE_FILE_ACQUISITION_PROFILE,
-  type SecureFileAcquisitionResult,
-} from "../acquisition/secure.file.acquisition";
 import {
   AUTHORITATIVE_EXTERNAL_DATA_VERSION,
   constructAuthoritativeExternalData,
   CSV_INTERPRETATION_PROFILE,
   CSV_INTERPRETATION_VERSION,
   interpretAdmittedCsv,
-  type AdmittedCsvContentReader,
   type CsvInterpretationConfiguration,
 } from "../interpretation/governed.csv.interpretation";
+import { governedCsvInput } from "./governed.csv.test.fixture";
 
 const configuration: CsvInterpretationConfiguration = {
   delimiter: ",",
@@ -24,62 +18,6 @@ const configuration: CsvInterpretationConfiguration = {
   maxCellLength: 20,
 };
 
-function admitted(bytes: Uint8Array, overrides: Record<string, unknown> = {}) {
-  const byteDigest = createHash("sha256").update(bytes).digest("hex");
-  const result = {
-    processed: true,
-    disposition: "ADMITTED_FOR_GOVERNED_INTERPRETATION",
-    reference: Object.freeze({
-      acquisitionProfile: SECURE_FILE_ACQUISITION_PROFILE,
-      interpretationRegistryVersion:
-        INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION,
-      uploadId: "upload-001",
-      tenantId: "tenant-001",
-      companyId: "company-001",
-      authorizationReference: "authorization:001",
-      quarantineReference: "quarantine:001",
-      inspectionId: "inspection:001",
-      malwareScanId: "scan:001",
-      detectedFormat: "CSV",
-      byteDigestAlgorithm: "SHA-256",
-      byteDigest,
-      byteLength: bytes.byteLength,
-      admittedAt: "2026-07-27T10:00:00.000Z",
-      ...overrides,
-    }),
-  } as Extract<
-    SecureFileAcquisitionResult,
-    { disposition: "ADMITTED_FOR_GOVERNED_INTERPRETATION" }
-  >;
-  return Object.freeze(result);
-}
-
-function reader(
-  bytes: Uint8Array,
-  overrides: Record<string, unknown> = {},
-): AdmittedCsvContentReader {
-  return {
-    async readAdmittedCsv(reference) {
-      return {
-        acquisitionProfile: reference.acquisitionProfile,
-        interpretationRegistryVersion:
-          reference.interpretationRegistryVersion,
-        uploadId: reference.uploadId,
-        tenantId: reference.tenantId,
-        companyId: reference.companyId,
-        quarantineReference: reference.quarantineReference,
-        inspectionId: reference.inspectionId,
-        malwareScanId: reference.malwareScanId,
-        byteDigestAlgorithm: reference.byteDigestAlgorithm,
-        byteDigest: reference.byteDigest,
-        byteLength: reference.byteLength,
-        bytes,
-        ...overrides,
-      };
-    },
-  };
-}
-
 async function interpret(
   source: string | Uint8Array,
   config: CsvInterpretationConfiguration = configuration,
@@ -87,7 +25,7 @@ async function interpret(
   const bytes = typeof source === "string"
     ? new TextEncoder().encode(source)
     : source;
-  return interpretAdmittedCsv(admitted(bytes), reader(bytes), config);
+  return interpretAdmittedCsv(governedCsvInput(bytes, config));
 }
 
 describe("Work Unit 9 — Governed CSV Industrial Interpretation", () => {
@@ -109,15 +47,34 @@ describe("Work Unit 9 — Governed CSV Industrial Interpretation", () => {
       },
     });
     expect(JSON.stringify(first)).not.toContain("INDUSTRIAL_ORDER");
-    expect(JSON.stringify(first)).not.toContain("canonical");
   });
 
-  it("rejects malformed UTF-8, empty and whitespace-only content", async () => {
+  it("projects immutable identity, provenance and digest lineage from WU10B-3", async () => {
+    const bytes = new TextEncoder().encode("sku,quantity\nA-1,2");
+    const input = governedCsvInput(bytes, configuration);
+    const result = await interpretAdmittedCsv(input);
+    expect(result.interpreted).toBe(true);
+    if (!result.interpreted) return;
+    expect(result.extraction.canonicalProvenance)
+      .toBe(input.canonical_provenance);
+    expect(result.extraction.acquisitionIdentity)
+      .toBe(input.acquisition_provenance.facts.acquisition_id);
+    expect(result.extraction.uploadDigest)
+      .toBe(input.acquisition_provenance.facts.source_byte_digest.value);
+    expect(result.extraction.tenantId)
+      .toBe(input.acquisition_provenance.previous.previous.facts.tenant_id);
+    expect(Object.isFrozen(result.extraction.canonicalProvenance)).toBe(true);
+  });
+
+  it("rejects malformed UTF-8, substituted empty and whitespace-only content", async () => {
     expect(await interpret(new Uint8Array([0xc3, 0x28]))).toEqual({
       interpreted: false, denial: "CSV_UTF8_INVALID",
     });
-    expect(await interpret("")).toEqual({
-      interpreted: false, denial: "CSV_EMPTY",
+    const admitted = new TextEncoder().encode("a\n1");
+    expect(await interpretAdmittedCsv(governedCsvInput(
+      admitted, configuration, new Uint8Array(),
+    ))).toEqual({
+      interpreted: false, denial: "CSV_BYTE_INTEGRITY_INVALID",
     });
     expect(await interpret(" \t \n")).toEqual({
       interpreted: false, denial: "CSV_WHITESPACE_ONLY",
@@ -178,36 +135,12 @@ describe("Work Unit 9 — Governed CSV Industrial Interpretation", () => {
     });
   });
 
-  it("rejects uploads not admitted by WU8", async () => {
+  it("rejects substituted source bytes against attested digest lineage", async () => {
     const bytes = new TextEncoder().encode("a\n1");
-    const result = await interpretAdmittedCsv({
-      processed: false,
-      denial: "MALWARE_DETECTED",
-    } as any, reader(bytes), configuration);
-    expect(result).toEqual({
-      interpreted: false, denial: "CSV_ADMISSION_INVALID",
-    });
-  });
-
-  it("rejects forged upload, acquisition and byte lineage", async () => {
-    const bytes = new TextEncoder().encode("a\n1");
-    const admission = admitted(bytes);
-    expect(await interpretAdmittedCsv(
-      admission,
-      reader(bytes, { uploadId: "upload-forged" }),
-      configuration,
-    )).toEqual({ interpreted: false, denial: "CSV_LINEAGE_INVALID" });
-    expect(await interpretAdmittedCsv(
-      admission,
-      reader(bytes, { quarantineReference: "quarantine:forged" }),
-      configuration,
-    )).toEqual({ interpreted: false, denial: "CSV_LINEAGE_INVALID" });
     const substituted = new TextEncoder().encode("a\n2");
-    expect(await interpretAdmittedCsv(
-      admission,
-      reader(substituted),
-      configuration,
-    )).toEqual({ interpreted: false, denial: "CSV_BYTE_INTEGRITY_INVALID" });
+    expect(await interpretAdmittedCsv(governedCsvInput(
+      bytes, configuration, substituted,
+    ))).toEqual({ interpreted: false, denial: "CSV_BYTE_INTEGRITY_INVALID" });
   });
 
   it("deeply freezes extraction and Authoritative External Data", async () => {

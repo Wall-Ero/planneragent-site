@@ -8,9 +8,9 @@ import {
 import {
   constructAuthoritativeExternalData,
   interpretAdmittedCsv,
-  type AdmittedCsvContentReader,
   type CsvInterpretationConfiguration,
 } from "../interpretation/governed.csv.interpretation";
+import { governedCsvInput } from "./governed.csv.test.fixture";
 import {
   constructTxtDatAuthoritativeExternalData,
   DELIMITED_TXT_DAT_INTERPRETATION_PROFILE,
@@ -301,16 +301,12 @@ describe("Work Unit 10 — Governed TXT/DAT Industrial Interpretation", () => {
     if (!txtAed.constructed) throw new Error("expected TXT AED");
 
     const csvBytes = new TextEncoder().encode("code,amount\nA01,10");
-    const csvAdmission = admitted(csvBytes, "CSV");
-    const csvReader: AdmittedCsvContentReader = {
-      readAdmittedCsv: reader(csvBytes).readAdmittedTxtDat,
-    };
     const csvConfig: CsvInterpretationConfiguration = {
       delimiter: ",", quote: '"', newline: "\n",
       maxRows: 3, maxColumns: 4, maxCellLength: 10,
     };
     const csv = await interpretAdmittedCsv(
-      csvAdmission, csvReader, csvConfig,
+      governedCsvInput(csvBytes, csvConfig),
     );
     if (!csv.interpreted) throw new Error("expected CSV extraction");
     const csvAed = constructAuthoritativeExternalData(csv.extraction);

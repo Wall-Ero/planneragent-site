@@ -12,7 +12,6 @@ import {
 import {
   constructAuthoritativeExternalData,
   interpretAdmittedCsv,
-  type AdmittedCsvContentReader,
 } from "../interpretation/governed.csv.interpretation";
 import {
   constructTxtDatAuthoritativeExternalData,
@@ -20,6 +19,7 @@ import {
   type AdmittedTxtDatContentReader,
   type TxtDatInterpretationConfiguration,
 } from "../interpretation/governed.flatfile.interpretation";
+import { governedCsvInput } from "./governed.csv.test.fixture";
 
 function admission(bytes: Uint8Array, format: "CSV" | "TXT_DAT") {
   const byteDigest = createHash("sha256").update(bytes).digest("hex");
@@ -69,16 +69,13 @@ function content(reference: ReturnType<typeof admission>["reference"],
 
 async function csvAed(): Promise<AuthoritativeExternalData> {
   const bytes = new TextEncoder().encode("code,amount\nA01,10");
-  const admitted = admission(bytes, "CSV");
-  const reader: AdmittedCsvContentReader = {
-    async readAdmittedCsv(reference) {
-      return content(reference, bytes);
-    },
-  };
-  const interpreted = await interpretAdmittedCsv(admitted, reader, {
+  const configuration = {
     delimiter: ",", quote: '"', newline: "\n",
     maxRows: 3, maxColumns: 3, maxCellLength: 10,
-  });
+  } as const;
+  const interpreted = await interpretAdmittedCsv(
+    governedCsvInput(bytes, configuration),
+  );
   if (!interpreted.interpreted) throw new Error(interpreted.denial);
   const result = constructAuthoritativeExternalData(
     interpreted.extraction,

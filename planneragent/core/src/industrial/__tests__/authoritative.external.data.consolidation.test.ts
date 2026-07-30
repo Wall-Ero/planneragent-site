@@ -76,6 +76,8 @@ describe("Work Unit 10A — Authoritative External Data consolidation", () => {
       expect(downstreamConsumer(data)).toEqual([["A01", "10"]]);
       expect(Object.isFrozen(data)).toBe(true);
       expect(Object.isFrozen(data.extractionMetadata)).toBe(true);
+      expect(data.provenance.version).toBe(1);
+      expect(Object.isFrozen(data.provenance)).toBe(true);
       expect(Object.isFrozen(data.lineage)).toBe(true);
     }
   });
@@ -92,6 +94,23 @@ describe("Work Unit 10A — Authoritative External Data consolidation", () => {
     expect(Object.keys(txt.extractionMetadata).sort()).toEqual(
       Object.keys(csv.extractionMetadata).sort(),
     );
+    expect(Object.keys(dat.provenance).sort()).toEqual(
+      Object.keys(csv.provenance).sort(),
+    );
+  });
+
+  it("adds canonical provenance without flattening its attested facts", async () => {
+    const data = await csvAed();
+    expect(Object.keys(data)).toContain("provenance");
+    for (const attestedOnly of [
+      "principal_id",
+      "session_id",
+      "membership_id",
+      "authorization_decision_id",
+      "quarantine_reference",
+      "inspection_id",
+      "malware_scan_id",
+    ]) expect(Object.keys(data)).not.toContain(attestedOnly);
   });
 
   it("requires no interface widening for a future adapter", async () => {

@@ -1,3 +1,7 @@
+import type {
+  CanonicalGovernedUploadProvenanceV1,
+} from "../provenance";
+
 export const AUTHORITATIVE_EXTERNAL_DATA_VERSION = "1" as const;
 
 export type AuthoritativeExternalDataMetadataValue =
@@ -22,6 +26,7 @@ export interface AuthoritativeExternalData {
   readonly headers: readonly string[];
   readonly rows: readonly (readonly string[])[];
   readonly extractionMetadata: AuthoritativeExternalDataMetadata;
+  readonly provenance: CanonicalGovernedUploadProvenanceV1;
   readonly lineage: Readonly<{
     uploadId: string;
     uploadDigestAlgorithm: "SHA-256";

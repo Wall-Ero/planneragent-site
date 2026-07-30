@@ -401,6 +401,7 @@ export function constructTxtDatAuthoritativeExternalData(
     headers: extraction.headers,
     rows: extraction.rows,
     extractionMetadata: extraction.metadata,
+    provenance: extraction.canonicalProvenance,
     lineage: {
       uploadId: extraction.uploadId,
       uploadDigestAlgorithm: "SHA-256" as const,

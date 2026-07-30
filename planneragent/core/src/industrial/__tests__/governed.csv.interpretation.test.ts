@@ -169,7 +169,10 @@ describe("Work Unit 9 — Governed CSV Industrial Interpretation", () => {
       },
     });
     if (first.constructed) {
+      expect(first.data.provenance)
+        .toBe(result.extraction.canonicalProvenance);
       expect(Object.isFrozen(first.data)).toBe(true);
+      expect(Object.isFrozen(first.data.provenance)).toBe(true);
       expect(Object.isFrozen(first.data.lineage)).toBe(true);
       expect(Object.isFrozen(first.data.rows[0])).toBe(true);
     }

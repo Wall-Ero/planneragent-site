@@ -203,7 +203,10 @@ describe("Work Unit 10 — Governed TXT/DAT Industrial Interpretation", () => {
     );
     expect(first).toEqual(second);
     if (first.constructed) {
+      expect(first.data.provenance)
+        .toBe(result.extraction.canonicalProvenance);
       expect(Object.isFrozen(first.data)).toBe(true);
+      expect(Object.isFrozen(first.data.provenance)).toBe(true);
       expect(Object.isFrozen(first.data.lineage)).toBe(true);
     }
   });

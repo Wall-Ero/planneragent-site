@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
-import {
-  INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION,
-  SECURE_FILE_ACQUISITION_PROFILE,
-  type SecureFileAcquisitionResult,
-} from "../acquisition/secure.file.acquisition";
+import type {
+  CanonicalGovernedUploadProvenanceV1,
+  VerifiedGovernedInterpretationInputV1,
+} from "../provenance";
 import {
   AUTHORITATIVE_EXTERNAL_DATA_VERSION,
   type AuthoritativeExternalData,
@@ -19,11 +18,6 @@ export const TXT_DAT_INTERPRETATION_VERSION = "1" as const;
 type TxtDatProfile =
   | typeof DELIMITED_TXT_DAT_INTERPRETATION_PROFILE
   | typeof FIXED_WIDTH_TXT_DAT_INTERPRETATION_PROFILE;
-type AdmittedUpload = Extract<
-  SecureFileAcquisitionResult,
-  { processed: true; disposition: "ADMITTED_FOR_GOVERNED_INTERPRETATION" }
->;
-
 export interface TxtDatFieldDefinition {
   readonly name: string;
   readonly start?: number;
@@ -55,27 +49,15 @@ export type TxtDatInterpretationConfiguration =
   | DelimitedTxtDatConfiguration
   | FixedWidthTxtDatConfiguration;
 
-export interface AdmittedTxtDatContent {
-  readonly acquisitionProfile: typeof SECURE_FILE_ACQUISITION_PROFILE;
-  readonly interpretationRegistryVersion:
-    typeof INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION;
-  readonly uploadId: string;
-  readonly tenantId: string;
-  readonly companyId: string;
-  readonly quarantineReference: string;
-  readonly inspectionId: string;
-  readonly malwareScanId: string;
-  readonly byteDigestAlgorithm: "SHA-256";
-  readonly byteDigest: string;
-  readonly byteLength: number;
+export interface VerifiedTxtDatContent {
   readonly bytes: Uint8Array;
 }
 
-export interface AdmittedTxtDatContentReader {
-  readAdmittedTxtDat(
-    admission: AdmittedUpload["reference"],
-  ): Promise<AdmittedTxtDatContent | null>;
-}
+export type VerifiedGovernedTxtDatInterpretationInputV1 =
+  VerifiedGovernedInterpretationInputV1<
+    VerifiedTxtDatContent,
+    TxtDatInterpretationConfiguration
+  >;
 
 export type PassiveTxtDatExtractionMetadata =
   AuthoritativeExternalDataMetadata & Readonly<{
@@ -98,6 +80,7 @@ export interface PassiveTxtDatExtraction {
   readonly uploadId: string;
   readonly uploadDigest: string;
   readonly acquisitionIdentity: string;
+  readonly canonicalProvenance: CanonicalGovernedUploadProvenanceV1;
   readonly interpretationIdentity: string;
   readonly datasetIdentity: string;
   readonly headers: readonly string[];
@@ -108,7 +91,6 @@ export interface PassiveTxtDatExtraction {
 export type TxtDatInterpretationDenial =
   | "TXT_DAT_ADMISSION_INVALID"
   | "TXT_DAT_CONTENT_UNAVAILABLE"
-  | "TXT_DAT_LINEAGE_INVALID"
   | "TXT_DAT_BYTE_INTEGRITY_INVALID"
   | "TXT_DAT_LAYOUT_MISSING"
   | "TXT_DAT_LAYOUT_INVALID"
@@ -233,26 +215,6 @@ function validateConfiguration(
   return null;
 }
 
-function lineageMatches(
-  admission: AdmittedUpload["reference"],
-  content: AdmittedTxtDatContent,
-): boolean {
-  return (
-    content.acquisitionProfile === admission.acquisitionProfile &&
-    content.interpretationRegistryVersion ===
-      admission.interpretationRegistryVersion &&
-    content.uploadId === admission.uploadId &&
-    content.tenantId === admission.tenantId &&
-    content.companyId === admission.companyId &&
-    content.quarantineReference === admission.quarantineReference &&
-    content.inspectionId === admission.inspectionId &&
-    content.malwareScanId === admission.malwareScanId &&
-    content.byteDigestAlgorithm === admission.byteDigestAlgorithm &&
-    content.byteDigest === admission.byteDigest &&
-    content.byteLength === admission.byteLength
-  );
-}
-
 function splitRecords(
   text: string,
   newline: "\n" | "\r\n",
@@ -322,40 +284,44 @@ function parseRecords(
 }
 
 export async function interpretAdmittedTxtDat(
-  admission: AdmittedUpload,
-  reader: AdmittedTxtDatContentReader,
-  configuration: TxtDatInterpretationConfiguration,
+  input: VerifiedGovernedTxtDatInterpretationInputV1,
 ): Promise<TxtDatInterpretationResult> {
   if (
-    admission?.processed !== true ||
-    admission.disposition !== "ADMITTED_FOR_GOVERNED_INTERPRETATION" ||
-    admission.reference?.detectedFormat !== "TXT_DAT" ||
-    !Object.isFrozen(admission) ||
-    !Object.isFrozen(admission.reference)
+    input?.version !== 1 ||
+    input.admission?.reference?.detectedFormat !== "TXT_DAT" ||
+    input.acquisition_provenance?.facts?.detected_format !== "TXT_DAT" ||
+    !Object.isFrozen(input) ||
+    !Object.isFrozen(input.canonical_provenance) ||
+    !Object.isFrozen(input.acquisition_provenance) ||
+    input.canonical_provenance.chain_head !== input.acquisition_provenance
   ) return deny("TXT_DAT_ADMISSION_INVALID");
-  const configurationFailure = validateConfiguration(configuration);
+  const configurationFailure = validateConfiguration(
+    input.adapter_configuration,
+  );
   if (configurationFailure) return deny(configurationFailure);
-  const profile = deepFreeze({
-    ...configuration,
-    fields: configuration.fields.map(field => ({ ...field })),
-  }) as TxtDatInterpretationConfiguration;
+  const profile = input.adapter_configuration;
+  const acquisition = input.acquisition_provenance.facts;
+  const governedIdentity =
+    input.acquisition_provenance.previous.previous.facts;
 
   try {
-    const content = await reader.readAdmittedTxtDat(admission.reference);
+    const content = await input.content_reader.readVerifiedContent(
+      input.content_read_request,
+    );
     if (!content) return deny("TXT_DAT_CONTENT_UNAVAILABLE");
-    if (!lineageMatches(admission.reference, content)) {
-      return deny("TXT_DAT_LINEAGE_INVALID");
-    }
     if (
       !(content.bytes instanceof Uint8Array) ||
-      content.bytes.byteLength !== admission.reference.byteLength ||
-      !HEX.test(content.byteDigest) ||
-      sha256(content.bytes) !== admission.reference.byteDigest
+      content.bytes.byteLength !== acquisition.byte_length ||
+      !HEX.test(acquisition.source_byte_digest.value) ||
+      sha256(content.bytes) !== acquisition.source_byte_digest.value
     ) return deny("TXT_DAT_BYTE_INTEGRITY_INVALID");
 
     let text: string;
     try {
-      text = new TextDecoder("utf-8", { fatal: true }).decode(content.bytes);
+      text = new TextDecoder("utf-8", {
+        fatal: true,
+        ignoreBOM: false,
+      }).decode(content.bytes);
     } catch {
       return deny("TXT_DAT_UTF8_INVALID");
     }
@@ -366,18 +332,7 @@ export async function interpretAdmittedTxtDat(
     const parsed = parseRecords(records, profile);
     if (!Array.isArray(parsed)) return deny(parsed);
 
-    const acquisitionIdentity = identity("acquisition", [
-      admission.reference.acquisitionProfile,
-      admission.reference.interpretationRegistryVersion,
-      admission.reference.tenantId,
-      admission.reference.companyId,
-      admission.reference.uploadId,
-      admission.reference.quarantineReference,
-      admission.reference.inspectionId,
-      admission.reference.malwareScanId,
-      admission.reference.byteDigest,
-      admission.reference.byteLength,
-    ]);
+    const acquisitionIdentity = acquisition.acquisition_id;
     const interpretationProfile = profile.layout === "DELIMITED"
       ? DELIMITED_TXT_DAT_INTERPRETATION_PROFILE
       : FIXED_WIDTH_TXT_DAT_INTERPRETATION_PROFILE;
@@ -397,11 +352,12 @@ export async function interpretAdmittedTxtDat(
       profile: interpretationProfile,
       version: TXT_DAT_INTERPRETATION_VERSION,
       sourceFormat: "TXT_DAT" as const,
-      tenantId: admission.reference.tenantId,
-      sourceIdentity: `upload:sha256:${admission.reference.byteDigest}`,
-      uploadId: admission.reference.uploadId,
-      uploadDigest: admission.reference.byteDigest,
+      tenantId: governedIdentity.tenant_id,
+      sourceIdentity: `upload:sha256:${acquisition.source_byte_digest.value}`,
+      uploadId: acquisition.upload_id,
+      uploadDigest: acquisition.source_byte_digest.value,
       acquisitionIdentity,
+      canonicalProvenance: input.canonical_provenance,
       interpretationIdentity,
       datasetIdentity,
       headers,
@@ -413,7 +369,7 @@ export async function interpretAdmittedTxtDat(
         encoding: "UTF-8" as const,
         headerCount: headers.length,
         rowCount: parsed.length,
-        byteLength: admission.reference.byteLength,
+        byteLength: acquisition.byte_length,
         formulaSafety: "REJECT_LEADING_FORMULA_MARKERS" as const,
       },
     }) as PassiveTxtDatExtraction;

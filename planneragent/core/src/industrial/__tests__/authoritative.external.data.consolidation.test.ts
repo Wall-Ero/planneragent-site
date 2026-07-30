@@ -1,10 +1,4 @@
-import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import {
-  INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION,
-  SECURE_FILE_ACQUISITION_PROFILE,
-  type SecureFileAcquisitionResult,
-} from "../acquisition/secure.file.acquisition";
 import {
   AUTHORITATIVE_EXTERNAL_DATA_VERSION,
   type AuthoritativeExternalData,
@@ -16,56 +10,10 @@ import {
 import {
   constructTxtDatAuthoritativeExternalData,
   interpretAdmittedTxtDat,
-  type AdmittedTxtDatContentReader,
   type TxtDatInterpretationConfiguration,
 } from "../interpretation/governed.flatfile.interpretation";
 import { governedCsvInput } from "./governed.csv.test.fixture";
-
-function admission(bytes: Uint8Array, format: "CSV" | "TXT_DAT") {
-  const byteDigest = createHash("sha256").update(bytes).digest("hex");
-  return Object.freeze({
-    processed: true,
-    disposition: "ADMITTED_FOR_GOVERNED_INTERPRETATION",
-    reference: Object.freeze({
-      acquisitionProfile: SECURE_FILE_ACQUISITION_PROFILE,
-      interpretationRegistryVersion:
-        INDUSTRIAL_INTERPRETATION_REGISTRY_VERSION,
-      uploadId: `upload-${format.toLowerCase()}`,
-      tenantId: "tenant-001",
-      companyId: "company-001",
-      authorizationReference: "authorization:010a",
-      quarantineReference: `quarantine:${format.toLowerCase()}`,
-      inspectionId: `inspection:${format.toLowerCase()}`,
-      malwareScanId: `scan:${format.toLowerCase()}`,
-      detectedFormat: format,
-      byteDigestAlgorithm: "SHA-256",
-      byteDigest,
-      byteLength: bytes.byteLength,
-      admittedAt: "2026-07-27T21:00:00.000Z",
-    }),
-  }) as Extract<
-    SecureFileAcquisitionResult,
-    { disposition: "ADMITTED_FOR_GOVERNED_INTERPRETATION" }
-  >;
-}
-
-function content(reference: ReturnType<typeof admission>["reference"],
-  bytes: Uint8Array) {
-  return {
-    acquisitionProfile: reference.acquisitionProfile,
-    interpretationRegistryVersion: reference.interpretationRegistryVersion,
-    uploadId: reference.uploadId,
-    tenantId: reference.tenantId,
-    companyId: reference.companyId,
-    quarantineReference: reference.quarantineReference,
-    inspectionId: reference.inspectionId,
-    malwareScanId: reference.malwareScanId,
-    byteDigestAlgorithm: reference.byteDigestAlgorithm,
-    byteDigest: reference.byteDigest,
-    byteLength: reference.byteLength,
-    bytes,
-  };
-}
+import { governedTxtDatInput } from "./governed.flatfile.test.fixture";
 
 async function csvAed(): Promise<AuthoritativeExternalData> {
   const bytes = new TextEncoder().encode("code,amount\nA01,10");
@@ -88,12 +36,6 @@ async function flatFileAed(
   dataKind: "TXT" | "DAT",
 ): Promise<AuthoritativeExternalData> {
   const bytes = new TextEncoder().encode("A01|10");
-  const admitted = admission(bytes, "TXT_DAT");
-  const reader: AdmittedTxtDatContentReader = {
-    async readAdmittedTxtDat(reference) {
-      return content(reference, bytes);
-    },
-  };
   const profile: TxtDatInterpretationConfiguration = {
     dataKind,
     layout: "DELIMITED",
@@ -106,7 +48,7 @@ async function flatFileAed(
     maxRecordLength: 20,
   };
   const interpreted = await interpretAdmittedTxtDat(
-    admitted, reader, profile,
+    governedTxtDatInput(bytes, profile),
   );
   if (!interpreted.interpreted) throw new Error(interpreted.denial);
   const result = constructTxtDatAuthoritativeExternalData(

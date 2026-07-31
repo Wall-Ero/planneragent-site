@@ -9,6 +9,10 @@ import {
   FIXED_WIDTH_TXT_DAT_INTERPRETATION_PROFILE,
   TXT_DAT_INTERPRETATION_VERSION,
 } from "../interpretation/governed.flatfile.interpretation";
+import {
+  XLSX_INTERPRETATION_PROFILE,
+  XLSX_INTERPRETATION_VERSION,
+} from "../interpretation/governed.xlsx.interpretation";
 
 export const INDUSTRIAL_DATASET_ROLE_CONTRACT_VERSION = 1 as const;
 
@@ -101,7 +105,9 @@ function supportedProfile(data: AuthoritativeExternalData): boolean {
       data.interpretationVersion === CSV_INTERPRETATION_VERSION) ||
     ((data.interpretationProfile === DELIMITED_TXT_DAT_INTERPRETATION_PROFILE ||
       data.interpretationProfile === FIXED_WIDTH_TXT_DAT_INTERPRETATION_PROFILE) &&
-      data.interpretationVersion === TXT_DAT_INTERPRETATION_VERSION);
+      data.interpretationVersion === TXT_DAT_INTERPRETATION_VERSION) ||
+    (data.interpretationProfile === XLSX_INTERPRETATION_PROFILE &&
+      data.interpretationVersion === XLSX_INTERPRETATION_VERSION);
 }
 
 function sameHeaders(actual: readonly string[], expected: readonly string[]): boolean {

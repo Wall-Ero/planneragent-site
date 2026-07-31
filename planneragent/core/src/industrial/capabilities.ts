@@ -58,6 +58,13 @@ export const READ_SUPPLY_PLAN: IndustrialCapability = {
     "Retrieve supplier delivery plan, purchase orders, or inbound supply schedule",
 };
 
+export const READ_MASTER_BOM: IndustrialCapability = {
+  id: "read_master_bom",
+  domain: "manufacturing",
+  verb: "read",
+  description: "Retrieve the authoritative material composition relationships",
+};
+
 // -----------------------------------------------------
 // EXECUTION CAPABILITIES
 // -----------------------------------------------------
@@ -88,6 +95,7 @@ export const INDUSTRIAL_CAPABILITIES: IndustrialCapability[] = [
   READ_MOVEMENTS,
   READ_PRODUCTION_PLAN,
   READ_SUPPLY_PLAN,
+  READ_MASTER_BOM,
   UPDATE_ORDER,
   NOTIFY_SUPPLIER,
 ];

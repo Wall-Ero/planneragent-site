@@ -3,7 +3,6 @@ import { executeAdapter } from "../adapter.runtime";
 import type { ConnectorAccessServices } from "../connector.access";
 import { getSystemRegistry } from "../system.registry";
 
-import "../../connectors/erp.sap.adapter";
 import "../../connectors/mail.smtp.adapter";
 
 const accessServices: ConnectorAccessServices = {
@@ -18,7 +17,7 @@ const accessServices: ConnectorAccessServices = {
   },
   async authorizeConnectorUse(request) {
     return request.connectorIdentity.identityId ===
-      "connector-identity:erp-sap";
+      "connector-identity:mail-smtp";
   },
   async resolveConnectorCredential(credentialReference) {
     return { credentialReference, secret: "test-secret" };
@@ -35,21 +34,21 @@ const dataAccessContext = {
   contextId: "data-access:adapter-test",
   tenantId: "tenant-001",
   targetTenantId: "tenant-001",
-  sourceSystem: "SAP",
+  sourceSystem: "SMTP",
   sourceRegion: "EU",
   targetRegion: "EU",
   runtimeLocality: "TENANT_LOCAL",
   encryptionDomain: "EXECUTION_MEMORY",
   encryptionEvidence: {
     contextId: "data-access:adapter-test",
-    connectorIdentityId: "connector-identity:erp-sap",
+    connectorIdentityId: "connector-identity:mail-smtp",
     domain: "EXECUTION_MEMORY",
     encryptedInTransit: true,
     encryptedAtRest: true,
   },
   transportEvidence: {
     contextId: "data-access:adapter-test",
-    connectorIdentityId: "connector-identity:erp-sap",
+    connectorIdentityId: "connector-identity:mail-smtp",
     scheme: "HTTPS",
     secure: true,
   },
@@ -78,7 +77,7 @@ describe("P6.2 — Industrial Adapter Runtime", () => {
 
     expect(res.capability_id).toBe("notify_supplier");
     expect(typeof res.connector_id).toBe("string");
-    expect(res.connector_identity_id).toBe("connector-identity:erp-sap");
+    expect(res.connector_identity_id).toBe("connector-identity:mail-smtp");
     expect(res.executed_at).toBeDefined();
     expect(res.output).toBeDefined();
   });

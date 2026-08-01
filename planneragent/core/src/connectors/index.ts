@@ -6,5 +6,5 @@
 // Importing this file registers all industrial connectors
 // =====================================================
 
-import "./erp.sap.adapter";
 export { initializeProductionErpConnector } from "./generic.erp.adapter";
+export { initializeSapConnector } from "./erp.sap.adapter";

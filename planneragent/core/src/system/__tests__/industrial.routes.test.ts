@@ -10,7 +10,6 @@ import { describe, it, expect } from "vitest";
 import worker from "../../worker";
 
 // side-effect imports (register real connectors)
-import "../../connectors/erp.sap.adapter";
 import "../../connectors/mail.smtp.adapter";
 
 async function mockFetch(path: string) {

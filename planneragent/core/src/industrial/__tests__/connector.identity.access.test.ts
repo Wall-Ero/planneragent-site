@@ -3,7 +3,7 @@ import type { ConnectorAccessServices } from "../connector.access";
 import { executeAdapter } from "../adapter.runtime";
 import { getSystemRegistry, registerConnector } from "../system.registry";
 
-import "../../connectors/erp.sap.adapter";
+import "../../connectors/mail.smtp.adapter";
 
 const identityEvidence = {
   workloadId: "planner-worker",
@@ -37,28 +37,28 @@ function accessServices(
 
 function request() {
   return {
-    capability_id: "read_orders",
+    capability_id: "notify_supplier",
     payload: {},
     workload_identity: identityEvidence,
     data_access_context: {
       contextId: "data-access:identity-test",
       tenantId: "tenant-001",
       targetTenantId: "tenant-001",
-      sourceSystem: "SAP",
+      sourceSystem: "SMTP",
       sourceRegion: "EU",
       targetRegion: "EU",
       runtimeLocality: "TENANT_LOCAL" as const,
       encryptionDomain: "EXECUTION_MEMORY" as const,
       encryptionEvidence: {
         contextId: "data-access:identity-test",
-        connectorIdentityId: "connector-identity:erp-sap",
+        connectorIdentityId: "connector-identity:mail-smtp",
         domain: "EXECUTION_MEMORY" as const,
         encryptedInTransit: true,
         encryptedAtRest: true,
       },
       transportEvidence: {
         contextId: "data-access:identity-test",
-        connectorIdentityId: "connector-identity:erp-sap",
+        connectorIdentityId: "connector-identity:mail-smtp",
         scheme: "HTTPS",
         secure: true,
       },
@@ -136,7 +136,7 @@ describe("Data Acquisition — Connector Identity & Access", () => {
   it("publishes connector identity without credential references", async () => {
     const serialized = JSON.stringify(await getSystemRegistry());
 
-    expect(serialized).toContain("connector-identity:erp-sap");
+    expect(serialized).toContain("connector-identity:mail-smtp");
     expect(serialized).not.toContain("secret://");
   });
 

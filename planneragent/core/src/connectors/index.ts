@@ -10,3 +10,4 @@ export { initializeProductionErpConnector } from "./generic.erp.adapter";
 export { initializeSapConnector } from "./erp.sap.adapter";
 export { initializeMesConnector } from "./generic.mes.adapter";
 export { initializeOperationalEdgeConnector } from "./generic.operational-edge.adapter";
+export { initializeIndustrialSignalGatewayProfile } from "./industrial.signal.gateway.profile";

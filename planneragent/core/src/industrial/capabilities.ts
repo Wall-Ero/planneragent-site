@@ -65,6 +65,13 @@ export const READ_MASTER_BOM: IndustrialCapability = {
   description: "Retrieve the authoritative material composition relationships",
 };
 
+export const READ_EDGE_OBSERVATIONS: IndustrialCapability = {
+  id: "read_edge_observations",
+  domain: "manufacturing",
+  verb: "read",
+  description: "Acquire uninterpreted operational observations from one governed edge source",
+};
+
 // -----------------------------------------------------
 // EXECUTION CAPABILITIES
 // -----------------------------------------------------
@@ -96,6 +103,7 @@ export const INDUSTRIAL_CAPABILITIES: IndustrialCapability[] = [
   READ_PRODUCTION_PLAN,
   READ_SUPPLY_PLAN,
   READ_MASTER_BOM,
+  READ_EDGE_OBSERVATIONS,
   UPDATE_ORDER,
   NOTIFY_SUPPLIER,
 ];

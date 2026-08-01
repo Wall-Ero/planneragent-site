@@ -8,3 +8,4 @@
 
 export { initializeProductionErpConnector } from "./generic.erp.adapter";
 export { initializeSapConnector } from "./erp.sap.adapter";
+export { initializeMesConnector } from "./generic.mes.adapter";

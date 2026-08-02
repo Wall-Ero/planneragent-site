@@ -10,33 +10,8 @@ export type TwilioWhatsAppConfig = Readonly<{
 }>;
 
 export async function sendWhatsApp(
-  message: string,
-  config: TwilioWhatsAppConfig
+  _message: string,
+  _config: TwilioWhatsAppConfig
 ): Promise<void> {
-  const auth = btoa(`${config.accountSid}:${config.authToken}`);
-
-  const body = new URLSearchParams({
-    From: config.fromWhatsApp,
-    To: config.toWhatsApp,
-    Body: message,
-  });
-
-  const res = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body,
-    }
-  );
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(
-      `Twilio WhatsApp send failed (${res.status}): ${text}`
-    );
-  }
+  throw new Error("GOVERNED_TWILIO_LEGACY_BYPASS_PROHIBITED");
 }

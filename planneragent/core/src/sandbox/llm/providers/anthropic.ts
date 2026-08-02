@@ -3,6 +3,7 @@ import { LlmProvider } from "../types";
 
 export const AnthropicProvider: LlmProvider = {
   id: "anthropic",
+  remote: false,
   isFree: false,
   quality: "high",
 

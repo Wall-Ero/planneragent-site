@@ -2,6 +2,7 @@ import { LlmProvider } from "../types";
 
 export const OpenAIProvider: LlmProvider = {
   id: "openai",
+  remote: false,
   isFree: false,
   quality: "high",
 

@@ -55,6 +55,7 @@ export type LlmProviderResult = {
 export interface LlmProvider {
   /** unique id, e.g. "openai", "openrouter", "anthropic", "mistral", "oss", "mock" */
   id: string;
+  remote: boolean;
 
   /** true if this provider has zero marginal cost */
   isFree: boolean;
@@ -63,9 +64,8 @@ export interface LlmProvider {
   quality: "low" | "medium" | "high";
 
   generateScenarios(input: {
-    domain: string;
-    intent: string;
-    baseline: unknown;
+    sealed_exposure?: import("../../governance/knowledge-exposure/transport").SealedCognitiveExposureV1;
+    local_input?: unknown;
     model?: string;
   }): Promise<LlmProviderResult>;
 }

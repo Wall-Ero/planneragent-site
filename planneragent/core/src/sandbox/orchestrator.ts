@@ -19,7 +19,7 @@ import {
 import { computeDqmV1 } from "./dqm";
 
 // llm.ts must export: callManyLLMs(calls: LlmCall[], env?: any) -> Promise<LlmResult[]>
-import { callManyLLMs, type LlmCall, type LlmResult } from "./llm";
+import { type LlmResult } from "./llm";
 
 // -------------------------------
 // Helpers
@@ -93,65 +93,6 @@ function normalizeLlmResult(r: LlmResult): NormalizedLlmAdvice {
 // Build 3 LLM calls for a scenario.
 // IMPORTANT: LLM sees only scenario input + metrics; no secrets.
 // It must produce advisory text only (no actions).
-function buildScenarioLlmCalls(
-  scenario: SandboxScenarioInput
-): LlmCall[] {
-  const base = {
-    scenarioId: scenario.scenarioId,
-    baselineMetrics: scenario.baselineMetrics,
-    scenarioMetrics: scenario.scenarioMetrics,
-    feasible: scenario.feasible,
-  };
-
-  const promptText = `
-You are an operations planning exploration model.
-You must provide advisory analysis ONLY (no execution, no decisions).
-Given baseline vs scenario metrics, explain:
-1) main drivers of improvement/worsening
-2) key risks and blind spots
-3) suggested additional checks (data, constraints, edge cases)
-Keep it concise and structured.
-JSON input:
-${safeString(base)}
-`.trim();
-
-  // These 3 are "logical slots". Your llm.ts can map them to real providers/models via env.
-  return [
-    {
-      provider: "openai",
-      model: "slotA",
-      callId: '${scenario.scenarioId}-A',
-      messages: [
-        {role: "system", content: "You are an operations planning advisor."},
-        {role: "user", content: promptText}
-      ],
-      temperature: 0.2,
-      maxTokens: 500,
-    },
-    {
-      provider: "anthropic",
-      model: "slotB",
-      callId: '${scenario.scenarioId}-B',
-      messages: [
-        {role: "system", content: "You are an operations planning advisor."},
-        {role: "user", content: promptText}
-      ],
-      temperature: 0.2,
-      maxTokens: 500,
-    },
-    {
-      provider: "openai",
-      model: "slotC",
-      callId: '${scenario.scenarioId}-C',
-      messages: [
-        {role: "system", content: "You are an operations planning advisor."},
-        {role: "user", content: promptText}
-      ],
-      temperature: 0.2,
-      maxTokens: 500,
-    },
-  ] as LlmCall[];
-}
 
 // Optional: simple confidence proxy from 3 LLMs agreement (text-length & ok rate)
 // This is NOT used for scoring. Only for notes/debug.
@@ -189,19 +130,9 @@ export async function evaluateSandboxScenariosV1(
 
   for (const scenario of scenarios) {
     // (a) LLM fan-out
-    const calls = buildScenarioLlmCalls(scenario);
-
-    let raw: LlmResult[] = [];
-    try {
-      raw = await callManyLLMs(env, calls);
-    } catch (e) {
-      // If adapter fails hard, we still return deterministically with empty advice.
-      raw = [
-        { provider: "llmA", model: "modelA", ok: false, text: "", error: safeString(e) } as any,
-        { provider: "llmB", model: "modelB", ok: false, text: "", error: safeString(e) } as any,
-        { provider: "llmC", model: "modelC", ok: false, text: "", error: safeString(e) } as any,
-      ];
-    }
+    // Legacy arbitrary-prompt fan-out is closed. WU3-mediated callers must
+    // obtain independent sealed exposures and use the mediated LLM boundary.
+    const raw: LlmResult[] = [];
 
     const advice = raw.map(normalizeLlmResult);
     const advisoryHealth = computeAdvisoryHealth(advice);
@@ -242,6 +173,6 @@ export async function evaluateSandboxScenariosV1(
     baselineScenarioId: config.baselineScenarioId as SandboxScenarioId,
     results: ranked as any,
     bestScenarioId: ranked[0]?.scenarioId,
-    notes: `sandbox-orchestrator-v1 | llm=3 parallel | deterministic dqm | scenarios=${scenarios.length}`,
+    notes: `sandbox-orchestrator-v1 | llm=sealed-exposure-required | deterministic dqm | scenarios=${scenarios.length}`,
   } as SandboxEvaluationSummary;
 }

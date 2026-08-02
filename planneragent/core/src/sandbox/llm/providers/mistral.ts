@@ -4,6 +4,7 @@ import { LlmProvider } from "../types";
 
 export const MistralProvider: LlmProvider = {
   id: "mistral",
+  remote: false,
   isFree: false,
   quality: "medium",
 

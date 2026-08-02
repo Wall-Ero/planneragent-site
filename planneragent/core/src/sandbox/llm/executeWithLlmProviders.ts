@@ -5,6 +5,7 @@ import { LlmProvider, LlmProviderResult, LlmUsage } from "./types";
 import { LlmProviderCandidate } from "../llmcontracts";
 import { logLlmUsage } from "./usageLedger";
 import type { LlmResultV2, LlmUsageV2 } from "../llm.v2";
+import type { SealedCognitiveExposureV1 } from "../../governance/knowledge-exposure/transport";
 
 /* ============================================================
  * Helpers
@@ -65,9 +66,8 @@ export interface ExecuteLlmInput {
   companyId: string;
   requestId: string;
   mode: DecisionMode;
-  domain: string;
-  intent: string;
-  baseline: unknown;
+  sealedExposures: readonly SealedCognitiveExposureV1[];
+  localBaseline?: unknown;
   providers: LlmProviderCandidate[];
   model?: string;
 }
@@ -92,9 +92,8 @@ export async function executeWithLlmProviders(
     companyId,
     requestId,
     mode,
-    domain,
-    intent,
-    baseline,
+    sealedExposures,
+    localBaseline,
     providers
   } = input;
 
@@ -110,12 +109,16 @@ export async function executeWithLlmProviders(
       continue;
     }
 
+    const sealed = sealedExposures.find(exposure => exposure.provider === candidate.id);
+    if (provider.remote && !sealed) {
+      usedFallback = true;
+      continue;
+    }
+
     try {
       const result: LlmProviderResult =
         await provider.generateScenarios({
-          domain,
-          intent,
-          baseline
+          ...(provider.remote ? { sealed_exposure: sealed, model: sealed!.model } : { local_input: localBaseline })
         });
 
       const llmResults: LlmResultV2[] = [

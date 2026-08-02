@@ -3,6 +3,7 @@ import { LlmProvider } from "../types";
 
 export const MockProvider: LlmProvider = {
   id: "mock",
+remote: false,
 isFree: false,
   quality: "low",
 

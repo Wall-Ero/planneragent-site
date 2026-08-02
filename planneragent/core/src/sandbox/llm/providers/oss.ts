@@ -4,10 +4,11 @@ import type { LlmProvider } from "../types";
 
 export const OssProvider: LlmProvider = {
   id: "oss",
+  remote: false,
   isFree: true,
   quality: "low",
 
-  async generateScenarios({ domain, intent, baseline }) {
+  async generateScenarios() {
     return {
       model: "oss",
       scenarios: [],

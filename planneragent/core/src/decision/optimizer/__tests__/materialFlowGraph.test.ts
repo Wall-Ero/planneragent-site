@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { buildMaterialFlowGraph } from "../materialFlowGraph.v1";
 
 describe("MaterialFlowGraph", () => {
@@ -39,6 +40,15 @@ describe("MaterialFlowGraph", () => {
     const edge = graph.edges.find(e => e.to === "FG_A");
 
     expect(edge).toBeDefined();
+    expect(edge).toMatchObject({
+      from: "COMP_X",
+      to: "FG_A",
+      relation: "consumes",
+      weight: 2
+    });
+    expect(graph.rootOrders).toEqual(["O1"]);
+    expect(graph.maxDepth).toBeGreaterThan(0);
+    expect(graph.topologyConfidence).toBeGreaterThan(0);
 
   });
 

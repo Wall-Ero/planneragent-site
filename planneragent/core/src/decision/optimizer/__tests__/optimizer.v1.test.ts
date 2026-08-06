@@ -4,11 +4,15 @@
 // Canonical Source of Truth
 // ======================================================
 
+import { describe, expect, test } from "vitest";
 import { runOptimizerV1 } from "../optimizer";
+import type { OptimizerInput } from "../contracts";
 
-async function runTest() {
+describe("Optimizer v1 deterministic result", () => {
 
-  const input = {
+  test("returns a deterministic SKU-mode advisory result", async () => {
+
+  const input: OptimizerInput = {
 
     requestId: "local-test-1",
 
@@ -42,9 +46,12 @@ async function runTest() {
 
   const result = await runOptimizerV1(input);
 
-  console.log("Optimizer result:");
-  console.log(JSON.stringify(result, null, 2));
+  expect(result.ok).toBe(true);
+  expect(result.meta.engine).toBe("OPT_V1_SKU");
+  expect(result.meta.deterministicSeed).toBeDefined();
+  expect(result.candidates.length).toBeGreaterThan(0);
+  expect(result.best).toBeDefined();
 
-}
+  });
 
-runTest();
+});

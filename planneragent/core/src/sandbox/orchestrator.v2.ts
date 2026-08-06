@@ -16,6 +16,7 @@ import type {
 } from "./contracts.v2";
 
 import { authoritySandboxGuard } from "./authority/authoritySandbox.guard";
+import { enforceVisionExecutionBoundary } from "./authority/visionExecutionBoundary.v1";
 import { computeDlEvidenceV2 } from "./dl.v2";
 import { buildUiSignalsV1 } from "./signal.engine.v1";
 
@@ -1961,6 +1962,13 @@ if (selectedBest) {
     allowedExecutionTypes = null;
   }
 
+  // VISION tier precedence is final: no data-quality, repair, recovery,
+  // optimizer, scenario, capability, or fallback branch may grant execution.
+  const visionBoundary=enforceVisionExecutionBoundary({plan:req.plan,executionAllowed,governanceReason});
+  executionAllowed=visionBoundary.executionAllowed;
+  governanceReason=visionBoundary.governanceReason;
+  if(req.plan==="VISION")allowedExecutionTypes=[];
+
  if (
   executionAllowed &&
   allowedExecutionTypes &&
@@ -3309,6 +3317,7 @@ console.log(
 },
     explanation,
     governance,
+    execution_preview: req.plan === "VISION" ? [] : undefined,
     execution,
     policy_used: policy,
     policy_debug: policyDebug,

@@ -1,0 +1,16 @@
+import type { GovernedEmailProviderV1 } from "../../outbound-disclosure/email/governed.email.contracts.v1";
+import type { GovernedTwilioTransportV1 } from "../../outbound-disclosure/twilio/governed.twilio.contracts.v1";
+import type { PlatformAlertDispatchEligibilityV1 } from "../disclosure";
+import type { PlatformAlertChannelV1 } from "../recipient";
+
+export const PLATFORM_ALERT_DELIVERY_POLICY_VERSION="PLATFORM_ALERT_DELIVERY_POLICY_V1" as const;
+export type PlatformAlertDeliveryFailureCode="PLATFORM_ALERT_DELIVERY_ELIGIBILITY_REQUIRED"|"PLATFORM_ALERT_DELIVERY_ELIGIBILITY_INVALID"|"PLATFORM_ALERT_DELIVERY_EXPIRED"|"PLATFORM_ALERT_DELIVERY_ENDPOINT_NOT_FOUND"|"PLATFORM_ALERT_DELIVERY_ENDPOINT_SUBSTITUTED"|"PLATFORM_ALERT_DELIVERY_CHANNEL_MISMATCH"|"PLATFORM_ALERT_DELIVERY_PAYLOAD_TOO_LARGE"|"PLATFORM_ALERT_DELIVERY_ALREADY_ATTEMPTED"|"PLATFORM_ALERT_DELIVERY_TRANSPORT_UNAVAILABLE"|"PLATFORM_ALERT_DELIVERY_TRANSPORT_FAILED"|"PLATFORM_ALERT_DELIVERY_INDETERMINATE"|"PLATFORM_ALERT_DELIVERY_EVIDENCE_FAILED";
+export class PlatformAlertDeliveryError extends Error{constructor(readonly code:PlatformAlertDeliveryFailureCode){super(code);this.name="PlatformAlertDeliveryError";}}
+export interface PlatformAlertBoundEndpointV1{readonly endpoint_id:string;readonly entitlement_id:string;readonly actor_id:string;readonly channel:PlatformAlertChannelV1;readonly normalized_destination:string;readonly destination_digest:string;}
+export interface PlatformAlertBoundEndpointRepositoryV1{readBound(endpointId:string):Promise<PlatformAlertBoundEndpointV1|null>;}
+export interface PlatformAlertDeliveryEvidenceV1{readonly version:1;readonly evidence_id:string;readonly disclosure_id:string;readonly disclosure_consumption_id:string;readonly alert_id:string;readonly endpoint_id:string;readonly endpoint_destination_digest:string;readonly channel:PlatformAlertChannelV1;readonly projection_digest:string;readonly payload_digest:string;readonly transport_identity:string;readonly dispatched_at:string;readonly status:"SUCCEEDED"|"FAILED"|"INDETERMINATE";readonly failure_code?:PlatformAlertDeliveryFailureCode;readonly provider_message_reference_digest?:string;readonly policy_version:typeof PLATFORM_ALERT_DELIVERY_POLICY_VERSION;readonly correlation_id:string;readonly causal_references:readonly string[];}
+export interface PlatformAlertDeliveryEvidenceRepositoryV1{reserve(disclosureConsumptionId:string,endpointId:string,channel:PlatformAlertChannelV1,at:string):Promise<boolean>;append(evidence:PlatformAlertDeliveryEvidenceV1):Promise<void>;}
+export interface PlatformAlertDeliveryTransportsV1{readonly email?:GovernedEmailProviderV1;readonly sms?:GovernedTwilioTransportV1;readonly whatsapp?:GovernedTwilioTransportV1;}
+export interface PlatformAlertDeliveryDependenciesV1{readonly endpoints:PlatformAlertBoundEndpointRepositoryV1;readonly transports:PlatformAlertDeliveryTransportsV1;readonly evidence:PlatformAlertDeliveryEvidenceRepositoryV1;readonly now:()=>string;}
+export interface PlatformAlertDeliveryResultV1{readonly version:1;readonly status:"SUCCEEDED";readonly evidence:PlatformAlertDeliveryEvidenceV1;readonly content_returned:false;}
+export interface PlatformAlertDeliveryRequestV1{readonly eligibility:PlatformAlertDispatchEligibilityV1;}

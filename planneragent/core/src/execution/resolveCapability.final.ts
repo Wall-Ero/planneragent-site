@@ -66,6 +66,13 @@ const rawAction = input.action;
 
 const actionType = normalizeActionType(rawAction);
 
+if (
+  (rawAction as any)?.executable === false ||
+  actionType === "DEFERRED_REQUIREMENT"
+) {
+  return { capabilityId: null, candidates: [], scoring: [] };
+}
+
 const memoryCapability = await getCapabilityFromMemory(actionType);
 
 console.log("MEMORY_LOOKUP", actionType);

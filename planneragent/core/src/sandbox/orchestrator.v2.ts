@@ -828,6 +828,7 @@ function computeMovementQuality(
 
 const orders = normalizeOrders(req.orders ?? []);
 const movements = normalizeMovements(req.movements ?? []);
+const inventoryAsOf = nowIso();
 
 // ----------------------------------------------------
 // MOVEMENT QUALITY (CANONICAL)
@@ -881,7 +882,8 @@ const normalizedInventory = normalizeInventory(req.inventory ?? []);
 
   const inventory = mergeInventoryWithReconstruction(
     normalizedInventory,
-    movements
+    movements,
+    inventoryAsOf
   );
 
   console.log("ORCH_INVENTORY_NORMALIZED", normalizedInventory);
@@ -3314,6 +3316,9 @@ console.log(
   candidates: isPlanCoherent
     ? selectedCandidates.length ?? 0
     : 0,
+  advisories: isPlanCoherent
+    ? selectedBest?.advisories ?? []
+    : [],
 },
     explanation,
     governance,

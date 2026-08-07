@@ -11,5 +11,6 @@ export type {
   OptimizerInput,
   OptimizerResult,
   CandidatePlan,
-  Action
+  Action,
+  DeferredRequirementIntentV1,
 } from "./contracts";

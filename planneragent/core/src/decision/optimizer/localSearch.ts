@@ -30,7 +30,11 @@ export function localSearchImprove(
   const maxIters = Math.min(remainingEvals, 25);
   for (let i = 0; i < maxIters; i++) {
     const mutated = mutateActions(best.actions, rng);
-    const cand = evaluateCandidate(input, mutated, 10_000 + i);
+    const evaluated = evaluateCandidate(input, mutated, 10_000 + i);
+    const cand: CandidatePlan = {
+      ...evaluated,
+      advisories: start.advisories,
+    };
     used++;
 
     if (isBetter(cand, best)) best = cand;

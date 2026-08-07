@@ -15,6 +15,7 @@ import type {
   OptimizerInput,
   OptimizerResult,
   Action,
+  DeferredRequirementIntentV1,
 } from "./contracts";
 
 import { resolveOptimizerBudget } from "./budget";
@@ -399,32 +400,43 @@ function buildCandidateFromGraphResult(
   graph: ReturnType<typeof runGraphOptimizerV1>,
   candidateIndex: number
 ): CandidatePlan {
-  const actions = graph.actions.map<Action>((a) => {
+  const actions: Action[] = graph.actions.flatMap((a) => {
     if (a.action === "EXPEDITE_SUPPLIER") {
-      return {
+      return [{
         kind: "EXPEDITE_SUPPLIER",
         sku: a.sku,
         qty: a.qty,
         costFactor: 1.35,
         reason: `graph_v1_level_${a.level}`,
-      };
+      }];
     }
 
-    return {
-      kind: "SHORT_TERM_PRODUCTION_ADJUST",
+    return [];
+  });
+
+  const advisories: DeferredRequirementIntentV1[] = graph.actions
+    .filter((a) => a.action === "DELAY_ORDER")
+    .map((a, index) => ({
+      id: `defer_graph_${candidateIndex}_${index}_${a.sku}`,
+      kind: "DEFERRED_REQUIREMENT",
       sku: a.sku,
       qty: a.qty,
-      availableInDays: Math.max(0, a.level),
-      costFactor: 1.2,
-      reason: `graph_v1_delay_substitute_level_${a.level}`,
-    };
-  });
+      source: "GRAPH",
+      reason: `graph_v1_unresolved_deferment_level_${a.level}`,
+      path: a.path ? [...a.path] : undefined,
+      shortage: graph.candidates.find((candidate) =>
+        candidate.sku === a.sku && candidate.level === a.level
+      )?.shortage,
+      realizationStatus: "UNRESOLVED",
+      executable: false,
+    }));
 
   const evaluated = evaluateCandidate(input, actions, candidateIndex);
 
   return {
     ...evaluated,
     id: `${evaluated.id}_graph`,
+    advisories,
     kpis: {
       ...evaluated.kpis,
       graphCriticalCandidates: graph.candidates.length,

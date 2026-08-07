@@ -20,7 +20,12 @@
 // - no LLM
 // ======================================================
 
-import type { OptimizerInput, CandidatePlan } from "./contracts";
+import type {
+  OptimizerInput,
+  CandidatePlan,
+  Action,
+  DeferredRequirementIntentV1,
+} from "./contracts";
 
 // ------------------------------------------------------
 // Types
@@ -33,6 +38,7 @@ type MilpVariable = {
   shortage: number;
   expedite: number;
   delay: number;
+  sourceAction: Action;
 };
 
 type MilpRefineResult = {
@@ -68,23 +74,26 @@ export async function milpRefineV1(
     input
   );
 
-  const refinedActions = buildActions(result.variables);
+  const realized = buildOutputs(result.variables, best.id);
+  const refinedActions = realized.actions;
+  const advisories = [...best.advisories, ...realized.advisories];
 
   if (refinedActions.length === 0) {
-    return best;
+    return { ...best, advisories };
   }
 
   const refinedScore = normalizeObjective(result.objective);
 
   // keep best if refinement is actually worse
   if (refinedScore >= best.score && best.actions.length > 0) {
-    return best;
+    return { ...best, advisories };
   }
 
   return {
     ...best,
     id: `${best.id}-milp`,
-    actions: refinedActions as any,
+    actions: refinedActions,
+    advisories,
     score: Math.min(best.score, refinedScore),
     evidence: {
       ...best.evidence,
@@ -101,8 +110,8 @@ export async function milpRefineV1(
 // Demand extraction
 // ------------------------------------------------------
 
-function extractDemand(best: CandidatePlan): Array<{ sku: string; qty: number }> {
-  const demand: Array<{ sku: string; qty: number }> = [];
+function extractDemand(best: CandidatePlan): Array<{ sku: string; qty: number; sourceAction: Action }> {
+  const demand: Array<{ sku: string; qty: number; sourceAction: Action }> = [];
 
   for (const a of best.actions ?? []) {
     const action = a as unknown as ActionLike;
@@ -114,6 +123,7 @@ function extractDemand(best: CandidatePlan): Array<{ sku: string; qty: number }>
     demand.push({
       sku,
       qty,
+      sourceAction: a,
     });
   }
 
@@ -125,7 +135,7 @@ function extractDemand(best: CandidatePlan): Array<{ sku: string; qty: number }>
 // ------------------------------------------------------
 
 function buildVariables(
-  demand: Array<{ sku: string; qty: number }>,
+  demand: Array<{ sku: string; qty: number; sourceAction: Action }>,
   inventory: any[]
 ): MilpVariable[] {
   const vars: MilpVariable[] = [];
@@ -149,6 +159,7 @@ function buildVariables(
       shortage,
       expedite: 0,
       delay: 0,
+      sourceAction: d.sourceAction,
     });
   }
 
@@ -300,32 +311,39 @@ function buildTopologyDegreeMap(input: OptimizerInput): Map<string, number> {
 // Action builder
 // ------------------------------------------------------
 
-function buildActions(vars: MilpVariable[]) {
-  const actions: Array<{
-    action: "EXPEDITE_SUPPLIER" | "DELAY_ORDER";
-    sku: string;
-    qty: number;
-  }> = [];
+function buildOutputs(vars: MilpVariable[], candidateId: string): {
+  actions: Action[];
+  advisories: DeferredRequirementIntentV1[];
+} {
+  const actions: Action[] = [];
+  const advisories: DeferredRequirementIntentV1[] = [];
 
-  for (const v of vars) {
-    if (v.expedite > 0) {
+  for (const [index, v] of vars.entries()) {
+    if (v.expedite > 0 && v.sourceAction.kind === "EXPEDITE_SUPPLIER") {
       actions.push({
-        action: "EXPEDITE_SUPPLIER",
+        ...v.sourceAction,
+        kind: "EXPEDITE_SUPPLIER",
         sku: v.sku,
         qty: v.expedite,
       });
     }
 
     if (v.delay > 0) {
-      actions.push({
-        action: "DELAY_ORDER",
+      advisories.push({
+        id: `defer_milp_${candidateId}_${index}_${v.sku}`,
+        kind: "DEFERRED_REQUIREMENT",
         sku: v.sku,
         qty: v.delay,
+        source: "MILP",
+        reason: "milp_v1_unresolved_deferment",
+        shortage: v.shortage,
+        realizationStatus: "UNRESOLVED",
+        executable: false,
       });
     }
   }
 
-  return actions;
+  return { actions, advisories };
 }
 
 // ------------------------------------------------------

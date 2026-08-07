@@ -104,7 +104,8 @@ export function shouldReconstructInventory(
 
 export function mergeInventoryWithReconstruction(
   base: NormalizedInventory[],
-  movements: NormalizedMovement[]
+  movements: NormalizedMovement[],
+  asOf?: string
 ): NormalizedInventory[] {
 
   if (!movements || movements.length === 0) {
@@ -113,7 +114,11 @@ export function mergeInventoryWithReconstruction(
 
   const deltaMap = new Map<string, number>();
 
-  for (const m of movements) {
+  const eligibleMovements = movements.filter((movement) =>
+    isMovementRealizedAt(movement, asOf)
+  );
+
+  for (const m of eligibleMovements) {
 
     if (!m?.sku) continue;
 
@@ -172,4 +177,23 @@ export function mergeInventoryWithReconstruction(
   console.log("INVENTORY_MERGED", merged);
 
   return merged;
+}
+
+export function isMovementRealizedAt(
+  movement: NormalizedMovement,
+  asOf?: string
+): boolean {
+  if (!asOf) return true;
+
+  const boundary = Date.parse(asOf);
+  if (!Number.isFinite(boundary)) {
+    throw new Error("INVALID_INVENTORY_AS_OF");
+  }
+
+  if (!movement.date) return true;
+
+  const movementTime = Date.parse(movement.date);
+  if (!Number.isFinite(movementTime)) return false;
+
+  return movementTime <= boundary;
 }

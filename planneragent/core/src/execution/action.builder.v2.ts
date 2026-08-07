@@ -65,7 +65,8 @@ export function buildActionsFromRealityV2(
         topology,
         leadTime,
         confidence,
-        maxExpeditePct
+        maxExpeditePct,
+        riskProfile: behavior?.preferences?.riskProfile ?? "BALANCED",
       }))
     );
 
@@ -200,13 +201,6 @@ function computeShortages(input: OptimizerInput): ShortageRow[] {
     supply.set(sku, (supply.get(sku) ?? 0) + qty);
   }
 
-  for (const m of input.movements ?? []) {
-    const sku = normalizeSku(m?.sku ?? m?.item ?? m?.code);
-    const qty = movementQty(m);
-    if (!sku || qty === 0) continue;
-    supply.set(sku, (supply.get(sku) ?? 0) + qty);
-  }
-
   const out: ShortageRow[] = [];
 
   for (const [sku, d] of demand.entries()) {
@@ -288,11 +282,12 @@ function expediteRatio(params: {
   leadTime: LeadTimeInfo;
   confidence: number;
   maxExpeditePct: number;
+  riskProfile: "AGGRESSIVE" | "CONSERVATIVE" | "BALANCED";
 }): number {
   let ratio =
-  behavior?.preferences?.riskProfile === "AGGRESSIVE"
+  params.riskProfile === "AGGRESSIVE"
     ? 0.85
-    : behavior?.preferences?.riskProfile === "CONSERVATIVE"
+    : params.riskProfile === "CONSERVATIVE"
     ? 0.5
     : 0.7;
 
@@ -360,14 +355,6 @@ function buildProductionReason(
 // ======================================================
 // HELPERS
 // ======================================================
-
-function movementQty(m: any): number {
-  const rawQty = num(m?.qty ?? m?.quantity);
-  const type = String(m?.type ?? m?.direction ?? "").toUpperCase();
-
-  if (type === "OUT" || type === "ISSUE") return -Math.abs(rawQty);
-  return rawQty;
-}
 
 function normalizeSku(v: unknown): string {
   return String(v ?? "").trim();

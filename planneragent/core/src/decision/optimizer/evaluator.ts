@@ -147,6 +147,7 @@ export function evaluateCandidate(
   return {
     id,
     actions,
+    advisories: [],
     feasibleHard,
     softViolations: uniq(soft),
     kpis,

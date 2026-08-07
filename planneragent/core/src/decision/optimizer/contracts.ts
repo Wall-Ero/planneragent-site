@@ -179,10 +179,25 @@ export type Action =
       reason?: string;
     };
 
+export type DeferredRequirementIntentV1 = {
+  id: string;
+  kind: "DEFERRED_REQUIREMENT";
+  sku: string;
+  qty: number;
+  source: "GRAPH" | "MILP";
+  reason: string;
+  path?: string[];
+  shortage?: number;
+  realizationStatus: "UNRESOLVED";
+  executable: false;
+};
+
 export type CandidatePlan = {
   id: string;
 
   actions: Action[];
+
+  advisories: DeferredRequirementIntentV1[];
 
   feasibleHard: boolean;
 

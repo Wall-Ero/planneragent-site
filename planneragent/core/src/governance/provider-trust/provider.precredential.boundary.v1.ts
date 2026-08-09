@@ -30,6 +30,10 @@ export interface CredentialResolutionPermitV1 {
 	readonly credential_reference: string | 'NOT_APPLICABLE';
 	readonly consumer: 'PROVIDER_CREDENTIAL_RESOLVER';
 	readonly authorization_reference: string;
+	readonly admission_id?: string;
+	readonly admission_digest?: string;
+	readonly invocation_consumer?: 'COGNITIVE_PROVIDER_INVOCATION';
+	readonly expires_at?: string;
 }
 export interface ProviderRuntimeCausalReferenceV1 {
 	readonly version: 1;
@@ -100,7 +104,10 @@ export function verifyProviderRuntimeCausalReferenceV1(
 		throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', 'PROVIDER_RUNTIME_CAUSAL_REFERENCE_SUBSTITUTED');
 }
 export class DeferredProviderCredentialResolverV1 implements ProviderCredentialResolverV1 {
-	constructor(private readonly sources: Readonly<Record<string, () => string | undefined | Promise<string | undefined>>>) {}
+	constructor(
+		private readonly sources: Readonly<Record<string, () => string | undefined | Promise<string | undefined>>>,
+		private readonly now: () => string = () => new Date().toISOString(),
+	) {}
 	async resolve(binding: ProviderRuntimeBindingReferenceV1, permit: CredentialResolutionPermitV1) {
 		const fields = [
 			'binding_id',
@@ -114,6 +121,15 @@ export class DeferredProviderCredentialResolverV1 implements ProviderCredentialR
 			throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', 'PROVIDER_CREDENTIAL_RESOLUTION_NOT_AUTHORIZED');
 		if (fields.some((field) => binding[field] !== permit[field]))
 			throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', 'PROVIDER_CREDENTIAL_REFERENCE_SUBSTITUTED');
+		if (
+			!permit.admission_id ||
+			!permit.admission_digest ||
+			permit.authorization_reference !== permit.admission_id ||
+			permit.invocation_consumer !== 'COGNITIVE_PROVIDER_INVOCATION' ||
+			!permit.expires_at ||
+			permit.expires_at <= this.now()
+		)
+			throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', 'PROVIDER_CREDENTIAL_RESOLUTION_NOT_AUTHORIZED');
 		if (binding.credential_reference === 'NOT_APPLICABLE') return undefined;
 		const source = this.sources[binding.credential_reference];
 		if (!source) throw new ProviderBoundaryFailureV1('CONFIGURATION_FAILURE', 'PROVIDER_CREDENTIAL_SOURCE_MISSING');

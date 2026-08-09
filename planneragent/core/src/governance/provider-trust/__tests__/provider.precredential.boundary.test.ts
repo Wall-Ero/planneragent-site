@@ -33,6 +33,10 @@ function ready(provider: string, credential?: string): PreparedProviderCandidate
 			...b,
 			consumer: 'PROVIDER_CREDENTIAL_RESOLVER',
 			authorization_reference: `future-admission-seam:${provider}`,
+			admission_id: `future-admission-seam:${provider}`,
+			admission_digest: `future-admission-digest:${provider}`,
+			invocation_consumer: 'COGNITIVE_PROVIDER_INVOCATION',
+			expires_at: '2099-01-01T00:00:00.000Z',
 		}),
 		causal_reference: providerRuntimeCausalReferenceV1({ binding_id: b.binding_id, binding_digest: `digest:${provider}` }),
 	});

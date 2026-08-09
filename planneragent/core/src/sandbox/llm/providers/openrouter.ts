@@ -32,7 +32,17 @@ export function createOpenRouterProvider(env: OpenRouterEnvironment): LlmProvide
 				fetch: env.cognitiveFetch ?? fetch,
 				evidence: env.cognitiveTransportEvidence,
 				now: env.cognitiveNow ?? (() => new Date().toISOString()),
-			}).dispatch({ sealed: input.sealed_exposure, provider: 'openrouter', model, api_key: key });
+			}).dispatch({
+				sealed: input.sealed_exposure,
+				provider: 'openrouter',
+				model,
+				api_key: key,
+				runtime_governance_references: [
+					`provider-runtime-binding:${input.runtime_context.causal_reference.provider_runtime_binding_id}:${input.runtime_context.causal_reference.provider_runtime_binding_digest}`,
+					`runtime-provider-trust-admission:${input.runtime_context.credential_resolution_permit.admission_id}:${input.runtime_context.credential_resolution_permit.admission_digest}`,
+					`oks-consumption:${input.sealed_exposure.eligibility.consumption_id}`,
+				],
+			});
 			let scenarios: unknown;
 			try {
 				scenarios = JSON.parse(response.text);

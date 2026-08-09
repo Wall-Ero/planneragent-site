@@ -50,7 +50,7 @@ export function createOpenRouterProvider(env: OpenRouterEnvironment): LlmProvide
 				throw new Error('COGNITIVE_PROVIDER_RESPONSE_INVALID');
 			}
 			if (!Array.isArray(scenarios)) throw new Error('COGNITIVE_PROVIDER_RESPONSE_INVALID');
-			return { model, scenarios };
+			return { model, scenarios, transport_evidence_id: response.evidence.evidence_id };
 		},
 	};
 }

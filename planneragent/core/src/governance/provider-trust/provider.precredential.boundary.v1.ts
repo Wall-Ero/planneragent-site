@@ -47,6 +47,7 @@ export interface PreparedProviderCandidateV1 {
 	readonly binding_reference: ProviderRuntimeBindingReferenceV1;
 	readonly credential_resolution_permit: CredentialResolutionPermitV1;
 	readonly causal_reference: ProviderRuntimeCausalReferenceV1;
+	readonly security_evidence_context?: import('../security-evidence/security.runtime.evidence.contracts.v1').SecurityEvidenceContextV1;
 }
 export type ProviderCandidatePreparationV1 = PreparedProviderCandidateV1 | Readonly<{ outcome: 'GOVERNANCE_DENIED'; failure_code: string }>;
 export interface ProviderCredentialResolverV1 {

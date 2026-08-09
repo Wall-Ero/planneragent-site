@@ -12,6 +12,12 @@ import {
 	type ProviderCandidatePreparationV1,
 	type ProviderCredentialResolverV1,
 } from '../../governance/provider-trust';
+import {
+	EvidencedProviderCredentialResolverV1,
+	type ProviderRuntimeAttemptEvidenceV1,
+	type SecurityEvidenceContextV1,
+	type SecurityRuntimeEvidenceRepositoryV1,
+} from '../../governance/security-evidence';
 
 /* ============================================================
  * Helpers
@@ -77,6 +83,8 @@ export interface ExecuteLlmInput {
 		readonly selected_model: string;
 	}) => Promise<ProviderCandidatePreparationV1>;
 	credentialResolver?: ProviderCredentialResolverV1;
+	securityEvidenceRepository?: SecurityRuntimeEvidenceRepositoryV1;
+	securityEvidenceNow?: () => string;
 }
 
 /* ============================================================
@@ -94,14 +102,18 @@ export async function executeWithLlmProviders(
 		plan: 'BASIC' | 'JUNIOR' | 'SENIOR';
 	},
 ): Promise<LlmExecutionResultV2> {
-	const { db, companyId, requestId, mode, sealedExposures, localBaseline, providers, prepareProviderCandidate, credentialResolver } = input;
+	const { db, companyId, requestId, mode, sealedExposures, localBaseline, providers, prepareProviderCandidate, credentialResolver, securityEvidenceRepository } = input;
+	const now=input.securityEvidenceNow??(()=>new Date().toISOString()),contexts=new Map<string,SecurityEvidenceContextV1>();
+	const evidencedResolver=credentialResolver&&securityEvidenceRepository?new EvidencedProviderCredentialResolverV1(credentialResolver,securityEvidenceRepository,contexts,now):undefined;
 
 	const plan = governance?.plan ?? 'BASIC';
 	let usedFallback = false;
+	let technicalPredecessor:ProviderRuntimeAttemptEvidenceV1|undefined;
 
 	for (let i = 0; i < providers.length; i++) {
 		const candidate = providers[i];
 		const provider = providerMap[candidate.id];
+		const attemptId=`provider-runtime-attempt:${crypto.randomUUID()}`,startedAt=now();
 
 		if (!provider) {
 			usedFallback = true;
@@ -120,11 +132,18 @@ export async function executeWithLlmProviders(
 				provider_identity: candidate.id,
 				selected_model: sealed?.model ?? input.model ?? candidate.id,
 			});
-			if (preparation.outcome === 'GOVERNANCE_DENIED') throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', preparation.failure_code);
-			if (preparation.binding_reference.provider_identity !== candidate.id)
+			if (preparation.outcome === 'GOVERNANCE_DENIED') {
+				await securityEvidenceRepository?.persistAttempt({version:1,attempt_id:attemptId,request_id:requestId,sequence:i,provider:candidate.id,model:sealed?.model??input.model??candidate.id,outcome:'GOVERNANCE_DENIED',failure_class:'GOVERNANCE',failure_code:preparation.failure_code,started_at:startedAt,completed_at:now(),correlation_id:requestId,causal_references:[]});
+				throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', preparation.failure_code);
+			}
+			if (preparation.binding_reference.provider_identity !== candidate.id) {
+				await securityEvidenceRepository?.persistAttempt({version:1,attempt_id:attemptId,request_id:requestId,sequence:i,runtime_binding_id:preparation.causal_reference.provider_runtime_binding_id,runtime_binding_digest:preparation.causal_reference.provider_runtime_binding_digest,admission_id:preparation.security_evidence_context?.admission_id,admission_digest:preparation.security_evidence_context?.admission_digest,oks_consumption_id:preparation.security_evidence_context?.oks_consumption_id,provider:candidate.id,model:sealed?.model??input.model??candidate.id,outcome:'GOVERNANCE_DENIED',failure_class:'GOVERNANCE',failure_code:'PROVIDER_RUNTIME_BINDING_CANDIDATE_SUBSTITUTED',started_at:startedAt,completed_at:now(),correlation_id:preparation.security_evidence_context?.correlation_id??requestId,causal_references:preparation.security_evidence_context?.causal_references??[]});
 				throw new ProviderBoundaryFailureV1('GOVERNANCE_DENIAL', 'PROVIDER_RUNTIME_BINDING_CANDIDATE_SUBSTITUTED');
+			}
 			runtimeContext = preparation;
+			if(preparation.security_evidence_context)contexts.set(preparation.binding_reference.binding_id,preparation.security_evidence_context);
 		} else if (provider.remote) {
+			await securityEvidenceRepository?.persistAttempt({version:1,attempt_id:attemptId,request_id:requestId,sequence:i,provider:candidate.id,model:sealed?.model??input.model??candidate.id,outcome:'CONFIGURATION_FAILED',failure_class:'CONFIGURATION',failure_code:'PROVIDER_PRE_CREDENTIAL_BOUNDARY_REQUIRED',started_at:startedAt,completed_at:now(),correlation_id:requestId,causal_references:[]});
 			throw new ProviderBoundaryFailureV1('CONFIGURATION_FAILURE', 'PROVIDER_PRE_CREDENTIAL_BOUNDARY_REQUIRED');
 		}
 
@@ -132,8 +151,14 @@ export async function executeWithLlmProviders(
 			const result: LlmProviderResult = await provider.generateScenarios({
 				...(provider.remote ? { sealed_exposure: sealed, model: sealed!.model } : { local_input: localBaseline }),
 				...(runtimeContext ? { runtime_context: runtimeContext } : {}),
-				...(credentialResolver ? { credential_resolver: credentialResolver } : {}),
+				...(credentialResolver ? { credential_resolver: evidencedResolver??credentialResolver } : {}),
 			});
+			if(securityEvidenceRepository&&runtimeContext){
+				const c=runtimeContext.security_evidence_context,ce=evidencedResolver?.latest.get(runtimeContext.binding_reference.binding_id);
+				const attempt=Object.freeze({version:1,attempt_id:attemptId,request_id:requestId,sequence:i,...(technicalPredecessor?{predecessor_attempt_id:technicalPredecessor.attempt_id}:{}),runtime_binding_id:runtimeContext.causal_reference.provider_runtime_binding_id,runtime_binding_digest:runtimeContext.causal_reference.provider_runtime_binding_digest,admission_id:c?.admission_id,admission_digest:c?.admission_digest,oks_consumption_id:c?.oks_consumption_id,credential_access_evidence_id:ce?.evidence_id,provider:candidate.id,provider_account_id:runtimeContext.binding_reference.provider_account_id,provider_deployment_id:runtimeContext.binding_reference.provider_deployment_id,adapter_identity:runtimeContext.binding_reference.adapter_identity,model:result.model??runtimeContext.binding_reference.selected_model,outcome:ce?.outcome==='NOT_APPLICABLE'?'CREDENTIAL_NOT_APPLICABLE':'TRANSPORT_SUCCEEDED',transport_evidence_id:result.transport_evidence_id,started_at:startedAt,completed_at:now(),correlation_id:c?.correlation_id??requestId,causal_references:c?.causal_references??[]}) as ProviderRuntimeAttemptEvidenceV1;
+				await securityEvidenceRepository.persistAttempt(attempt);
+				if(technicalPredecessor)await securityEvidenceRepository.persistFallback({lineage_id:`provider-runtime-fallback:${technicalPredecessor.attempt_id}:${attempt.attempt_id}`,predecessor_attempt_id:technicalPredecessor.attempt_id,successor_attempt_id:attempt.attempt_id,reason:'TECHNICAL_FAILURE',linked_at:attempt.started_at,correlation_id:attempt.correlation_id});
+			}
 
 			const llmResults: LlmResultV2[] = [
 				{
@@ -179,6 +204,7 @@ export async function executeWithLlmProviders(
 				llmResults,
 			};
 		} catch (err) {
+			if(securityEvidenceRepository&&runtimeContext){const c=runtimeContext.security_evidence_context,ce=evidencedResolver?.latest.get(runtimeContext.binding_reference.binding_id),boundary=err instanceof ProviderBoundaryFailureV1;const attempt=Object.freeze({version:1,attempt_id:attemptId,request_id:requestId,sequence:i,...(technicalPredecessor?{predecessor_attempt_id:technicalPredecessor.attempt_id}:{}),runtime_binding_id:runtimeContext.causal_reference.provider_runtime_binding_id,runtime_binding_digest:runtimeContext.causal_reference.provider_runtime_binding_digest,admission_id:c?.admission_id,admission_digest:c?.admission_digest,oks_consumption_id:c?.oks_consumption_id,credential_access_evidence_id:ce?.evidence_id,provider:candidate.id,provider_account_id:runtimeContext.binding_reference.provider_account_id,provider_deployment_id:runtimeContext.binding_reference.provider_deployment_id,adapter_identity:runtimeContext.binding_reference.adapter_identity,model:runtimeContext.binding_reference.selected_model,outcome:ce?.outcome==='RESOLUTION_FAILED'?'CREDENTIAL_RESOLUTION_FAILED':boundary?'CONFIGURATION_FAILED':'TRANSPORT_FAILED',failure_class:boundary?'CONFIGURATION':'TECHNICAL',failure_code:boundary?err.code:ce?.failure_code??'PROVIDER_TECHNICAL_FAILURE',started_at:startedAt,completed_at:now(),correlation_id:c?.correlation_id??requestId,causal_references:c?.causal_references??[]}) as ProviderRuntimeAttemptEvidenceV1;await securityEvidenceRepository.persistAttempt(attempt);if(technicalPredecessor)await securityEvidenceRepository.persistFallback({lineage_id:`provider-runtime-fallback:${technicalPredecessor.attempt_id}:${attempt.attempt_id}`,predecessor_attempt_id:technicalPredecessor.attempt_id,successor_attempt_id:attempt.attempt_id,reason:'TECHNICAL_FAILURE',linked_at:attempt.started_at,correlation_id:attempt.correlation_id});if(!boundary)technicalPredecessor=attempt;}
 			if (err instanceof ProviderBoundaryFailureV1) throw err;
 			usedFallback = true;
 

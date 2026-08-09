@@ -241,6 +241,15 @@ export async function prepareAdmittedProviderCandidateV1(
 				admission_id: admission.admission_id,
 				admission_digest: admission.admission_digest,
 			}),
+			security_evidence_context: {
+				admission_id: admission.admission_id,
+				admission_digest: admission.admission_digest,
+				runtime_binding_id: admission.runtime_binding_id,
+				runtime_binding_digest: admission.runtime_binding_digest,
+				oks_consumption_id: admission.oks_consumption_id,
+				correlation_id: admission.correlation_id,
+				causal_references: admission.causal_references,
+			},
 		}) as PreparedProviderCandidateV1;
 	} catch (error) {
 		throw asGovernanceDenialV1(error);

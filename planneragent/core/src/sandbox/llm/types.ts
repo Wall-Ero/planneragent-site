@@ -45,6 +45,7 @@ export type LlmProviderResult = {
 	scenarios: LlmScenario[];
 	model?: string;
 	usage?: LlmUsage;
+	transport_evidence_id?: string;
 };
 
 /* ===============================

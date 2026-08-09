@@ -1,0 +1,14 @@
+import{applyD1Migrations,env}from"cloudflare:test";
+import{beforeAll,beforeEach,describe,expect,it}from"vitest";
+import migration from"../../../../migrations/0028_canonical_organizational_authority.sql?raw";
+import{buildGraphVersionV1,CanonicalOrganizationalAuthorityD1V1,organizationalAuthorityPolicyV1,semanticReferenceV1}from"..";
+const now="2026-08-09T10:00:00.000Z",db=env.POLICIES_DB,repo=new CanonicalOrganizationalAuthorityD1V1(db);
+function queries(sql:string){return sql.split(/;\s*\r?\n(?=CREATE (?:TABLE|INDEX|TRIGGER))/).map(x=>x.trim()).filter(Boolean).map(x=>x.endsWith(";")?x:`${x};`);}
+beforeAll(async()=>applyD1Migrations(db,[{name:"0028",queries:queries(migration)}]));
+beforeEach(async()=>repo.persistPolicy(organizationalAuthorityPolicyV1(now,"correlation")));
+const graph=(identity:string)=>buildGraphVersionV1({version:1,tenant_id:"tenant:1",company_id:"company:1",policy_id:"OAG_AUTHORITY_POLICY_V1",state_references:[semanticReferenceV1("ROOT",identity,{identity})],effective_from:now,correlation_id:"correlation",causal_references:[]});
+describe("OAG-CAN-WU1 actual D1",()=>{
+ it("applies normalized migration and preserves immutable records",async()=>{const g=graph("root:1");await repo.persistGraph(g);expect((await repo.resolveCurrentGraph("tenant:1","company:1"))?.graph_version_id).toBe(g.graph_version_id);await expect(db.prepare("UPDATE oag_can_graph_versions SET graph_digest='tampered'").run()).rejects.toThrow(/OAG_CAN_IMMUTABLE/);await expect(db.prepare("UPDATE oag_can_policies SET max_delegation_depth=2").run()).rejects.toThrow();});
+ it("retains historical graph and resolves its explicit successor",async()=>{const old=graph("root:1"),next=graph("root:2");await repo.persistGraph(old);await repo.persistGraph(next);await expect(repo.resolveCurrentGraph("tenant:1","company:1")).rejects.toMatchObject({code:"OAG_CAN_GRAPH_VERSION_AMBIGUOUS"});await repo.transition("GRAPH",old.graph_version_id,"SUPERSEDED",now,"correlation",[old.graph_version_id],next.graph_version_id);expect((await repo.resolveCurrentGraph("tenant:1","company:1"))?.graph_version_id).toBe(next.graph_version_id);expect((await db.prepare("SELECT COUNT(*) count FROM oag_can_graph_versions").first<{count:number}>())?.count).toBe(2);});
+ it("persists immutable content-free audit",async()=>{await repo.audit({id:"audit:1",kind:"GRAPH_VERSION_CREATED",subject_kind:"GRAPH",subject_id:graph("root:2").graph_version_id,outcome:"CREATED",policy_id:"OAG_AUTHORITY_POLICY_V1",correlation:"correlation",caused:[],at:now});const row=await db.prepare("SELECT content_payload FROM oag_can_audit_events").first<{content_payload:null}>();expect(row?.content_payload).toBeNull();await expect(db.prepare("UPDATE oag_can_audit_events SET outcome='TAMPERED'").run()).rejects.toThrow(/OAG_CAN_IMMUTABLE/);});
+});

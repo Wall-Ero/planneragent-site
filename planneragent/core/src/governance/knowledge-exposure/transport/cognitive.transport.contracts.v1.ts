@@ -4,7 +4,9 @@ import type { KnowledgeProjectionManifestV1, KnowledgeExposurePurposeCodeV1, Kno
 export type CognitiveProviderV1="openai"|"anthropic"|"openrouter";
 export type CognitiveTransportFailureCode=
 |"COGNITIVE_EXPOSURE_REQUIRED"|"COGNITIVE_ELIGIBILITY_INVALID"|"COGNITIVE_ELIGIBILITY_OPERATION_MISMATCH"|"COGNITIVE_ELIGIBILITY_PURPOSE_MISMATCH"|"COGNITIVE_ELIGIBILITY_TARGET_MISMATCH"|"COGNITIVE_ELIGIBILITY_REGION_MISMATCH"|"COGNITIVE_ELIGIBILITY_RETENTION_MISMATCH"|"COGNITIVE_ELIGIBILITY_CONSUMPTION_MISMATCH"|"COGNITIVE_MANIFEST_MISMATCH"|"COGNITIVE_PROJECTION_DIGEST_MISMATCH"|"COGNITIVE_REFERENCE_SET_MISMATCH"|"COGNITIVE_PROJECTION_MUTATED"|"COGNITIVE_PROVIDER_NOT_ADMITTED"|"COGNITIVE_MODEL_NOT_ADMITTED"|"COGNITIVE_FALLBACK_NOT_ADMITTED"|"COGNITIVE_FANOUT_NOT_ADMITTED"|"COGNITIVE_REQUEST_TOO_LARGE"|"COGNITIVE_RESPONSE_TOO_LARGE"|"COGNITIVE_PROVIDER_TIMEOUT"|"COGNITIVE_PROVIDER_FAILURE"|"COGNITIVE_PROVIDER_RESPONSE_INVALID"|"COGNITIVE_TRANSPORT_EVIDENCE_FAILED"|"COGNITIVE_LEGACY_BYPASS_PROHIBITED";
-export class CognitiveTransportError extends Error{constructor(readonly code:CognitiveTransportFailureCode){super(code);this.name="CognitiveTransportError";}}
+export class CognitiveTransportError extends Error{
+ constructor(readonly code:CognitiveTransportFailureCode,readonly transport_evidence_id?:string){super(code);this.name="CognitiveTransportError";}
+}
 
 export interface SealedCognitiveExposureV1{
  readonly version:1;readonly eligibility:KnowledgeExposureEligibilityV1;readonly manifest:KnowledgeProjectionManifestV1;

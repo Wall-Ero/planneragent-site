@@ -82,12 +82,15 @@ function source(provider: any = 'openai', model = 'model-1') {
 		a = account(provider),
 		d = deployment(provider, model),
 		audit = vi.fn();
+	let stored:any;
 	const s: ProviderRuntimeBindingSourceV1 = {
 		findMappings: async () => [m],
 		readAccount: async () => a,
 		readDeployment: async () => d,
 		credentialReferenceIsCurrent: async () => true,
 		isTransitioned: async () => false,
+		persistBinding:async(e)=>{stored=e;return 'CREATED';},
+		readBinding:async()=>stored??null,
 		audit,
 	};
 	return { s, m, a, d, audit };
@@ -166,4 +169,5 @@ describe('PT-WU3A runtime provider binding', () => {
 		expect(Object.keys(x.s)).not.toContain('fetch');
 		expect(JSON.stringify(b)).not.toContain('secret-value');
 	});
+	it('persists the exact canonical binding and deterministic digest',async()=>{const x=source(),b=await new ProviderRuntimeBindingRuntimeV1(x.s).bind(request()),stored=await x.s.readBinding(b.binding_id);expect(stored?.binding).toEqual(b);expect(stored?.binding_digest).toMatch(/^[0-9a-f]{64}$/);});
 });

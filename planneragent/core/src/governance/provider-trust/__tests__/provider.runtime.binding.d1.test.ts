@@ -2,6 +2,7 @@ import { applyD1Migrations, env } from 'cloudflare:test';
 import { beforeAll, describe, expect, it } from 'vitest';
 import pt from '../../../../migrations/0023_provider_account_attestation.sql?raw';
 import binding from '../../../../migrations/0025_provider_runtime_binding.sql?raw';
+import evidence from '../../../../migrations/0031_canonical_runtime_provider_binding.sql?raw';
 import {
 	ProviderAttestationD1V1,
 	ProviderRuntimeBindingD1V1,
@@ -25,6 +26,7 @@ beforeAll(async () => {
 	await applyD1Migrations(db, [
 		{ name: '0023', queries: queries(pt) },
 		{ name: '0025', queries: queries(binding) },
+		{ name: '0031', queries: queries(evidence) },
 	]);
 	const r = await fixture(),
 		f = await verifyProviderFactsV1(r, NOW);
@@ -73,6 +75,12 @@ describe('PT-WU3A actual D1', () => {
 			transport_executed: false,
 		});
 		expect(JSON.stringify(out)).not.toMatch(/api[_-]?key|prompt|provider response/i);
+		const persisted=await repo.readBinding(out.binding_id);
+		expect(persisted?.binding).toEqual(out);
+		expect(persisted?.binding_digest).toMatch(/^[0-9a-f]{64}$/);
+		expect(await repo.persistBinding(persisted!)).toBe('IDENTICAL');
+		await expect(repo.persistBinding({...persisted!,binding_digest:'f'.repeat(64)})).rejects.toMatchObject({code:'PROVIDER_RUNTIME_BINDING_IDENTITY_MISMATCH'});
+		await expect(db.prepare("UPDATE provider_runtime_binding_evidence SET selected_model='x'").run()).rejects.toThrow(/IMMUTABLE/);
 	});
 	it('keeps mapping and audit immutable', async () => {
 		await expect(db.prepare("UPDATE provider_runtime_mappings SET selected_model='x'").run()).rejects.toThrow(/IMMUTABLE/);
@@ -94,7 +102,8 @@ describe('PT-WU3A actual D1', () => {
 		await expect(db.prepare("UPDATE provider_runtime_mapping_transitions SET status='REVOKED'").run()).rejects.toThrow(/IMMUTABLE/);
 	});
 	it('persists content-free audit only', async () => {
-		const rows = JSON.stringify((await db.prepare('SELECT * FROM provider_runtime_binding_audit_events').all()).results);
+		const rows = JSON.stringify((await db.prepare('SELECT * FROM provider_runtime_binding_audit_events').all()).results)+JSON.stringify((await db.prepare('SELECT * FROM provider_runtime_binding_evidence').all()).results)+JSON.stringify((await db.prepare('SELECT * FROM provider_runtime_binding_evidence_audit').all()).results);
 		expect(rows).not.toMatch(/secret:\/\/|api[_-]?key|prompt|projection|provider response/i);
+		await expect(db.prepare("UPDATE provider_runtime_binding_evidence_audit SET outcome='x'").run()).rejects.toThrow(/IMMUTABLE/);
 	});
 });

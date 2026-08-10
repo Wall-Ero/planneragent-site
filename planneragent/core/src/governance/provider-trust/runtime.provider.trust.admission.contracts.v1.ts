@@ -2,6 +2,7 @@ import type { KnowledgeExposureEligibilityV1 } from '../knowledge-exposure/persi
 import type { DataClassification, SovereigntyClass } from '../../security/encryption.domains';
 import type { KnowledgeRetentionV1, ProviderOrRecipientClassV1 } from '../knowledge-exposure';
 import type { ProviderRuntimeBindingV1 } from './provider.runtime.binding.contracts.v1';
+import type { CanonicalProviderRuntimeBindingEvidenceV1 } from './provider.runtime.binding.contracts.v1';
 import type {
 	ProviderTrustEligibilityV1,
 	ProviderTrustProcessingContextV1,
@@ -26,6 +27,9 @@ export type RuntimeProviderTrustFailureCodeV1 =
 	| 'RUNTIME_PROVIDER_TRUST_DEPLOYMENT_MISMATCH'
 	| 'RUNTIME_PROVIDER_TRUST_ADAPTER_MISMATCH'
 	| 'RUNTIME_PROVIDER_TRUST_CREDENTIAL_REFERENCE_MISMATCH'
+	| 'RUNTIME_PROVIDER_TRUST_BINDING_NOT_FOUND'
+	| 'RUNTIME_PROVIDER_TRUST_BINDING_DIGEST_MISMATCH'
+	| 'RUNTIME_PROVIDER_TRUST_BINDING_IDENTITY_MISMATCH'
 	| 'RUNTIME_PROVIDER_TRUST_ADMISSION_DENIED'
 	| 'RUNTIME_PROVIDER_TRUST_ADMISSION_EXPIRED'
 	| 'RUNTIME_PROVIDER_TRUST_ADMISSION_REPLAYED'
@@ -144,6 +148,8 @@ export interface RuntimeProviderTrustAdmissionV1 {
 	readonly transport_executed: false;
 }
 export interface RuntimeProviderTrustAdmissionRepositoryV1 {
+	resolveRuntimeBinding(bindingId:string): Promise<CanonicalProviderRuntimeBindingEvidenceV1|null>;
+	auditRuntimeBindingVerification(input:{event_kind:'BINDING_RESOLVED'|'BINDING_DIGEST_VERIFIED'|'BINDING_MISSING'|'BINDING_DIGEST_MISMATCH'|'BINDING_IDENTITY_MISMATCH';binding_id:string;outcome:'VERIFIED'|'DENIED';failure_code?:RuntimeProviderTrustFailureCodeV1;correlation_id:string;recorded_at:string;}):Promise<void>;
 	current(request: RuntimeProviderTrustAdmissionRequestV1): Promise<RuntimeProviderTrustCurrentStateV1>;
 	persistAdmission(admission: RuntimeProviderTrustAdmissionV1): Promise<void>;
 	persistDenial(input: {

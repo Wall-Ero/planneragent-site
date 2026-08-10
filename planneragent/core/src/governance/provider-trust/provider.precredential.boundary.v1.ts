@@ -1,4 +1,5 @@
 import type { ProviderRuntimeBindingV1 } from './provider.runtime.binding.contracts.v1';
+export async function canonicalProviderRuntimeBindingDigestV1(binding:ProviderRuntimeBindingV1){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(binding))))].map(v=>v.toString(16).padStart(2,'0')).join('');}
 export type ProviderBoundaryFailureCategoryV1 = 'GOVERNANCE_DENIAL' | 'TECHNICAL_FAILURE' | 'CONFIGURATION_FAILURE';
 export class ProviderBoundaryFailureV1 extends Error {
 	constructor(

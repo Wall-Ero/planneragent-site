@@ -17,6 +17,9 @@ export type ProviderRuntimeBindingFailureCodeV1 =
 	| 'PROVIDER_RUNTIME_BINDING_DEPLOYMENT_SUBSTITUTED'
 	| 'PROVIDER_RUNTIME_BINDING_ADAPTER_SUBSTITUTED'
 	| 'PROVIDER_RUNTIME_BINDING_CREDENTIAL_SUBSTITUTED'
+	| 'PROVIDER_RUNTIME_BINDING_NOT_FOUND'
+	| 'PROVIDER_RUNTIME_BINDING_DIGEST_MISMATCH'
+	| 'PROVIDER_RUNTIME_BINDING_IDENTITY_MISMATCH'
 	| 'PROVIDER_RUNTIME_BINDING_STALE'
 	| 'PROVIDER_RUNTIME_BINDING_PERSISTENCE_FAILED'
 	| 'PROVIDER_RUNTIME_BINDING_AUDIT_FAILED';
@@ -70,12 +73,19 @@ export interface ProviderRuntimeBindingV1 {
 	readonly admission_granted: false;
 	readonly transport_executed: false;
 }
+export interface CanonicalProviderRuntimeBindingEvidenceV1 {
+	readonly version: 1;
+	readonly binding: ProviderRuntimeBindingV1;
+	readonly binding_digest: string;
+}
 export interface ProviderRuntimeBindingSourceV1 {
 	findMappings(request: ProviderRuntimeBindingRequestV1): Promise<readonly ProviderRuntimeMappingV1[]>;
 	readAccount(id: string): Promise<ProviderAccountIdentityV1 | null>;
 	readDeployment(id: string): Promise<ProviderDeploymentIdentityV1 | null>;
 	credentialReferenceIsCurrent(accountId: string, deploymentId: string, reference: string): Promise<boolean>;
 	isTransitioned(subjectId: string): Promise<boolean>;
+	persistBinding(evidence: CanonicalProviderRuntimeBindingEvidenceV1): Promise<'CREATED' | 'IDENTICAL'>;
+	readBinding(bindingId: string): Promise<CanonicalProviderRuntimeBindingEvidenceV1 | null>;
 	audit(event: {
 		event_id: string;
 		event_kind: string;

@@ -1,4 +1,5 @@
 import { deepCopyAndFreeze } from '../knowledge-exposure/knowledge.projection.guard.v1';
+import { canonicalProviderRuntimeBindingDigestV1 } from './provider.precredential.boundary.v1';
 import type { KnowledgeRetentionV1 } from '../knowledge-exposure';
 import {
 	ProviderBoundaryFailureV1,
@@ -54,6 +55,21 @@ export class RuntimeProviderTrustAdmissionRuntimeV1 {
 		if (!o) return deny('RUNTIME_PROVIDER_TRUST_OKS_REQUIRED');
 		if (!p) return deny('RUNTIME_PROVIDER_TRUST_ELIGIBILITY_REQUIRED');
 		if (!b) return deny('RUNTIME_PROVIDER_TRUST_REQUEST_INVALID');
+		const bindingEvidence=await this.repository.resolveRuntimeBinding(b.binding_id);
+		if(!bindingEvidence){await this.repository.auditRuntimeBindingVerification({event_kind:'BINDING_MISSING',binding_id:b.binding_id,outcome:'DENIED',failure_code:'RUNTIME_PROVIDER_TRUST_BINDING_NOT_FOUND',correlation_id:r.correlation_id,recorded_at:r.current_time});return deny('RUNTIME_PROVIDER_TRUST_BINDING_NOT_FOUND');}
+		await this.repository.auditRuntimeBindingVerification({event_kind:'BINDING_RESOLVED',binding_id:b.binding_id,outcome:'VERIFIED',correlation_id:r.correlation_id,recorded_at:r.current_time});
+		const authoritative=bindingEvidence.binding,canonicalDigest=await canonicalProviderRuntimeBindingDigestV1(authoritative);
+		const bindingMismatch=async(code:RuntimeProviderTrustFailureCodeV1):Promise<never>=>{await this.repository.auditRuntimeBindingVerification({event_kind:'BINDING_IDENTITY_MISMATCH',binding_id:b.binding_id,outcome:'DENIED',failure_code:code,correlation_id:r.correlation_id,recorded_at:r.current_time});return deny(code);};
+		if(bindingEvidence.binding_digest!==canonicalDigest){await this.repository.auditRuntimeBindingVerification({event_kind:'BINDING_DIGEST_MISMATCH',binding_id:b.binding_id,outcome:'DENIED',failure_code:'RUNTIME_PROVIDER_TRUST_BINDING_DIGEST_MISMATCH',correlation_id:r.correlation_id,recorded_at:r.current_time});return deny('RUNTIME_PROVIDER_TRUST_BINDING_DIGEST_MISMATCH');}
+		if(authoritative.provider!==b.provider)return bindingMismatch('RUNTIME_PROVIDER_TRUST_PROVIDER_MISMATCH');
+		if(authoritative.provider_account_id!==b.provider_account_id)return bindingMismatch('RUNTIME_PROVIDER_TRUST_ACCOUNT_MISMATCH');
+		if(authoritative.provider_deployment_id!==b.provider_deployment_id)return bindingMismatch('RUNTIME_PROVIDER_TRUST_DEPLOYMENT_MISMATCH');
+		if(authoritative.adapter_identity!==b.adapter_identity)return bindingMismatch('RUNTIME_PROVIDER_TRUST_ADAPTER_MISMATCH');
+		if(authoritative.selected_model!==b.selected_model)return bindingMismatch('RUNTIME_PROVIDER_TRUST_DEPLOYMENT_MISMATCH');
+		if(authoritative.credential_reference!==b.credential_reference)return bindingMismatch('RUNTIME_PROVIDER_TRUST_CREDENTIAL_REFERENCE_MISMATCH');
+		if(JSON.stringify(authoritative)!==JSON.stringify(b))return bindingMismatch('RUNTIME_PROVIDER_TRUST_BINDING_IDENTITY_MISMATCH');
+		if(r.runtime_binding_digest!==canonicalDigest){await this.repository.auditRuntimeBindingVerification({event_kind:'BINDING_DIGEST_MISMATCH',binding_id:b.binding_id,outcome:'DENIED',failure_code:'RUNTIME_PROVIDER_TRUST_BINDING_DIGEST_MISMATCH',correlation_id:r.correlation_id,recorded_at:r.current_time});return deny('RUNTIME_PROVIDER_TRUST_BINDING_DIGEST_MISMATCH');}
+		await this.repository.auditRuntimeBindingVerification({event_kind:'BINDING_DIGEST_VERIFIED',binding_id:b.binding_id,outcome:'VERIFIED',correlation_id:r.correlation_id,recorded_at:r.current_time});
 		const s = await this.repository.current(r);
 		if (!s.oks) return deny('RUNTIME_PROVIDER_TRUST_OKS_INVALID');
 		if (!s.pt) return deny('RUNTIME_PROVIDER_TRUST_ELIGIBILITY_INVALID');
@@ -137,7 +153,7 @@ export class RuntimeProviderTrustAdmissionRuntimeV1 {
 			policy_digest: p.policy_digest,
 			attestation_set_digest: p.attestation_set_digest,
 			runtime_binding_id: b.binding_id,
-			runtime_binding_digest: r.runtime_binding_digest,
+			runtime_binding_digest: canonicalDigest,
 			provider: b.provider,
 			provider_account_id: b.provider_account_id,
 			provider_deployment_id: b.provider_deployment_id,

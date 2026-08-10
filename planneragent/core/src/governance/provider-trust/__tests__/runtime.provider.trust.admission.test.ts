@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import {createHash} from 'node:crypto';
 import {
 	DeferredProviderCredentialResolverV1,
 	prepareAdmittedProviderCandidateV1,
@@ -7,6 +8,7 @@ import {
 	type RuntimeProviderTrustAdmissionRequestV1,
 	type RuntimeProviderTrustCurrentStateV1,
 } from '..';
+const canonicalProviderRuntimeBindingDigestV1=(x:unknown)=>createHash('sha256').update(JSON.stringify(x),'utf8').digest('hex');
 const NOW = '2026-08-09T10:00:00.000Z',
 	LATER = '2026-08-09T10:01:00.000Z';
 function request(overrides: Record<string, unknown> = {}): RuntimeProviderTrustAdmissionRequestV1 {
@@ -91,7 +93,7 @@ function request(overrides: Record<string, unknown> = {}): RuntimeProviderTrustA
 		oks_eligibility: oks,
 		provider_trust_eligibility: pt,
 		runtime_binding: binding,
-		runtime_binding_digest: 'binding-digest',
+		runtime_binding_digest: canonicalProviderRuntimeBindingDigestV1(binding),
 		invocation_consumer: 'COGNITIVE_PROVIDER_INVOCATION',
 		requested_validity_ms: 10000,
 		current_time: NOW,
@@ -163,9 +165,12 @@ function state(overrides: Record<string, unknown> = {}): RuntimeProviderTrustCur
 }
 class Repo implements RuntimeProviderTrustAdmissionRepositoryV1 {
 	snapshot = state();
+	binding=request().runtime_binding!;
 	admissions: any[] = [];
 	denials: any[] = [];
 	used = false;
+	async resolveRuntimeBinding(id:string){return id===this.binding.binding_id?{version:1 as const,binding:this.binding,binding_digest:canonicalProviderRuntimeBindingDigestV1(this.binding)}:null;}
+	async auditRuntimeBindingVerification(){}
 	async current() {
 		return this.snapshot;
 	}
@@ -281,6 +286,8 @@ describe('PT-WU3C runtime provider trust admission', () => {
 			},
 		});
 		(q.runtime_binding as any).downstream_provider_identity_status = 'UNKNOWN';
+		repo.binding=q.runtime_binding!;
+		(q as any).runtime_binding_digest=canonicalProviderRuntimeBindingDigestV1(repo.binding);
 		await fails(new RuntimeProviderTrustAdmissionRuntimeV1(repo).admit(q), 'RUNTIME_PROVIDER_TRUST_CONSTRAINT_CONFLICT');
 	});
 	it('is short-lived, atomic and single-use', async () => {
@@ -327,7 +334,7 @@ describe('PT-WU3C runtime provider trust admission', () => {
 			},
 			causal_reference: {
 				provider_runtime_binding_id: 'runtime-binding',
-				provider_runtime_binding_digest: 'binding-digest',
+				provider_runtime_binding_digest: canonicalProviderRuntimeBindingDigestV1(request().runtime_binding!),
 			},
 		});
 		expect(candidate.credential_resolution_permit.authorization_reference).toBe(
@@ -376,6 +383,8 @@ describe('PT-WU3C runtime provider trust admission', () => {
 		(q.runtime_binding as any).credential_reference = 'NOT_APPLICABLE';
 		(q.runtime_binding as any).selected_model = 'oss';
 		const repo = new Repo();
+		repo.binding=q.runtime_binding!;
+		(q as any).runtime_binding_digest=canonicalProviderRuntimeBindingDigestV1(repo.binding);
 		repo.snapshot = state({ pt: { ...state().pt!, provider: 'oss', credential_reference: undefined, model_references: ['oss'] } });
 		const runtime = new RuntimeProviderTrustAdmissionRuntimeV1(repo),
 			a = await runtime.admit(q),
@@ -397,4 +406,5 @@ describe('PT-WU3C runtime provider trust admission', () => {
 			),
 		).toBeUndefined();
 	});
+	it('denies missing, mismatched and consistently forged binding provenance',async()=>{let repo=new Repo();repo.resolveRuntimeBinding=async()=>null;await fails(new RuntimeProviderTrustAdmissionRuntimeV1(repo).admit(request()),'RUNTIME_PROVIDER_TRUST_BINDING_NOT_FOUND');repo=new Repo();const wrong=request();(wrong.runtime_binding as any).binding_id='other';await fails(new RuntimeProviderTrustAdmissionRuntimeV1(repo).admit(wrong),'RUNTIME_PROVIDER_TRUST_BINDING_NOT_FOUND');repo=new Repo();await fails(new RuntimeProviderTrustAdmissionRuntimeV1(repo).admit(request({runtime_binding_digest:'f'.repeat(64)})),'RUNTIME_PROVIDER_TRUST_BINDING_DIGEST_MISMATCH');repo=new Repo();const forged=request();(forged.runtime_binding as any).selected_model='forged';(forged as any).runtime_binding_digest=canonicalProviderRuntimeBindingDigestV1(forged.runtime_binding!);await fails(new RuntimeProviderTrustAdmissionRuntimeV1(repo).admit(forged),'RUNTIME_PROVIDER_TRUST_DEPLOYMENT_MISMATCH');});
 });

@@ -4,6 +4,8 @@ import {
 	type ProviderRuntimeBindingRequestV1,
 	type ProviderRuntimeBindingSourceV1,
 	type ProviderRuntimeMappingV1,
+	type CanonicalProviderRuntimeBindingEvidenceV1,
+	type ProviderRuntimeBindingV1,
 } from './provider.runtime.binding.contracts.v1';
 import type { ProviderAccountIdentityV1, ProviderDeploymentIdentityV1 } from './provider.account.contracts.v1';
 const parse = (x: string) => Object.freeze(JSON.parse(x));
@@ -33,6 +35,20 @@ export class ProviderRuntimeBindingD1V1 implements ProviderRuntimeBindingSourceV
 		} catch {
 			throw new ProviderRuntimeBindingFailureV1('PROVIDER_RUNTIME_BINDING_PERSISTENCE_FAILED');
 		}
+	}
+	async persistBinding(e:CanonicalProviderRuntimeBindingEvidenceV1):Promise<'CREATED'|'IDENTICAL'>{
+		const old=await this.readBinding(e.binding.binding_id);
+		if(old){if(old.binding_digest!==e.binding_digest||JSON.stringify(old.binding)!==JSON.stringify(e.binding))throw new ProviderRuntimeBindingFailureV1('PROVIDER_RUNTIME_BINDING_IDENTITY_MISMATCH');return 'IDENTICAL';}
+		const b=e.binding;
+		try{await this.db.batch([
+			this.db.prepare('INSERT INTO provider_runtime_binding_evidence VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(b.binding_id,1,e.binding_digest,b.mapping_id,b.provider,b.provider_account_id,b.provider_deployment_id,b.adapter_identity,b.selected_model,b.credential_reference,b.environment_class,b.downstream_provider_identity_status,b.downstream_deployment_identity_status,b.binding_policy_version,b.issued_at,b.correlation_id,JSON.stringify(b.causal_references),0,0,b.issued_at),
+			this.bindingAudit(`binding-evidence-audit:${b.binding_id}:persisted`,'BINDING_PERSISTED',b.binding_id,'VERIFIED',null,b.correlation_id,b.issued_at)
+		]);return 'CREATED';}catch{const concurrent=await this.readBinding(b.binding_id);if(concurrent&&concurrent.binding_digest===e.binding_digest&&JSON.stringify(concurrent.binding)===JSON.stringify(b))return 'IDENTICAL';throw new ProviderRuntimeBindingFailureV1('PROVIDER_RUNTIME_BINDING_PERSISTENCE_FAILED');}
+	}
+	async readBinding(id:string):Promise<CanonicalProviderRuntimeBindingEvidenceV1|null>{
+		const x=await this.db.prepare('SELECT * FROM provider_runtime_binding_evidence WHERE binding_id=?').bind(id).first<any>();if(!x)return null;
+		const binding=freeze({version:1,binding_id:x.binding_id,mapping_id:x.mapping_id,provider:x.provider,provider_account_id:x.provider_account_id,provider_deployment_id:x.provider_deployment_id,adapter_identity:x.adapter_identity,selected_model:x.selected_model,credential_reference:x.credential_reference,environment_class:x.environment_class,downstream_provider_identity_status:x.downstream_provider_identity_status,downstream_deployment_identity_status:x.downstream_deployment_identity_status,binding_policy_version:x.binding_policy_version,issued_at:x.issued_at,correlation_id:x.correlation_id,causal_references:parse(x.causal_references_json),admission_granted:false,transport_executed:false}) as ProviderRuntimeBindingV1;
+		return freeze({version:1,binding,binding_digest:x.binding_digest}) as CanonicalProviderRuntimeBindingEvidenceV1;
 	}
 	async transition(mappingId: string, status: 'EXPIRED' | 'REVOKED' | 'SUPERSEDED', reference: string, at: string, correlation: string) {
 		try {
@@ -160,4 +176,5 @@ export class ProviderRuntimeBindingD1V1 implements ProviderRuntimeBindingSourceV
 			throw new ProviderRuntimeBindingFailureV1('PROVIDER_RUNTIME_BINDING_AUDIT_FAILED');
 		}
 	}
+	private bindingAudit(id:string,kind:string,binding:string,outcome:string,failure:string|null,correlation:string,at:string){return this.db.prepare('INSERT INTO provider_runtime_binding_evidence_audit VALUES (?,?,?,?,?,?,?)').bind(id,kind,binding,outcome,failure,correlation,at);}
 }

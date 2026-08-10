@@ -1,10 +1,12 @@
 import { freeze, PROVIDERS } from './provider.attestation.policy.v1';
+import {canonicalProviderRuntimeBindingDigestV1} from './provider.precredential.boundary.v1';
 import {
 	PROVIDER_RUNTIME_BINDING_POLICY_V1,
 	ProviderRuntimeBindingFailureV1,
 	type ProviderRuntimeBindingRequestV1,
 	type ProviderRuntimeBindingSourceV1,
 	type ProviderRuntimeBindingV1,
+	type CanonicalProviderRuntimeBindingEvidenceV1,
 } from './provider.runtime.binding.contracts.v1';
 const text = (x: unknown) => typeof x === 'string' && x.length > 0;
 async function hash(x: unknown) {
@@ -97,6 +99,8 @@ export class ProviderRuntimeBindingRuntimeV1 {
 			admission_granted: false,
 			transport_executed: false,
 		}) as ProviderRuntimeBindingV1;
+		const evidence = freeze({version:1,binding,binding_digest:await canonicalProviderRuntimeBindingDigestV1(binding)}) as CanonicalProviderRuntimeBindingEvidenceV1;
+		try{await this.source.persistBinding(evidence);}catch(error){if(error instanceof ProviderRuntimeBindingFailureV1)throw error;throw new ProviderRuntimeBindingFailureV1('PROVIDER_RUNTIME_BINDING_PERSISTENCE_FAILED');}
 		try {
 			await this.source.audit({
 				event_id: `audit:${binding.binding_id}`,

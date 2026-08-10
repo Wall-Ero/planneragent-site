@@ -5,9 +5,12 @@ import {
 	type RuntimeProviderTrustAdmissionV1,
 	type RuntimeProviderTrustCurrentStateV1,
 } from './runtime.provider.trust.admission.contracts.v1';
+import { ProviderRuntimeBindingD1V1 } from './provider.runtime.binding.d1.v1';
 const json = (x: string) => JSON.parse(x);
 export class RuntimeProviderTrustAdmissionD1V1 implements RuntimeProviderTrustAdmissionRepositoryV1 {
 	constructor(private readonly db: D1Database) {}
+	async resolveRuntimeBinding(id:string){return new ProviderRuntimeBindingD1V1(this.db).readBinding(id);}
+	async auditRuntimeBindingVerification(e:Parameters<RuntimeProviderTrustAdmissionRepositoryV1['auditRuntimeBindingVerification']>[0]){try{await this.db.prepare('INSERT INTO provider_runtime_binding_evidence_audit VALUES (?,?,?,?,?,?,?)').bind(`binding-evidence-audit:${crypto.randomUUID()}`,e.event_kind,e.binding_id,e.outcome,e.failure_code??null,e.correlation_id,e.recorded_at).run();}catch{throw new RuntimeProviderTrustFailureV1('RUNTIME_PROVIDER_TRUST_AUDIT_FAILED');}}
 	async current(r: RuntimeProviderTrustAdmissionRequestV1): Promise<RuntimeProviderTrustCurrentStateV1> {
 		const o = r.oks_eligibility,
 			p = r.provider_trust_eligibility,

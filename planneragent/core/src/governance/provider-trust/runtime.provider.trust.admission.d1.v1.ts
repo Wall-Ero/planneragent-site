@@ -5,7 +5,7 @@ import {
 	type RuntimeProviderTrustAdmissionV1,
 	type RuntimeProviderTrustCurrentStateV1,
 } from './runtime.provider.trust.admission.contracts.v1';
-import { ProviderRuntimeBindingD1V1 } from './provider.runtime.binding.d1.v1';
+import { ProviderRuntimeBindingD1V1 } from './provider.runtime.repository.d1.v1';
 const json = (x: string) => JSON.parse(x);
 export class RuntimeProviderTrustAdmissionD1V1 implements RuntimeProviderTrustAdmissionRepositoryV1 {
 	constructor(private readonly db: D1Database) {}

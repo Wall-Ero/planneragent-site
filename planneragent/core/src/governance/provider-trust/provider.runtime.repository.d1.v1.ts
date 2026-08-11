@@ -6,7 +6,7 @@ import {
 	type ProviderRuntimeMappingV1,
 	type CanonicalProviderRuntimeBindingEvidenceV1,
 	type ProviderRuntimeBindingV1,
-} from './provider.runtime.binding.contracts.v1';
+} from './provider.runtime.repository.contracts.v1';
 import type { ProviderAccountIdentityV1, ProviderDeploymentIdentityV1 } from './provider.account.contracts.v1';
 const parse = (x: string) => Object.freeze(JSON.parse(x));
 export class ProviderRuntimeBindingD1V1 implements ProviderRuntimeBindingSourceV1 {

@@ -1,8 +1,8 @@
 import type { KnowledgeExposureEligibilityV1 } from '../knowledge-exposure/persistence';
 import type { DataClassification, SovereigntyClass } from '../../security/encryption.domains';
 import type { KnowledgeRetentionV1, ProviderOrRecipientClassV1 } from '../knowledge-exposure';
-import type { ProviderRuntimeBindingV1 } from './provider.runtime.binding.contracts.v1';
-import type { CanonicalProviderRuntimeBindingEvidenceV1 } from './provider.runtime.binding.contracts.v1';
+import type { ProviderRuntimeBindingV1 } from './provider.runtime.repository.contracts.v1';
+import type { CanonicalProviderRuntimeBindingEvidenceV1 } from './provider.runtime.repository.contracts.v1';
 import type {
 	ProviderTrustEligibilityV1,
 	ProviderTrustProcessingContextV1,

@@ -1,5 +1,5 @@
 import { applyD1Migrations, env } from 'cloudflare:test';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import pt from '../../../../migrations/0023_provider_account_attestation.sql?raw';
 import binding from '../../../../migrations/0025_provider_runtime_binding.sql?raw';
 import evidence from '../../../../migrations/0031_canonical_runtime_provider_binding.sql?raw';
@@ -10,7 +10,7 @@ import {
 	type ProviderRuntimeMappingV1,
 	verifyProviderFactsV1,
 } from '..';
-import { fixture, NOW } from './provider.attestation.runtime.test';
+import { fixture, NOW } from './provider.attestation.test.fixtures';
 const db = env.POLICIES_DB,
 	attest = new ProviderAttestationD1V1(db),
 	repo = new ProviderRuntimeBindingD1V1(db);
@@ -22,7 +22,7 @@ function queries(sql: string) {
 		.map((x) => (x.endsWith(';') ? x : `${x};`));
 }
 let mapping: ProviderRuntimeMappingV1;
-beforeAll(async () => {
+beforeEach(async () => {
 	await applyD1Migrations(db, [
 		{ name: '0023', queries: queries(pt) },
 		{ name: '0025', queries: queries(binding) },
@@ -56,6 +56,10 @@ beforeAll(async () => {
 		causal_references: [f.account.provider_account_id],
 	};
 	await repo.persistMapping(mapping);
+	await db.batch([
+		db.prepare('INSERT INTO provider_runtime_binding_audit_events VALUES (?,?,?,?,?,?,?,?)').bind('setup-audit','SETUP',mapping.mapping_id,null,'BOUND',null,'setup',NOW),
+		db.prepare('INSERT INTO provider_runtime_binding_evidence_audit VALUES (?,?,?,?,?,?,?)').bind('setup-evidence-audit','SETUP','setup-binding','VERIFIED',null,'setup',NOW),
+	]);
 });
 describe('PT-WU3A actual D1', () => {
 	it('applies migration and resolves one immutable content-free binding', async () => {

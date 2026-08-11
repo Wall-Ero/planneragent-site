@@ -7,7 +7,7 @@ import {
 	type ProviderRuntimeBindingSourceV1,
 	type ProviderRuntimeBindingV1,
 	type CanonicalProviderRuntimeBindingEvidenceV1,
-} from './provider.runtime.binding.contracts.v1';
+} from './provider.runtime.repository.contracts.v1';
 const text = (x: unknown) => typeof x === 'string' && x.length > 0;
 async function hash(x: unknown) {
 	return [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(x))))]

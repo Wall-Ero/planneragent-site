@@ -2,19 +2,22 @@ export const GOVERNANCE_INDICATOR_TYPES_V1 = [
 	'AUTHORITY_INTEGRITY',
 	'PROVIDER_TRUST',
 	'SECURITY_EVIDENCE_COMPOSITION',
+	'KNOWLEDGE_EXPOSURE_GOVERNANCE',
+	'RUNTIME_SECURITY_EVIDENCE',
 ] as const;
 export type GovernanceIndicatorTypeV1 = (typeof GOVERNANCE_INDICATOR_TYPES_V1)[number];
 
 export const GOVERNANCE_INDICATOR_STATUSES_V1 = ['HEALTHY', 'DEGRADED', 'DENIED', 'INCOMPLETE', 'NOT_APPLICABLE'] as const;
 export type GovernanceIndicatorStatusV1 = (typeof GOVERNANCE_INDICATOR_STATUSES_V1)[number];
 
-export type GovernanceIndicatorSourceFamilyV1 = 'OAG' | 'PT' | 'SEC_WU3';
+export type GovernanceIndicatorSourceFamilyV1 = 'OAG' | 'OKS' | 'PT' | 'SEC_WU1' | 'SEC_WU3';
 export type GovernanceIndicatorHistoricalModeV1 = 'CURRENT' | 'VALID_AT_OPERATION_TIME';
 export type GovernanceIndicatorReasonCodeV1 =
 	| 'AUTHORITATIVE_SOURCE_VERIFIED'
 	| 'AUTHORITATIVE_SOURCE_DENIED'
 	| 'AUTHORITATIVE_SOURCE_INCOMPLETE'
-	| 'AUTHORITATIVE_SOURCE_NOT_APPLICABLE';
+	| 'AUTHORITATIVE_SOURCE_NOT_APPLICABLE'
+	| 'AUTHORITATIVE_RUNTIME_EVIDENCE_COMPLETE';
 
 export interface GovernanceIndicatorSourceReferenceV1 {
 	readonly version: 1;

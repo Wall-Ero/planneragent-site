@@ -19,6 +19,8 @@ const mappings: Readonly<Record<GovernanceIndicatorTypeV1, Readonly<{
 	AUTHORITY_INTEGRITY: Object.freeze({ family: 'OAG', results: Object.freeze({ VERIFIED: 'HEALTHY', APPLICABLE: 'HEALTHY', DENIED: 'DENIED', INCOMPLETE: 'INCOMPLETE', UNDEFINED: 'INCOMPLETE', NOT_APPLICABLE: 'NOT_APPLICABLE' }) }),
 	PROVIDER_TRUST: Object.freeze({ family: 'PT', results: Object.freeze({ VERIFIED: 'HEALTHY', SATISFIED: 'HEALTHY', DENIED: 'DENIED', INCOMPLETE: 'INCOMPLETE', INSUFFICIENT_EVIDENCE: 'INCOMPLETE', NOT_APPLICABLE: 'NOT_APPLICABLE' }) }),
 	SECURITY_EVIDENCE_COMPOSITION: Object.freeze({ family: 'SEC_WU3', results: Object.freeze({ VERIFIED: 'HEALTHY', DENIED: 'DENIED', INCOMPLETE: 'INCOMPLETE', NOT_APPLICABLE: 'NOT_APPLICABLE' }) }),
+	KNOWLEDGE_EXPOSURE_GOVERNANCE: Object.freeze({ family: 'OKS', results: Object.freeze({ ADMITTED: 'HEALTHY', DENIED: 'DENIED', INCOMPLETE: 'INCOMPLETE', NOT_APPLICABLE: 'NOT_APPLICABLE' }) }),
+	RUNTIME_SECURITY_EVIDENCE: Object.freeze({ family: 'SEC_WU1', results: Object.freeze({}) }),
 });
 
 const reason = (status: GovernanceIndicatorStatusV1): GovernanceIndicatorReasonCodeV1 =>
@@ -37,29 +39,34 @@ export function createGovernanceIndicatorV1(input: CreateGovernanceIndicatorInpu
 	const indicatorType = input.indicator_type as GovernanceIndicatorTypeV1;
 	if (!valid(input.subject_type) || !valid(input.subject_id) || !valid(input.evaluated_at))
 		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_IDENTITY_INVALID');
-	if (input.source_evidence.length !== 1)
+	if (input.source_evidence.length === 0)
 		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_MISSING');
-	const source = input.source_evidence[0];
-	if (!source || source.version !== 1 || !valid(source.source_artifact_id) || !valid(source.source_artifact_digest) || !valid(source.source_result) || !valid(source.observed_at))
-		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_INVALID');
 	const mapping = mappings[indicatorType];
-	if (source.source_family !== mapping.family)
+	for (const source of input.source_evidence) {
+		if (!source || source.version !== 1 || !valid(source.source_artifact_id) || !valid(source.source_artifact_digest) || !valid(source.source_result) || !valid(source.observed_at) || source.source_family !== mapping.family)
+			throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_INVALID');
+		if (input.tenant_id !== source.tenant_id) throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_TENANT_MISMATCH');
+		if (input.company_id !== source.company_id) throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_COMPANY_MISMATCH');
+		const expectedDigest = input.expected_source_digests[source.source_artifact_id];
+		if (!expectedDigest || expectedDigest !== source.source_artifact_digest) throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_DIGEST_MISMATCH');
+	}
+	if (new Set(input.source_evidence.map(x => x.source_artifact_id)).size !== input.source_evidence.length)
 		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_INVALID');
-	if (input.tenant_id !== source.tenant_id)
-		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_TENANT_MISMATCH');
-	if (input.company_id !== source.company_id)
-		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_COMPANY_MISMATCH');
-	const expectedDigest = input.expected_source_digests[source.source_artifact_id];
-	if (!expectedDigest || expectedDigest !== source.source_artifact_digest)
-		throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_DIGEST_MISMATCH');
-	const status = mapping.results[source.source_result];
-	if (!status)
-		throw new GovernanceIndicatorFailureV1(source.source_result === 'NOT_APPLICABLE' ? 'GOVERNANCE_INDICATOR_APPLICABILITY_UNSUPPORTED' : 'GOVERNANCE_INDICATOR_SOURCE_STATUS_INCONSISTENT');
+	let status: GovernanceIndicatorStatusV1;
+	if (indicatorType === 'RUNTIME_SECURITY_EVIDENCE') status = runtimeStatus(input.source_evidence);
+	else {
+		if (input.source_evidence.length !== 1) throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_INVALID');
+		const result = input.source_evidence[0].source_result;
+		const mapped = mapping.results[result];
+		if (!mapped) throw new GovernanceIndicatorFailureV1(result === 'NOT_APPLICABLE' ? 'GOVERNANCE_INDICATOR_APPLICABILITY_UNSUPPORTED' : 'GOVERNANCE_INDICATOR_SOURCE_STATUS_INCONSISTENT');
+		status = mapped;
+	}
+	const reasonCodes: GovernanceIndicatorReasonCodeV1[] = indicatorType === 'RUNTIME_SECURITY_EVIDENCE' && status === 'HEALTHY' ? ['AUTHORITATIVE_RUNTIME_EVIDENCE_COMPLETE'] : [reason(status)];
 	const semantic = canonical({
 		version: 1, indicator_type: indicatorType, subject_type: input.subject_type, subject_id: input.subject_id,
 		...(input.tenant_id ? { tenant_id: input.tenant_id } : {}), ...(input.company_id ? { company_id: input.company_id } : {}),
-		status, source_evidence: [source], evaluated_at: input.evaluated_at, historical_mode: input.historical_mode,
-		causal_lineage: [...input.causal_lineage], reason_codes: [reason(status)],
+		status, source_evidence: [...input.source_evidence], evaluated_at: input.evaluated_at, historical_mode: input.historical_mode,
+		causal_lineage: [...input.causal_lineage], reason_codes: reasonCodes,
 	});
 	const indicatorDigest = governanceIndicatorDigestV1(semantic);
 	return deepCopyAndFreeze({ ...semantic, indicator_id: `governance-indicator:sha256:${indicatorDigest}`, indicator_digest: indicatorDigest }) as GovernanceIndicatorV1;
@@ -68,8 +75,18 @@ export function createGovernanceIndicatorV1(input: CreateGovernanceIndicatorInpu
 function canonical(input: GovernanceIndicatorSemanticV1): GovernanceIndicatorSemanticV1 {
 	return {
 		...input,
-		source_evidence: [...input.source_evidence].map(source => ({ ...source })),
+		source_evidence: [...input.source_evidence].map(source => ({ ...source })).sort((a, b) => a.source_artifact_id.localeCompare(b.source_artifact_id)),
 		causal_lineage: [...new Set(input.causal_lineage)].sort((a, b) => a.localeCompare(b)),
 		reason_codes: [...new Set(input.reason_codes)].sort((a, b) => a.localeCompare(b)),
 	};
+}
+
+function runtimeStatus(sources: readonly GovernanceIndicatorSourceReferenceV1[]): GovernanceIndicatorStatusV1 {
+	const results = new Set(sources.map(x => x.source_result));
+	const known = new Set(['RESOLUTION_SUCCEEDED', 'NOT_APPLICABLE', 'RESOLUTION_FAILED', 'RESOLUTION_DENIED', 'GOVERNANCE_DENIED', 'CONFIGURATION_FAILED', 'CREDENTIAL_RESOLUTION_FAILED', 'TRANSPORT_FAILED', 'TRANSPORT_SUCCEEDED', 'CREDENTIAL_NOT_APPLICABLE']);
+	if ([...results].some(x => !known.has(x))) throw new GovernanceIndicatorFailureV1('GOVERNANCE_INDICATOR_SOURCE_STATUS_INCONSISTENT');
+	if (results.has('RESOLUTION_DENIED') || results.has('GOVERNANCE_DENIED')) return 'DENIED';
+	if (results.has('NOT_APPLICABLE') && results.has('CREDENTIAL_NOT_APPLICABLE') && sources.length === 2) return 'NOT_APPLICABLE';
+	if (results.has('RESOLUTION_SUCCEEDED') && results.has('TRANSPORT_SUCCEEDED') && sources.length === 2) return 'HEALTHY';
+	return 'INCOMPLETE';
 }

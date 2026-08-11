@@ -5,3 +5,6 @@ export * from './security.evidence.composition.contracts.v1';
 export * from './security.evidence.composition.v1';
 export * from './security.evidence.composer.contracts.v1';
 export * from './security.evidence.composer.v1';
+export * from './security.evidence.composition.persistence.contracts.v1';
+export * from './security.evidence.composition.d1.v1';
+export * from './security.evidence.composition.verifier.d1.v1';

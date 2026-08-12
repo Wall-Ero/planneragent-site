@@ -8,10 +8,10 @@ import type {
   DlEvidenceV2,
   DatasetClassificationResult,
   DatasetDescriptor,
-  UiSignalsV1,
+  LegacyUiSignalSeedV1,
   DataAwarenessState,
   PlanState,
-  RealityState,
+  LegacyRealityState,
   DecisionPressureState,
 } from "./contracts.v2";
 
@@ -60,7 +60,7 @@ function mapPlanState(stockoutRisk01: number): PlanState {
   return "COHERENT";
 }
 
-function mapRealityState(driftIndex01: number): RealityState {
+function mapRealityState(driftIndex01: number): LegacyRealityState {
   const x = clamp01(driftIndex01);
   if (x >= 0.7) return "MISALIGNED";
   if (x >= 0.4) return "DRIFTING";
@@ -73,7 +73,7 @@ function mapRealityState(driftIndex01: number): RealityState {
 export function buildUiSignalsV1(input: {
   dl: DlEvidenceV2;
   dataset_descriptor?: DatasetDescriptor;
-}): { signals: UiSignalsV1; dataset: DatasetClassificationResult } {
+}): { signals: LegacyUiSignalSeedV1; dataset: DatasetClassificationResult } {
   // ==================================================
   // DATASET (SAFE FALLBACK)
   // ==================================================
@@ -98,7 +98,7 @@ export function buildUiSignalsV1(input: {
   // ==================================================
   // BASE SIGNALS
   // ==================================================
-  const signals: UiSignalsV1 = {
+  const signals: LegacyUiSignalSeedV1 = {
     data_awareness: mapDataAwarenessState(dataset.level),
     plan: mapPlanState(stockoutRisk),
     reality: mapRealityState(driftIndex),

@@ -54,18 +54,60 @@ export type DataAwarenessState = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL";
 
 export type PlanState = "COHERENT" | "SOME_GAPS" | "INCOHERENT";
 
-export type RealityState =
+export type LegacyRealityState =
   | "ALIGNED"
   | "DRIFTING"
   | "MISALIGNED"
   | "ASSUMED";
 
-export type DecisionPressureState = "LOW" | "MEDIUM" | "HIGH";
+export type RealityStabilityState =
+  | "STABLE"
+  | "SHIFTING"
+  | "UNSTABLE"
+  | "ASSUMED";
+
+export type PlanSignalSource =
+  | "MASTER"
+  | "ORDERS_INFERRED"
+  | "REALITY_INFERRED"
+  | "ASSUMED";
+
+export type PlanQualityState =
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "UNUSABLE";
+
+export interface PublicPlanSignalV1 {
+  level: PlanState;
+  source: PlanSignalSource;
+  confidence: number;
+  score: number;
+  quality: PlanQualityState;
+  quality_score: number;
+}
+
+export interface PublicRealitySignalV1 {
+  realityState: RealityStabilityState;
+  confidence: number;
+  reasons: string[];
+}
+
+export type DecisionPressureState = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface UiSignalsV1 {
   data_awareness: DataAwarenessState;
+  plan: PublicPlanSignalV1;
+  reality: RealityStabilityState;
+  realityEvidence: PublicRealitySignalV1;
+  decision_pressure: DecisionPressureState;
+}
+
+/** Historical seed output, overwritten by canonical orchestration. */
+export interface LegacyUiSignalSeedV1 {
+  data_awareness: DataAwarenessState;
   plan: PlanState;
-  reality: RealityState;
+  reality: LegacyRealityState;
   decision_pressure: DecisionPressureState;
 }
 
@@ -405,7 +447,7 @@ export interface SandboxEvaluateResponseV2 {
 
   evaluation_scope?: OperationalSignalScopeBindingV1;
 
-  signals?: unknown;
+  signals?: UiSignalsV1;
 
   advisory?: ScenarioAdvisoryV2;
 

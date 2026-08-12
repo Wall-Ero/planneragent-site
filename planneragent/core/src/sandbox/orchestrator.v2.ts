@@ -2101,8 +2101,11 @@ const realityState = deriveRealityState({
 (signals as any).reality =
   realityState.realityState;
 
-  (signals as any).realityEvidence =
-  realityState;
+  (signals as any).realityEvidence = {
+    realityState: realityState.realityState,
+    confidence: realityState.confidence,
+    reasons: realityState.reasons,
+  };
 
 
 // --------------------------------------------------
@@ -2823,7 +2826,7 @@ const plannerCognition =
   buildPlannerCognition({
 
     reality:
-      (signals as any).realityEvidence,
+      realityState,
 
     executionAllowed,
 

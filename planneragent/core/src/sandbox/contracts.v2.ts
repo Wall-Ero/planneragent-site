@@ -5,8 +5,6 @@
 // + IMPROVE + CAPABILITY GOVERNANCE
 // ======================================================
 
-import type { DataAwarenessLevel } from "../reality/reality.types";
-
 import type {
   AttentionSubscription
 } from "../attention/attention.types";
@@ -110,9 +108,7 @@ export interface SandboxEvaluateRequestV2 {
 
   domain: PlanningDomain;
 
-  dataset_descriptor?: {
-    awareness_level?: DataAwarenessLevel;
-  };
+  dataset_descriptor?: DatasetDescriptor;
 
   baseline_metrics?: Record<string, number>;
 

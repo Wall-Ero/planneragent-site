@@ -2173,17 +2173,6 @@ if (movementQuality.qualityScore < 0.5) {
 
 }
 
-  // --------------------------------------------------
-  // DATA AWARENESS (OPTIONAL BUT POTENTE)
-  // --------------------------------------------------
-
-  (signals as any).data_awareness =
-    topologyConfidence < 0.5
-      ? "LOW"
-      : topologyConfidence < 0.75
-      ? "MEDIUM"
-      : "HIGH";
-
       // --------------------------------------------------
 // PLAN STATE (STRUCTURAL SIGNAL)
 // --------------------------------------------------

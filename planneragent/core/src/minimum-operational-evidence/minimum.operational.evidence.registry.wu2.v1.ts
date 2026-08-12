@@ -35,6 +35,25 @@ function deepFreeze<T>(value: T): Readonly<T> {
 }
 
 const declarations = {
+  CANONICAL_COCKPIT_PLAN_COHERENCE: base({
+    capability_id: "CANONICAL_COCKPIT_PLAN_COHERENCE",
+    supported_operational_question: "Does the current plan structurally and operationally hold together within the exact evaluation scope?",
+    minimum_evidence: [],
+    optional_evidence: [
+      "ORDER_RELATIONSHIP", "PLAN_BOM_EDGE", "AUTHORITATIVE_MASTER_BOM",
+      "PLAN_STRUCTURE_QUALITY", "OPERATIONAL_TOPOLOGY", "TOPOLOGY_CONFIDENCE",
+    ],
+    unnecessary_evidence: [],
+    evidence_dependencies: [],
+    composed_capability_ids: ["BASIC_ORDER_PLAN_COHERENCE"],
+    evidence_semantics: "TECHNICALLY_EVALUABLE",
+    limitations: [
+      "Plan source and provenance labels do not select capability or determine sufficiency.",
+      "Optional structural evidence qualifies only when selected within the bound evaluation scope.",
+      "Plan Quality, optimizer candidates, and Decision Pressure are outside this capability.",
+    ],
+    grants_execution: false,
+  }),
   BASIC_ORDER_PLAN_COHERENCE: base({
     capability_id: "BASIC_ORDER_PLAN_COHERENCE",
     supported_operational_question: "Does a non-empty order plan exist for deterministic coherence evaluation?",

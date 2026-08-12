@@ -261,8 +261,8 @@ describe("MOE-WU2 remaining deterministic capability declarations", () => {
       ]);
     });
 
-    it("does not freeze cockpit declarations or fabricate unsupported canonical capabilities", () => {
-      const ids = Object.keys(ALL_CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_V1).join(" ");
+    it("keeps the frozen WU2 registry free of later cockpit declarations and provider coupling", () => {
+      const ids = Object.keys(CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU2_V1).join(" ");
       expect(ids).not.toMatch(/DATA_AWARENESS|REALITY_ALIGNMENT|BOTTLENECK|DECISION_PACKAGE/);
       const serializedDeclarations = JSON.stringify(CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU2_V1);
       expect(serializedDeclarations).not.toMatch(/SAP|ORACLE|DYNAMICS|CONNECTOR|CSV|XLSX/);

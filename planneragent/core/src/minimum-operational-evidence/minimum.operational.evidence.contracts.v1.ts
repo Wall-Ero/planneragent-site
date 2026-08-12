@@ -25,7 +25,11 @@ export type OperationalCapabilityIdV2 =
   | "JUNIOR_REALITY_AWARE_ADVISORY"
   | "JUNIOR_FREEZE_HORIZON_ADVISORY";
 
-export type OperationalCapabilityId = OperationalCapabilityIdV1 | OperationalCapabilityIdV2;
+export type OperationalCapabilityIdV3 =
+  | "SCOPED_OPERATIONAL_DATA_AWARENESS"
+  | "CANONICAL_REALITY_STABILITY";
+
+export type OperationalCapabilityId = OperationalCapabilityIdV1 | OperationalCapabilityIdV2 | OperationalCapabilityIdV3;
 
 export type OperationalEvidenceKindV1 =
   | "DEMAND_ORDER"
@@ -49,6 +53,9 @@ export type OperationalEvidenceKindV1 =
   | "OPTIMIZER_SHORTAGE_RESULT"
   | "EXECUTION_GAP_ASSESSMENT"
   | "REALITY_ASSESSMENT"
+  | "PROCESS_INSTABILITY_ASSESSMENT"
+  | "BOM_DIVERGENCE_ASSESSMENT"
+  | "OPERATIONAL_ASSUMPTION"
   | "MOVEMENT_EVENT"
   | "INVENTORY_SNAPSHOT"
   | "RECONSTRUCTED_INVENTORY_STATE"

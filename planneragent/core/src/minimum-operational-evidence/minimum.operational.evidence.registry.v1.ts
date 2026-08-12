@@ -6,6 +6,7 @@ import type {
 import {
   CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU2_V1,
 } from "./minimum.operational.evidence.registry.wu2.v1";
+import { CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU3_V1 } from "./minimum.operational.evidence.registry.wu3.v1";
 
 const UNSUPPORTED_BY_OPERATIONAL_CAPABILITIES = Object.freeze([
   "EMPLOYEE_PERSONAL_DATA",
@@ -197,6 +198,7 @@ export const CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_V1 = DECLARATIONS;
 export const ALL_CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_V1 = Object.freeze({
   ...DECLARATIONS,
   ...CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU2_V1,
+  ...CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU3_V1,
 });
 
 export function resolveCapabilityMinimumEvidenceDeclarationV1(
@@ -208,5 +210,7 @@ export function resolveCapabilityMinimumEvidenceDeclarationV1(
       ? CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU2_V1[
         capabilityId as keyof typeof CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU2_V1
       ]
+    : Object.prototype.hasOwnProperty.call(CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU3_V1, capabilityId)
+      ? CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU3_V1[capabilityId as keyof typeof CAPABILITY_MINIMUM_EVIDENCE_DECLARATIONS_WU3_V1]
       : null;
 }

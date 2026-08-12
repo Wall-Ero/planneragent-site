@@ -10,6 +10,10 @@ import type { DataAwarenessLevel } from "../reality/reality.types";
 import type {
   AttentionSubscription
 } from "../attention/attention.types";
+import type {
+  OperationalSignalEvaluationScopeInputV1,
+  OperationalSignalScopeBindingV1,
+} from "../cockpit/operational.signal.evaluation.scope.v1";
 
 /* =====================================================
  PLAN TIERS
@@ -95,6 +99,8 @@ export interface SandboxEvaluateRequestV2 {
   request_id: string;
 
   company_id: string;
+
+  evaluation_scope?: OperationalSignalEvaluationScopeInputV1;
 
   actor_id?: string;
 
@@ -400,6 +406,8 @@ export interface SandboxEvaluateResponseV2 {
   intent?: string;
 
   domain?: PlanningDomain;
+
+  evaluation_scope?: OperationalSignalScopeBindingV1;
 
   signals?: unknown;
 

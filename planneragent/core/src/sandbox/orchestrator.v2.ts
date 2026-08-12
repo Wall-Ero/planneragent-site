@@ -19,6 +19,10 @@ import { authoritySandboxGuard } from "./authority/authoritySandbox.guard";
 import { enforceVisionExecutionBoundary } from "./authority/visionExecutionBoundary.v1";
 import { computeDlEvidenceV2 } from "./dl.v2";
 import { buildUiSignalsV1 } from "./signal.engine.v1";
+import {
+  bindOperationalSignalsToScopeV1,
+  createOperationalSignalEvaluationScopeV1,
+} from "../cockpit/operational.signal.evaluation.scope.v1";
 
 import { buildReality } from "../reality/reality.builder";
 import { buildOperationalTopology } from "../topology/topology.builder.v2";
@@ -829,6 +833,35 @@ function computeMovementQuality(
 const orders = normalizeOrders(req.orders ?? []);
 const movements = normalizeMovements(req.movements ?? []);
 const inventoryAsOf = nowIso();
+
+const declaredEvaluationScope = req.evaluation_scope ?? {
+  version: 1 as const,
+  scope_type: "REQUEST_DATASET" as const,
+  request_id: req.request_id,
+  company_id: req.company_id,
+  domain: req.domain,
+  evidence_selection_ref: `request:${req.request_id}:supplied-operational-evidence`,
+  source_snapshot_ref: String((req as any).baseline_snapshot_id),
+};
+
+if (
+  declaredEvaluationScope.request_id !== req.request_id ||
+  declaredEvaluationScope.company_id !== req.company_id ||
+  declaredEvaluationScope.domain !== req.domain
+) {
+  throw new Error("EVALUATION_SCOPE_REQUEST_BOUNDARY_MISMATCH");
+}
+
+const operationalSignalScope = await createOperationalSignalEvaluationScopeV1(
+  declaredEvaluationScope,
+);
+const operationalSignalScopeBinding = await bindOperationalSignalsToScopeV1({
+  scope: operationalSignalScope,
+  request_id: req.request_id,
+  company_id: req.company_id,
+  evidence_as_of: inventoryAsOf,
+  evaluated_at: inventoryAsOf,
+});
 
 // ----------------------------------------------------
 // MOVEMENT QUALITY (CANONICAL)
@@ -3305,6 +3338,7 @@ console.log(
     plan: req.plan,
     intent: req.intent,
     domain: req.domain,
+    evaluation_scope: operationalSignalScopeBinding,
     signals,
     optimizer: {
   best_score: isPlanCoherent

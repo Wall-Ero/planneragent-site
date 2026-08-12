@@ -137,25 +137,39 @@ function triggerMatches(
 
   switch (subscription.trigger) {
 
-    case "REALITY_DRIFTING":
+    case "REALITY_SHIFTING":
       return {
         triggered:
-          signals.reality === "DRIFTING",
+          signals.reality === "SHIFTING",
         reason:
-          "Reality is drifting from the watched operational condition.",
+          "Reality is shifting within the watched operational scope.",
         evidence: {
           reality:
             signals.reality,
         },
       };
 
-    case "REALITY_MISALIGNED":
+    case "REALITY_UNSTABLE":
       return {
         triggered:
-          signals.reality === "MISALIGNED",
+          signals.reality === "UNSTABLE",
         reason:
-          "Reality is misaligned with the watched operational condition.",
+          "Reality is unstable within the watched operational scope.",
         evidence: {
+          reality:
+            signals.reality,
+        },
+      };
+
+    case "REALITY_DRIFTING":
+    case "REALITY_MISALIGNED":
+      return {
+        triggered: false,
+        reason:
+          "This legacy Reality attention subscription requires explicit replacement.",
+        evidence: {
+          legacy_trigger:
+            subscription.trigger,
           reality:
             signals.reality,
         },

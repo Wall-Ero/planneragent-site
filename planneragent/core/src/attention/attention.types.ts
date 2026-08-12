@@ -43,17 +43,31 @@ export type AttentionScope =
   | "GOVERNANCE"
   | "GENERAL";
 
-export type AttentionTrigger =
+export type LegacyAttentionTrigger =
+  | "REALITY_DRIFTING"
+  | "REALITY_MISALIGNED";
+
+export type CurrentAttentionTrigger =
   | "CHANGE_DETECTED"
   | "DELIVERY_DATE_CHANGED"
   | "QUANTITY_CHANGED"
   | "PLAN_BROKEN"
-  | "REALITY_DRIFTING"
-  | "REALITY_MISALIGNED"
+  | "REALITY_SHIFTING"
+  | "REALITY_UNSTABLE"
   | "DECISION_PRESSURE_HIGH"
   | "EXECUTION_BLOCKED"
   | "GOVERNANCE_REVIEW_REQUIRED"
   | "CUSTOM_CONDITION";
+
+/**
+ * Persisted attention identity contract.
+ *
+ * Legacy Reality triggers remain readable for historical subscriptions and
+ * events, but are not creation-facing and do not match Reality Stability.
+ */
+export type AttentionTrigger =
+  | CurrentAttentionTrigger
+  | LegacyAttentionTrigger;
 
 export type AttentionPriority =
   | "LOW"
@@ -148,7 +162,7 @@ export interface CreateAttentionSubscriptionInput {
 
   scope: AttentionScope;
 
-  trigger: AttentionTrigger;
+  trigger: CurrentAttentionTrigger;
 
   priority?: AttentionPriority;
 

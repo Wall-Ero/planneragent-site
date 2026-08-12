@@ -161,6 +161,15 @@ export class AttentionSubscriptionStore {
     input: CreateAttentionSubscriptionInput
   ): Promise<AttentionSubscription> {
 
+    if (
+      (input.trigger as string) === "REALITY_DRIFTING" ||
+      (input.trigger as string) === "REALITY_MISALIGNED"
+    ) {
+      throw new Error(
+        "Legacy Reality attention triggers require explicit replacement with a current subscription."
+      );
+    }
+
     const createdAt =
       nowIso();
 

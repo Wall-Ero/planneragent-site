@@ -41,11 +41,15 @@ function titleForEvent(
     case "PLAN_BROKEN":
       return "Plan requires attention";
 
-    case "REALITY_DRIFTING":
-      return "Reality is drifting";
+    case "REALITY_SHIFTING":
+      return "Reality is shifting";
 
+    case "REALITY_UNSTABLE":
+      return "Reality is unstable";
+
+    case "REALITY_DRIFTING":
     case "REALITY_MISALIGNED":
-      return "Reality is misaligned";
+      return "Legacy Reality attention event";
 
     case "DECISION_PRESSURE_HIGH":
       return "Decision pressure is high";

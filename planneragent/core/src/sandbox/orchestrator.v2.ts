@@ -23,6 +23,7 @@ import {
   bindOperationalSignalsToScopeV1,
   createOperationalSignalEvaluationScopeV1,
 } from "../cockpit/operational.signal.evaluation.scope.v1";
+import { buildOperationalCockpitSnapshotV1 } from "../cockpit/operational.cockpit.snapshot.v1";
 
 import { buildReality } from "../reality/reality.builder";
 import { buildOperationalTopology } from "../topology/topology.builder.v2";
@@ -3235,6 +3236,28 @@ const attentionNotifications =
     attentionResult.triggered
   );
 
+const operationalCockpitSnapshot =
+  await buildOperationalCockpitSnapshotV1({
+    request_id: req.request_id,
+    company_id: req.company_id,
+    domain: req.domain,
+    evaluation_scope: operationalSignalScopeBinding,
+    data_awareness: (signals as any).data_awareness,
+    plan: (signals as any).plan,
+    reality: {
+      state: (signals as any).reality,
+      confidence: (signals as any).realityEvidence.confidence,
+      reasons: (signals as any).realityEvidence.reasons,
+    },
+    decision_pressure: {
+      level: (signals as any).decision_pressure,
+      pressure_type: (signals as any).decision_pressure_type,
+      ...((signals as any).decision_blocked_reason === "UNRELIABLE_REALITY"
+        ? { blocked_reason: "UNRELIABLE_REALITY" as const }
+        : {}),
+    },
+  });
+
 console.log(
   "WORKING_ATTENTION",
   {
@@ -3331,6 +3354,7 @@ console.log(
     intent: req.intent,
     domain: req.domain,
     evaluation_scope: operationalSignalScopeBinding,
+    operational_cockpit_snapshot: operationalCockpitSnapshot,
     signals,
     optimizer: {
   best_score: isPlanCoherent

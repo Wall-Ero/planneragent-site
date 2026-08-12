@@ -449,6 +449,8 @@ export interface SandboxEvaluateResponseV2 {
 
   signals?: UiSignalsV1;
 
+  operational_cockpit_snapshot?: import("../cockpit/operational.cockpit.snapshot.v1").OperationalCockpitSnapshotV1;
+
   advisory?: ScenarioAdvisoryV2;
 
   pressure?: DecisionPressure;

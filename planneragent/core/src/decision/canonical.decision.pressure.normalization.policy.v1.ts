@@ -127,7 +127,7 @@ export async function createCanonicalDecisionPressureProducerCertificationV1(
   const projection = input.projection_mode === "CONTINUOUS"
     ? (() => {
       const places = input.precision_policy?.decimal_places;
-      if (!Number.isInteger(places) || places < 0 || places > 12) {
+      if (!Number.isSafeInteger(places) || places < 0) {
         throw new Error("PRESSURE_CERTIFICATION_PRECISION_INVALID");
       }
       return { projection_mode: "CONTINUOUS" as const,

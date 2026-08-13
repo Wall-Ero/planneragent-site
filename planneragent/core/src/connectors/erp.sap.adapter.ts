@@ -7,6 +7,7 @@ import {
 } from "./generic.erp.adapter";
 import type { ConnectorExecutionAccess } from "../industrial/connector.access";
 import { registerConnector, type IndustrialConnector } from "../industrial/system.registry";
+import { preserveGovernedOperationsFactV1 } from "../industrial/preservation/governed.operational.fact.preservation.v1";
 
 export const SAP_PROFILE = "SAP_ODATA_V4_FACADE_V1" as const;
 export const SAP_PROFILE_VERSION = "1" as const;
@@ -128,7 +129,7 @@ export function createSapConnector(input: SapConnectorConfig, dependencies: Prod
       const requested = payload.providerProfile; active = NAMES.find(name => config.lanes[name] && PRODUCTION_ERP_PROFILES[name] === requested) ?? NAMES.filter(name => config.lanes[name] && generic.capabilities.some(c => c.id === capabilityId)).find(name => name !== "MATERIAL_MOVEMENTS" || requested === PRODUCTION_ERP_PROFILES[name]);
       const admission = access.dataPolicyAdmission; const genericAccess = { ...access, dataPolicyAdmission: { ...admission, connectorIdentityId: GENERIC_IDENTITY_ID, context: { ...admission.context, transportEvidence: { ...admission.context.transportEvidence, connectorIdentityId: GENERIC_IDENTITY_ID }, encryptionEvidence: { ...admission.context.encryptionEvidence, connectorIdentityId: GENERIC_IDENTITY_ID } } } } as ConnectorExecutionAccess;
       translatedFailure = undefined;
-      try { const output = await generic.execute(capabilityId, payload, genericAccess); const copy = structuredClone(output) as Record<string, any>; copy.acquisition.connectorIdentityId = IDENTITY_ID; copy.sap = { profile: SAP_PROFILE, profileVersion: SAP_PROFILE_VERSION }; return freeze(copy) as Record<string, unknown>; } catch (error) { if (translatedFailure) throw translatedFailure; return mapGeneric(error); } finally { active = undefined; translatedFailure = undefined; }
+      try { const selected=active!; const output = await generic.execute(capabilityId, payload, genericAccess); const copy = structuredClone(output) as Record<string,any>; copy.acquisition.connectorIdentityId = IDENTITY_ID; copy.governedFacts=await Promise.all(copy[MAP[selected].collection].map((row:Record<string,unknown>)=>preserveGovernedOperationsFactV1(selected,row,{tenantId:config.tenantId,companyId:config.companyId,sourceSystem:config.sourceSystem,connectorIdentityId:IDENTITY_ID,connectorRevision:admission.connectorRevision,acquisitionReference:admission.context.contextId,authorizationReference:admission.authorizationReference,acquiredAt:copy.acquisition.acquiredAt,capabilityId,sourceRepresentation:PRODUCTION_ERP_PROFILES[selected]}))); copy.sap = { profile: SAP_PROFILE, profileVersion: SAP_PROFILE_VERSION }; return freeze(copy) as Record<string, unknown>; } catch (error) { if (translatedFailure) throw translatedFailure; return mapGeneric(error); } finally { active = undefined; translatedFailure = undefined; }
     }
   }) as IndustrialConnector;
 }

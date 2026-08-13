@@ -222,6 +222,14 @@ describe.sequential(
       expect(Object.isFrozen(
         (result.ok ? (result.output as any).orders[0] : undefined)
       )).toBe(true);
+      const preserved = result.ok ? (result.output as any).governedFacts[0] : undefined;
+      expect(preserved).toMatchObject({ fact_family: "ORDERS", semantic: {
+        family: "ORDERS", order_id: "ERP-1001", order_version: "7", sku: "MATERIAL-001",
+        quantity: { value: 12, source_unit: "EA", canonical_unit: "EACH" },
+        observed_at: "2026-07-26T19:55:00.000Z", effective_at: "2026-07-26T19:00:00.000Z",
+        due_at: "2026-08-01T00:00:00.000Z",
+      }, role_bindings: { subject: { subject_kind: "ORDER" }, plan_element: { role: "PLAN_ELEMENT" },
+        temporal: { temporal_role: "REQUIREMENT_DEADLINE" } } });
     });
 
     it("fails closed for invalid credentials", async () => {

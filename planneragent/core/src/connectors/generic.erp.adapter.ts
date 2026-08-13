@@ -4,6 +4,7 @@ import {
 } from "../industrial/capabilities";
 import type { ConnectorExecutionAccess } from "../industrial/connector.access";
 import { registerConnector, type IndustrialConnector } from "../industrial/system.registry";
+import { preserveGovernedOperationsFactV1 } from "../industrial/preservation/governed.operational.fact.preservation.v1";
 
 export const PRODUCTION_ERP_PROFILES = Object.freeze({
   ORDERS: "PRODUCTION_REST_ERP_ORDERS_V1",
@@ -237,9 +238,16 @@ export function createProductionErpConnector(input: ProductionErpConnectorConfig
       const identities = new Set<string>(); const rows = (object[definition.collection] as unknown[]).map(raw => { const row = validateRow(name, raw, config); const id = definition.identity(row); if (identities.has(id)) fail("ERP_DUPLICATE_IDENTITY"); identities.add(id); return deepFreeze({ ...row }); });
       const cognitionRows = rows.map(row => deepFreeze(definition.normalize(row)));
       const acquiredAt = new Date(dependencies.now()).toISOString();
+      const governedFacts = await Promise.all(rows.map(row => preserveGovernedOperationsFactV1(name, row, {
+        tenantId: config.tenantId, companyId: config.companyId, sourceSystem: config.sourceSystem,
+        connectorIdentityId: CONNECTOR_IDENTITY_ID, connectorRevision: access.dataPolicyAdmission.connectorRevision,
+        acquisitionReference: access.dataPolicyAdmission.context.contextId,
+        authorizationReference: access.dataPolicyAdmission.authorizationReference, acquiredAt,
+        capabilityId, sourceRepresentation: PRODUCTION_ERP_PROFILES[name],
+      })));
       return deepFreeze({ sourceRepresentation: PRODUCTION_ERP_PROFILES[name], sourceRepresentationVersion: "1", providerProfile: PRODUCTION_ERP_PROFILES[name],
         acquisition: { acquisitionReference: access.dataPolicyAdmission.context.contextId, acquiredAt, tenantId: config.tenantId, companyId: config.companyId, ownerId: config.ownerId, sourceSystem: config.sourceSystem, sourceRegion: config.sourceRegion, connectorIdentityId: CONNECTOR_IDENTITY_ID, connectorRevision: access.dataPolicyAdmission.connectorRevision, authorizationReference: access.dataPolicyAdmission.authorizationReference, capabilityId, transportEvidence: access.dataPolicyAdmission.context.transportEvidence, encryptionEvidence: access.dataPolicyAdmission.context.encryptionEvidence },
-        [definition.collection]: rows, cognitionLane: name === "PRODUCTION_ORDERS" ? "movord" : name === "MATERIAL_MOVEMENTS" ? "movmag" : name === "MASTER_BOM" ? "masterBom" : definition.collection, cognitionRows });
+        [definition.collection]: rows, governedFacts, cognitionLane: name === "PRODUCTION_ORDERS" ? "movord" : name === "MATERIAL_MOVEMENTS" ? "movmag" : name === "MASTER_BOM" ? "masterBom" : definition.collection, cognitionRows });
     } });
 }
 

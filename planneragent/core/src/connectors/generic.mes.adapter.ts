@@ -8,6 +8,7 @@ import {
 } from "./generic.erp.adapter";
 import type { ConnectorExecutionAccess } from "../industrial/connector.access";
 import { registerConnector, type IndustrialConnector } from "../industrial/system.registry";
+import { preserveGovernedOperationsFactV1 } from "../industrial/preservation/governed.operational.fact.preservation.v1";
 
 export const MES_PROFILE = "GENERIC_READ_ONLY_MES_V1" as const;
 export const MES_PROFILE_VERSION = "1" as const;
@@ -111,6 +112,9 @@ export function createMesConnector(input: MesConnectorConfig, dependencies: Prod
         copy.acquisition.connectorIdentityId = IDENTITY_ID;
         copy.acquisition.transportEvidence.connectorIdentityId = IDENTITY_ID;
         copy.acquisition.encryptionEvidence.connectorIdentityId = IDENTITY_ID;
+        const selected=LANES.find(name=>MES_REPRESENTATION_PROFILES[name]===copy.providerProfile)!;
+        const collection=selected==="PRODUCTION_ORDERS"?"productionOrders":selected==="MATERIAL_MOVEMENTS"?"materialMovements":"inventory";
+        copy.governedFacts=await Promise.all(copy[collection].map((row:Record<string,unknown>)=>preserveGovernedOperationsFactV1(selected,row,{tenantId:config.tenantId,companyId:config.companyId,sourceSystem:config.sourceSystem,connectorIdentityId:IDENTITY_ID,connectorRevision:admission.connectorRevision,acquisitionReference:admission.context.contextId,authorizationReference:admission.authorizationReference,acquiredAt:copy.acquisition.acquiredAt,capabilityId,sourceRepresentation:MES_REPRESENTATION_PROFILES[selected]})));
         copy.mes = { profile: MES_PROFILE, profileVersion: MES_PROFILE_VERSION };
         return freeze(copy) as Record<string, unknown>;
       } catch (error) { return mapGeneric(error); }

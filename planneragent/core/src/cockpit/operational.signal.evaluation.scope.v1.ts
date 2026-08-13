@@ -1,5 +1,6 @@
 // Content-free attribution for an operational cockpit signal evaluation.
 // It identifies caller-selected context; it does not select evidence or parse questions.
+import type { OperationalSubjectRefV1 } from "../cognition/canonical.operational.roles.v1";
 
 export type OperationalSignalScopeTypeV1 = "REQUEST_DATASET" | "ENTITY" | "PATH";
 export type OperationalSignalEntityTypeV1 = "SKU" | "ORDER" | "SUPPLIER";
@@ -14,6 +15,7 @@ export type OperationalSignalEvaluationScopeInputV1 = Readonly<{
   source_snapshot_ref: string;
   question_ref?: string;
   entity?: Readonly<{ entity_type: OperationalSignalEntityTypeV1; entity_ref: string }>;
+  operational_subject?: OperationalSubjectRefV1;
   path?: Readonly<{ subgraph_ref: string; seed_refs: readonly string[] }>;
 }>;
 
@@ -52,18 +54,20 @@ function normalizeInput(input: OperationalSignalEvaluationScopeInputV1): Operati
   };
 
   if (input.scope_type === "REQUEST_DATASET") {
-    if (input.entity || input.path) throw new Error("SCOPE_TYPE_SUBSTITUTION");
+    if (input.entity || input.operational_subject || input.path) throw new Error("SCOPE_TYPE_SUBSTITUTION");
     return base;
   }
   if (input.scope_type === "ENTITY") {
-    if (!input.entity || input.path) throw new Error("SCOPE_TYPE_SUBSTITUTION");
-    return { ...base, entity: {
-      entity_type: input.entity.entity_type,
-      entity_ref: required(input.entity.entity_ref, "SCOPE_ENTITY_REF_REQUIRED"),
-    } };
+    if ((!input.entity && !input.operational_subject) || (input.entity && input.operational_subject) || input.path) throw new Error("SCOPE_TYPE_SUBSTITUTION");
+    if (input.operational_subject) {
+      if (input.operational_subject.company_id !== base.company_id || input.operational_subject.domain_ref !== `domain:${base.domain}`) throw new Error("SCOPE_SUBJECT_BINDING_MISMATCH");
+      return { ...base, operational_subject: input.operational_subject };
+    }
+    return { ...base, entity: { entity_type: input.entity!.entity_type,
+      entity_ref: required(input.entity!.entity_ref, "SCOPE_ENTITY_REF_REQUIRED") } };
   }
   if (input.scope_type === "PATH") {
-    if (!input.path || input.entity) throw new Error("SCOPE_TYPE_SUBSTITUTION");
+    if (!input.path || input.entity || input.operational_subject) throw new Error("SCOPE_TYPE_SUBSTITUTION");
     const seed_refs = [...new Set(input.path.seed_refs.map((x) => x.trim()).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b));
     if (!seed_refs.length) throw new Error("SCOPE_PATH_SEEDS_REQUIRED");

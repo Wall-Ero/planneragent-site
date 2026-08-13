@@ -12,3 +12,5 @@ export type {
   OperationalSignalScopeBindingV1,
   OperationalSignalScopeTypeV1,
 } from "./cockpit/operational.signal.evaluation.scope.v1";
+export * from "./cockpit/cockpit.signal.assertability.v1";
+export * from "./cockpit/operational.cockpit.manifestation.v1";

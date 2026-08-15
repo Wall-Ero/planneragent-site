@@ -93,6 +93,8 @@ describe("WU11A-1 — Governed Industrial Dataset Admission", () => {
     expect(adapted[key][0]).toEqual(Object.fromEntries(headers.map((header, index) => [header, String(index + 1)])));
   });
 
+  it("admits explicit optional movement attribution columns without opening arbitrary headers",()=>{const headers=["sku","qty","type","order_ref","delivery_ref","destination_ref","movement_line_ref"],source=data({headers:Object.freeze(headers),rows:Object.freeze([Object.freeze(["SKU-1","2","SHIP","order:O1","delivery:D1","destination:C1","line:1"])])}),result=admit(source,"MOVEMENTS");expect(result.admitted).toBe(true);if(result.admitted)expect((adaptAdmittedDatasetToCognitionInput(result.dataset)as any).movements[0]).toMatchObject({order_ref:"order:O1",delivery_ref:"delivery:D1",destination_ref:"destination:C1",movement_line_ref:"line:1"});expect(admit(data({headers:Object.freeze([...headers,"provider_guess"]),rows:Object.freeze([Object.freeze([...headers.map(()=>"x"),"guess"])])}),"MOVEMENTS")).toEqual({admitted:false,failure:"DATASET_HEADERS_INVALID"});});
+
   it.each([
     ["GOVERNED_PASSIVE_CSV_V1", "CSV"],
     ["GOVERNED_PASSIVE_DELIMITED_TXT_DAT_V1", "TXT"],

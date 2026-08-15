@@ -95,6 +95,7 @@ const ROLE_KEYS: Readonly<Record<IndustrialDatasetRole, CognitionDatasetKey>> =
     PRODUCTION_ORDERS: "movord", MATERIAL_MOVEMENTS: "movmag",
     MASTER_BOM: "masterBom",
   });
+const MOVEMENT_ATTRIBUTION_HEADERS=Object.freeze(["order_ref","delivery_ref","shipment_ref","production_order_ref","destination_ref","source_location_ref","destination_location_ref","movement_line_ref","reservation_ref","allocation_ref"]);
 
 function denied(failure: DatasetAdmissionFailure): DatasetAdmissionResult {
   return Object.freeze({ admitted: false, failure });
@@ -114,6 +115,7 @@ function sameHeaders(actual: readonly string[], expected: readonly string[]): bo
   return actual.length === expected.length &&
     actual.every((header, index) => header === expected[index]);
 }
+function compatibleHeaders(role:IndustrialDatasetRole,actual:readonly string[],expected:readonly string[]):boolean{if(sameHeaders(actual,expected))return true;if(role!=="MOVEMENTS"&&role!=="MATERIAL_MOVEMENTS")return false;if(actual.length<expected.length||!expected.every((header,index)=>actual[index]===header))return false;const optional=actual.slice(expected.length);return new Set(optional).size===optional.length&&optional.every(header=>MOVEMENT_ATTRIBUTION_HEADERS.includes(header));}
 
 export function admitIndustrialDataset(
   data: AuthoritativeExternalData,
@@ -138,7 +140,7 @@ export function admitIndustrialDataset(
     return denied("DATASET_HEADERS_INVALID");
   }
   const allowed = ROLE_HEADERS[contract.role];
-  if (!allowed.some(headers => sameHeaders(data.headers, headers))) {
+  if (!allowed.some(headers => compatibleHeaders(contract.role,data.headers, headers))) {
     return denied("DATASET_HEADERS_INVALID");
   }
   if (!Array.isArray(data.rows) || data.rows.some(row =>

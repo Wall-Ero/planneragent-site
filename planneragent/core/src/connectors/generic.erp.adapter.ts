@@ -126,6 +126,8 @@ const closed = (row: Record<string, unknown>, fields: readonly string[]) => {
 const source = (row: Record<string, unknown>, config: ProductionErpConnectorConfig) => {
   if (requiredString(row, "company_id") !== config.companyId || requiredString(row, "source_system") !== config.sourceSystem) fail("ERP_SOURCE_IDENTITY_CONTRADICTION");
 };
+const MOVEMENT_ATTRIBUTION_FIELDS = Object.freeze(["order_ref","delivery_ref","shipment_ref","production_order_ref","destination_ref","source_location_ref","destination_location_ref","movement_line_ref","reservation_ref","allocation_ref"] as const);
+function movementAttribution(row:Record<string,unknown>):Record<string,string>{const result:Record<string,string>={};for(const field of MOVEMENT_ATTRIBUTION_FIELDS)if(row[field]!==undefined)result[field]=requiredString(row,field);return result;}
 
 const DEFINITIONS: Readonly<Record<ProductionErpProfileName, ProfileDefinition>> = Object.freeze({
   ORDERS: { name: "ORDERS", capabilityId: READ_ORDERS.id, collection: "orders",
@@ -136,13 +138,13 @@ const DEFINITIONS: Readonly<Record<ProductionErpProfileName, ProfileDefinition>>
     identity: r => requiredString(r, "inventory_id"), normalize: r => ({ sku: requiredString(r, "sku"), qty: number(r, "quantity") }) },
   MOVEMENTS: { name: "MOVEMENTS", capabilityId: READ_MOVEMENTS.id, collection: "movements",
     maxResponseBytes: DEFAULT_MAX_RESPONSE_BYTES,
-    identity: r => requiredString(r, "movement_id"), normalize: r => ({ sku: requiredString(r, "sku"), qty: number(r, "quantity"), type: requiredString(r, "type") }) },
+    identity: r => requiredString(r, "movement_id"), normalize: r => ({ sku: requiredString(r, "sku"), qty: number(r, "quantity"), type: requiredString(r, "type"), ...movementAttribution(r) }) },
   PRODUCTION_ORDERS: { name: "PRODUCTION_ORDERS", capabilityId: READ_PRODUCTION_PLAN.id, collection: "productionOrders",
     maxResponseBytes: DEFAULT_MAX_RESPONSE_BYTES,
     identity: r => requiredString(r, "production_order_id"), normalize: r => ({ order: requiredString(r, "production_order_id"), article: requiredString(r, "article"), quantity: number(r, "quantity", true) }) },
   MATERIAL_MOVEMENTS: { name: "MATERIAL_MOVEMENTS", capabilityId: READ_MOVEMENTS.id, collection: "materialMovements",
     maxResponseBytes: DEFAULT_MAX_RESPONSE_BYTES,
-    identity: r => requiredString(r, "movement_id"), normalize: r => ({ order: requiredString(r, "production_order_id"), article: requiredString(r, "article"), quantity: number(r, "quantity", true), type: requiredString(r, "type") }) },
+    identity: r => requiredString(r, "movement_id"), normalize: r => ({ order: requiredString(r, "production_order_id"), article: requiredString(r, "article"), quantity: number(r, "quantity", true), type: requiredString(r, "type"), production_order_ref:requiredString(r,"production_order_id"), ...movementAttribution(r) }) },
   MASTER_BOM: { name: "MASTER_BOM", capabilityId: READ_MASTER_BOM.id, collection: "masterBom",
     maxResponseBytes: DEFAULT_MAX_RESPONSE_BYTES,
     identity: r => `${requiredString(r, "parent")}:${requiredString(r, "component")}`, normalize: r => ({ parent: requiredString(r, "parent"), component: requiredString(r, "component"), ratio: number(r, "ratio", true) }) },
@@ -150,9 +152,9 @@ const DEFINITIONS: Readonly<Record<ProductionErpProfileName, ProfileDefinition>>
 const FIELDS: Readonly<Record<ProductionErpProfileName, readonly string[]>> = Object.freeze({
   ORDERS: ["external_order_id", "external_order_version", "company_id", "owner_id", "source_system", "sku", "quantity_value", "quantity_unit", "status", "observed_at", "effective_at", "due_at"],
   INVENTORY: ["inventory_id", "company_id", "source_system", "warehouse_id", "sku", "quantity", "unit", "observed_at"],
-  MOVEMENTS: ["movement_id", "company_id", "source_system", "sku", "quantity", "type", "unit", "occurred_at"],
+  MOVEMENTS: ["movement_id", "company_id", "source_system", "sku", "quantity", "type", "unit", "occurred_at", ...MOVEMENT_ATTRIBUTION_FIELDS],
   PRODUCTION_ORDERS: ["production_order_id", "company_id", "source_system", "article", "output_article", "quantity", "unit", "scheduled_at"],
-  MATERIAL_MOVEMENTS: ["movement_id", "production_order_id", "company_id", "source_system", "article", "quantity", "type", "unit", "occurred_at"],
+  MATERIAL_MOVEMENTS: ["movement_id", "production_order_id", "company_id", "source_system", "article", "quantity", "type", "unit", "occurred_at", ...MOVEMENT_ATTRIBUTION_FIELDS],
   MASTER_BOM: ["company_id", "source_system", "parent", "component", "ratio", "unit", "revision", "valid_from"],
 });
 function validateRow(name: ProductionErpProfileName, row: unknown, config: ProductionErpConnectorConfig): Record<string, unknown> {
@@ -163,7 +165,8 @@ function validateRow(name: ProductionErpProfileName, row: unknown, config: Produ
   if (name === "INVENTORY") { requiredString(value, "warehouse_id"); unit(value); timestamp(value, "observed_at"); }
   if (name === "MOVEMENTS") { if (!/^(RECEIPT|ISSUE|TRANSFER)$/.test(requiredString(value, "type"))) fail("ERP_CAPABILITY_PAYLOAD_MISMATCH"); unit(value); timestamp(value, "occurred_at"); }
   if (name === "PRODUCTION_ORDERS") { if (requiredString(value, "article") !== requiredString(value, "output_article")) fail("ERP_CAPABILITY_PAYLOAD_MISMATCH"); unit(value); timestamp(value, "scheduled_at"); }
-  if (name === "MATERIAL_MOVEMENTS") { if (requiredString(value, "type") !== "CONSUMPTION") fail("ERP_CAPABILITY_PAYLOAD_MISMATCH"); unit(value); timestamp(value, "occurred_at"); }
+  if (name === "MATERIAL_MOVEMENTS") { if (requiredString(value, "type") !== "CONSUMPTION") fail("ERP_CAPABILITY_PAYLOAD_MISMATCH");if(value.production_order_ref!==undefined&&requiredString(value,"production_order_ref")!==requiredString(value,"production_order_id"))fail("ERP_SOURCE_IDENTITY_CONTRADICTION"); unit(value); timestamp(value, "occurred_at"); }
+  if(name==="MOVEMENTS"||name==="MATERIAL_MOVEMENTS")movementAttribution(value);
   if (name === "MASTER_BOM") { requiredString(value, "revision"); unit(value); timestamp(value, "valid_from"); }
   DEFINITIONS[name].normalize(value); return value;
 }

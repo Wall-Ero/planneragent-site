@@ -1,8 +1,10 @@
 import { createOperationsEvidenceProfileV1 } from "../../cognition/canonical.operational.roles.v1";
 import { createCanonicalDomainInterventionProfileV1, type CanonicalDomainInterventionProfileV1 } from "../../cognition/canonical.domain.intervention.profile.v1";
+import { createCanonicalDomainContextBindingV1, type CanonicalDomainContextBindingV1 } from "../../cognition/canonical.domain.context.v1";
 import { createOperationsGovernedInterventionClassV1, type OperationsGovernedInterventionClassV1 } from "./operations.governed.intervention.class.v1";
 
 export const OPERATIONS_DOMAIN_INTERVENTION_PROFILE_VERSION_V1 = "1" as const;
+export const OPERATIONS_DOMAIN_SEMANTIC_PROFILE_REF_V1 = "domain-profile:operations" as const;
 
 export async function createOperationsDomainInterventionClassesV1():Promise<readonly OperationsGovernedInterventionClassV1[]>{
   const base={version:1 as const,domain_profile_ref:"profile:operations-v1",domain_profile_version:"1",producer_ref:"producer:operations-domain-intervention-profile-v1",policy_ref:"policy:operations-domain-intervention-profile-v1"};
@@ -62,3 +64,5 @@ export async function createOperationsDomainInterventionProfileV1():Promise<Cano
     qualification_refs:["qualification:repository-owned-operations-semantics-v1"],
   });
 }
+
+export async function createOperationsDomainContextBindingV1():Promise<CanonicalDomainContextBindingV1>{return createCanonicalDomainContextBindingV1({version:1,domain_ref:"domain:operations",domain_semantic_profile_ref:OPERATIONS_DOMAIN_SEMANTIC_PROFILE_REF_V1,domain_semantic_profile_version:"1",evidence_profile:await createOperationsEvidenceProfileV1(),intervention_profile:await createOperationsDomainInterventionProfileV1(),policy_ref:"policy:operations-domain-context-v1",qualification_refs:["qualification:repository-owned-operations-domain-context-v1"]});}

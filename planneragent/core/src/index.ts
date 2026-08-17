@@ -17,3 +17,4 @@ export * from "./cockpit/operational.cockpit.manifestation.v1";
 export * from "./cockpit/operational.availability.read-model.v1";
 export * from "./industrial/cognition/operations.planned.production.material.feasibility.v1";
 export * from "./industrial/cognition/operations.urgency.v1";
+export * from "./industrial/cognition/operations.cost.of.waiting.v1";

@@ -19,3 +19,4 @@ export * from "./industrial/cognition/operations.planned.production.material.fea
 export * from "./industrial/cognition/operations.urgency.v1";
 export * from "./industrial/cognition/operations.cost.of.waiting.v1";
 export * from "./decision/canonical.decision.pressure.composition.v1";
+export * from "./attention/canonicalAttention";

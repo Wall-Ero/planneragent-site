@@ -14,3 +14,5 @@ export type {
 } from "./cockpit/operational.signal.evaluation.scope.v1";
 export * from "./cockpit/cockpit.signal.assertability.v1";
 export * from "./cockpit/operational.cockpit.manifestation.v1";
+export * from "./cockpit/operational.availability.read-model.v1";
+export * from "./industrial/cognition/operations.planned.production.material.feasibility.v1";

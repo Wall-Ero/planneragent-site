@@ -25,6 +25,15 @@ type SandboxResponse = {
   ok: boolean;
   plan: "VISION" | "JUNIOR" | "SENIOR" | "PRINCIPAL";
   signals?: SandboxSignals;
+  operational_cockpit_snapshot?: {
+    signals?: {
+      operational_availability?: {
+        status: "CURRENT_GOVERNED" | "PARTIALLY_UNRESOLVED";
+        breakdown: Array<{ kind: "EFFECTIVE_INVENTORY" | "GOVERNED_FUTURE_SUPPLY" | "PLANNED_PRODUCTION"; quantity: number; unit: "EA" }>;
+        planned_production: Array<{ item_ref: string; planned_quantity: number; feasible_quantity: number; available_at: string; feasibility: "FEASIBLE" | "PARTIALLY_FEASIBLE" | "ZERO_FEASIBLE" | "UNRESOLVED" }>;
+      };
+    };
+  };
 };
 
 // -----------------------------------------------------
@@ -171,6 +180,24 @@ function renderSignal(label: string, active?: string) {
   return `<div class="${cls}">${label}</div>`;
 }
 
+function availabilityLabel(kind: string): string {
+  if (kind === "EFFECTIVE_INVENTORY") return "Effective inventory";
+  if (kind === "GOVERNED_FUTURE_SUPPLY") return "Governed future supply";
+  return "Planned production";
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!);
+}
+
+function renderOperationalAvailability(response: SandboxResponse): string {
+  const availability = response.operational_cockpit_snapshot?.signals?.operational_availability;
+  if (!availability) return "";
+  const rows = availability.breakdown.map(row => `<div class="availability-row"><span>${availabilityLabel(row.kind)}</span><strong>${row.quantity} ${row.unit}</strong></div>`).join("");
+  const production = availability.planned_production.map(row => `<div class="production-row"><span>${escapeHtml(row.item_ref.replace("operations-item:", ""))}</span><span>${row.feasible_quantity}/${row.planned_quantity} EA · ${row.feasibility.replaceAll("_", " ")} · ${escapeHtml(new Date(row.available_at).toLocaleString())}</span></div>`).join("");
+  return `<div class="availability-panel"><div class="section-title">CURRENT OPERATIONAL AVAILABILITY</div><div class="availability-state">${availability.status === "CURRENT_GOVERNED" ? "Current governed" : "Partially unresolved"}</div>${rows}${production}</div>`;
+}
+
 // -----------------------------------------------------
 // MAIN RENDER
 // -----------------------------------------------------
@@ -285,6 +312,8 @@ async function render() {
       </div>
 
     </div>
+
+    ${renderOperationalAvailability(response)}
 
 
     <div class="chat">

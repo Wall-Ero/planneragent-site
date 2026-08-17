@@ -247,6 +247,12 @@ opacity:1;
 
 /* CHAT */
 
+.availability-panel{margin:34px auto 0;max-width:720px;border:1px solid var(--pa-line);border-radius:8px;padding:20px;background:rgba(255,255,255,.02)}
+.availability-state{text-align:center;color:var(--pa-gold);font-size:12px;letter-spacing:1px;margin-bottom:12px}
+.availability-row,.production-row{display:flex;justify-content:space-between;gap:20px;padding:9px 0;border-top:1px solid var(--pa-line);font-size:13px}
+.production-row{color:var(--pa-muted);font-size:12px}
+.production-row span:last-child{text-align:right}
+
 .chat{
 
 margin-top:80px;

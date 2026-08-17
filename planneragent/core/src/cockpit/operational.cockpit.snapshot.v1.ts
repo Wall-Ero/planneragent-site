@@ -5,6 +5,7 @@ import type {
 } from "../sandbox/contracts.v2";
 import type { OperationalSignalScopeBindingV1 } from "./operational.signal.evaluation.scope.v1";
 import { verifyOperationalSignalEvaluationScopeV1 } from "./operational.signal.evaluation.scope.v1";
+import { verifyOperationalAvailabilityReadModelV1, type OperationalAvailabilityReadModelV1 } from "./operational.availability.read-model.v1";
 
 export type PublicDecisionPressureV2 = Readonly<{
   level: "LOW" | "MEDIUM" | "HIGH";
@@ -37,6 +38,7 @@ export type OperationalCockpitSnapshotV1 = Readonly<{
       reasons: readonly string[];
     }>;
     decision_pressure: PublicDecisionPressureV2;
+    operational_availability?: OperationalAvailabilityReadModelV1;
   }>;
   lineage_refs: readonly string[];
   company_global_claim: false;
@@ -57,6 +59,7 @@ export type BuildOperationalCockpitSnapshotV1Input = Readonly<{
     reasons: readonly string[];
   }>;
   decision_pressure: PublicDecisionPressureV2;
+  operational_availability?: OperationalAvailabilityReadModelV1;
 }>;
 
 const awarenessStates = new Set(["SNAPSHOT", "BEHAVIORAL", "STRUCTURAL"]);
@@ -128,6 +131,7 @@ export async function buildOperationalCockpitSnapshotV1(
   if (input.decision_pressure.blocked_reason && input.decision_pressure.blocked_reason !== "UNRELIABLE_REALITY") {
     throw new Error("COCKPIT_SNAPSHOT_PRESSURE_REASON_INVALID");
   }
+  if(input.operational_availability){await verifyOperationalAvailabilityReadModelV1(input.operational_availability);if(input.operational_availability.request_id!==input.request_id||input.operational_availability.company_id!==input.company_id||input.operational_availability.scope_id!==binding.scope.scope_id||input.operational_availability.scope_digest!==binding.scope.scope_digest||input.operational_availability.evidence_selection_ref!==binding.scope.evidence_selection_ref||input.operational_availability.source_snapshot_ref!==binding.scope.source_snapshot_ref||input.operational_availability.evidence_as_of!==binding.evidence_as_of)throw new Error("COCKPIT_SNAPSHOT_AVAILABILITY_MISMATCH");}
 
   const semantic = {
     version: 1 as const,
@@ -142,6 +146,7 @@ export async function buildOperationalCockpitSnapshotV1(
     plan: input.plan,
     reality: input.reality,
     decision_pressure: input.decision_pressure,
+    ...(input.operational_availability?{operational_availability:input.operational_availability}:{}),
   };
   const snapshot_digest = await sha256(canonicalJson(semantic));
   const snapshot: OperationalCockpitSnapshotV1 = {
@@ -165,8 +170,9 @@ export async function buildOperationalCockpitSnapshotV1(
       plan: { ...input.plan },
       reality: { ...input.reality, reasons: [...input.reality.reasons] },
       decision_pressure: { ...input.decision_pressure },
+      ...(input.operational_availability?{operational_availability:input.operational_availability}:{}),
     },
-    lineage_refs: [binding.scope.scope_id, binding.scope.evidence_selection_ref, binding.scope.source_snapshot_ref],
+    lineage_refs: [binding.scope.scope_id, binding.scope.evidence_selection_ref, binding.scope.source_snapshot_ref, ...(input.operational_availability?[input.operational_availability.read_model_id]:[])],
     company_global_claim: false,
     grants_execution: false,
     observational_only: true,

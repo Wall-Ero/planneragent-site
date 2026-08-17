@@ -1,7 +1,7 @@
 import type { OperationalCockpitSnapshotV1 } from "./operational.cockpit.snapshot.v1";
 import type { CockpitSignalEvidenceQualificationV1, CockpitSignalFamilyV1 } from "../minimum-operational-evidence";
 
-export type CockpitManifestedStateV1 = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL" | "COHERENT" | "SOME_GAPS" | "INCOHERENT" | "STABLE" | "SHIFTING" | "UNSTABLE" | "LOW" | "MEDIUM" | "HIGH";
+export type CockpitManifestedStateV1 = "SNAPSHOT" | "BEHAVIORAL" | "STRUCTURAL" | "COHERENT" | "SOME_GAPS" | "INCOHERENT" | "STABLE" | "SHIFTING" | "UNSTABLE" | "UNRESOLVED_CONFLICT" | "COMPLETE" | "QUALIFIED_PARTIAL_UNRESOLVED" | "QUALIFIED_PARTIAL_INSUFFICIENT_EVIDENCE" | "LOW" | "MEDIUM" | "HIGH";
 export type CockpitNonManifestationReasonV1 = "MOE_INSUFFICIENT" | "MOE_UNSUPPORTED_EVIDENCE" | "MOE_UNNECESSARY_EVIDENCE" | "MOE_CAPABILITY_UNDECLARED" | "MOE_INPUT_INVALID" | "INSUFFICIENT_GROUNDING";
 export type CockpitSignalAssertabilityV1 = Readonly<{
   version: 1; assertability_id: string; assertability_digest: string; digest_algorithm: "SHA-256";
@@ -16,7 +16,7 @@ export const COCKPIT_SIGNAL_CAPABILITIES_V1 = { DATA_AWARENESS: "SCOPED_OPERATIO
 export function canonicalCockpitJsonV1(value: unknown): string { if (Array.isArray(value)) return `[${value.map(canonicalCockpitJsonV1).join(",")}]`; if (value && typeof value === "object") { const e=Object.entries(value as Record<string,unknown>).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)); return `{${e.map(([k,v])=>`${JSON.stringify(k)}:${canonicalCockpitJsonV1(v)}`).join(",")}}`; } return JSON.stringify(value); }
 export async function cockpitDigestV1(value: unknown): Promise<string> { const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonicalCockpitJsonV1(value))); return Array.from(new Uint8Array(d),b=>b.toString(16).padStart(2,"0")).join(""); }
 function moeReason(status: string): CockpitNonManifestationReasonV1 { return ({ INSUFFICIENT:"MOE_INSUFFICIENT", UNSUPPORTED_EVIDENCE_PRESENT:"MOE_UNSUPPORTED_EVIDENCE", UNNECESSARY_EVIDENCE_PRESENT:"MOE_UNNECESSARY_EVIDENCE", CAPABILITY_UNDECLARED:"MOE_CAPABILITY_UNDECLARED", INPUT_INVALID:"MOE_INPUT_INVALID" } as Record<string,CockpitNonManifestationReasonV1>)[status] ?? "MOE_INPUT_INVALID"; }
-function state(snapshot: OperationalCockpitSnapshotV1, family: CockpitSignalFamilyV1): string { if(family==="DATA_AWARENESS") return snapshot.signals.data_awareness; if(family==="PLAN_COHERENCE") return snapshot.signals.plan.level; if(family==="REALITY_STABILITY") return snapshot.signals.reality.state; return snapshot.signals.decision_pressure.level; }
+function state(snapshot: OperationalCockpitSnapshotV1, family: CockpitSignalFamilyV1): string { if(family==="DATA_AWARENESS") return snapshot.signals.data_awareness; if(family==="PLAN_COHERENCE") return snapshot.signals.plan.level; if(family==="REALITY_STABILITY") return snapshot.canonical_cognition?.reality.composition_status??snapshot.signals.reality.state; return snapshot.canonical_cognition?.decision_pressure.completeness_status??snapshot.signals.decision_pressure.level; }
 export async function evaluateCockpitSignalAssertabilityV1(snapshot: OperationalCockpitSnapshotV1, q: CockpitSignalEvidenceQualificationV1): Promise<CockpitSignalAssertabilityV1> {
   if(q.capability_id!==COCKPIT_SIGNAL_CAPABILITIES_V1[q.signal_family]) throw new Error("COCKPIT_ASSERTABILITY_CAPABILITY_MISMATCH");
   if(q.request_id!==snapshot.request_id||q.company_id!==snapshot.company_id) throw new Error("COCKPIT_ASSERTABILITY_PARTY_MISMATCH");

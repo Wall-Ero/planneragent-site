@@ -96,6 +96,7 @@ const ROLE_KEYS: Readonly<Record<IndustrialDatasetRole, CognitionDatasetKey>> =
     MASTER_BOM: "masterBom",
   });
 const MOVEMENT_ATTRIBUTION_HEADERS=Object.freeze(["order_ref","delivery_ref","shipment_ref","production_order_ref","destination_ref","source_location_ref","destination_location_ref","movement_line_ref","reservation_ref","allocation_ref"]);
+const PRODUCTION_ORDER_OPTIONAL_HEADERS=Object.freeze(["planned_output_available_at"]);
 
 function denied(failure: DatasetAdmissionFailure): DatasetAdmissionResult {
   return Object.freeze({ admitted: false, failure });
@@ -115,7 +116,8 @@ function sameHeaders(actual: readonly string[], expected: readonly string[]): bo
   return actual.length === expected.length &&
     actual.every((header, index) => header === expected[index]);
 }
-function compatibleHeaders(role:IndustrialDatasetRole,actual:readonly string[],expected:readonly string[]):boolean{if(sameHeaders(actual,expected))return true;if(role!=="MOVEMENTS"&&role!=="MATERIAL_MOVEMENTS")return false;if(actual.length<expected.length||!expected.every((header,index)=>actual[index]===header))return false;const optional=actual.slice(expected.length);return new Set(optional).size===optional.length&&optional.every(header=>MOVEMENT_ATTRIBUTION_HEADERS.includes(header));}
+function compatibleHeaders(role:IndustrialDatasetRole,actual:readonly string[],expected:readonly string[]):boolean{if(sameHeaders(actual,expected))return true;const allowedOptional=role==="MOVEMENTS"||role==="MATERIAL_MOVEMENTS"?MOVEMENT_ATTRIBUTION_HEADERS:role==="PRODUCTION_ORDERS"?PRODUCTION_ORDER_OPTIONAL_HEADERS:undefined;if(!allowedOptional)return false;if(actual.length<expected.length||!expected.every((header,index)=>actual[index]===header))return false;const optional=actual.slice(expected.length);return new Set(optional).size===optional.length&&optional.every(header=>allowedOptional.includes(header));}
+function exactTimestamp(value:string):boolean{return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)&&Number.isFinite(Date.parse(value));}
 
 export function admitIndustrialDataset(
   data: AuthoritativeExternalData,
@@ -148,6 +150,7 @@ export function admitIndustrialDataset(
     row.some(cell => typeof cell !== "string"))) {
     return denied("DATASET_STRUCTURE_INCOMPATIBLE");
   }
+  if(contract.role==="PRODUCTION_ORDERS"){const index=data.headers.indexOf("planned_output_available_at");if(index>=0&&data.rows.some(row=>row[index]!==""&&!exactTimestamp(row[index]!)))return denied("DATASET_STRUCTURE_INCOMPATIBLE");}
 
   const roleContract = Object.freeze({ version: 1, role: contract.role });
   const admission = Object.freeze({
@@ -168,7 +171,7 @@ export function adaptAdmittedDatasetToCognitionInput(
   admitted: AdmittedIndustrialDatasetV1,
 ): Readonly<Pick<SandboxEvaluateRequestV2, CognitionDatasetKey>> {
   const rows = admitted.data.rows.map(row => Object.freeze(
-    Object.fromEntries(admitted.data.headers.map((header, index) => [header, row[index]])),
+    Object.fromEntries(admitted.data.headers.flatMap((header, index) => header==="planned_output_available_at"&&row[index]===""?[]:[[header, row[index]]])),
   ));
   return Object.freeze({ [ROLE_KEYS[admitted.roleContract.role]]: Object.freeze(rows) }) as
     Readonly<Pick<SandboxEvaluateRequestV2, CognitionDatasetKey>>;

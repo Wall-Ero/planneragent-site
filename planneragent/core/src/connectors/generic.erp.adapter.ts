@@ -141,7 +141,7 @@ const DEFINITIONS: Readonly<Record<ProductionErpProfileName, ProfileDefinition>>
     identity: r => requiredString(r, "movement_id"), normalize: r => ({ sku: requiredString(r, "sku"), qty: number(r, "quantity"), type: requiredString(r, "type"), ...movementAttribution(r) }) },
   PRODUCTION_ORDERS: { name: "PRODUCTION_ORDERS", capabilityId: READ_PRODUCTION_PLAN.id, collection: "productionOrders",
     maxResponseBytes: DEFAULT_MAX_RESPONSE_BYTES,
-    identity: r => requiredString(r, "production_order_id"), normalize: r => ({ order: requiredString(r, "production_order_id"), article: requiredString(r, "article"), quantity: number(r, "quantity", true) }) },
+    identity: r => requiredString(r, "production_order_id"), normalize: r => ({ order: requiredString(r, "production_order_id"), article: requiredString(r, "article"), quantity: number(r, "quantity", true), ...(r.planned_output_available_at !== undefined ? { planned_output_available_at: timestamp(r, "planned_output_available_at") } : {}) }) },
   MATERIAL_MOVEMENTS: { name: "MATERIAL_MOVEMENTS", capabilityId: READ_MOVEMENTS.id, collection: "materialMovements",
     maxResponseBytes: DEFAULT_MAX_RESPONSE_BYTES,
     identity: r => requiredString(r, "movement_id"), normalize: r => ({ order: requiredString(r, "production_order_id"), article: requiredString(r, "article"), quantity: number(r, "quantity", true), type: requiredString(r, "type"), production_order_ref:requiredString(r,"production_order_id"), ...movementAttribution(r) }) },
@@ -153,7 +153,7 @@ const FIELDS: Readonly<Record<ProductionErpProfileName, readonly string[]>> = Ob
   ORDERS: ["external_order_id", "external_order_version", "company_id", "owner_id", "source_system", "sku", "quantity_value", "quantity_unit", "status", "observed_at", "effective_at", "due_at"],
   INVENTORY: ["inventory_id", "company_id", "source_system", "warehouse_id", "sku", "quantity", "unit", "observed_at"],
   MOVEMENTS: ["movement_id", "company_id", "source_system", "sku", "quantity", "type", "unit", "occurred_at", ...MOVEMENT_ATTRIBUTION_FIELDS],
-  PRODUCTION_ORDERS: ["production_order_id", "company_id", "source_system", "article", "output_article", "quantity", "unit", "scheduled_at"],
+  PRODUCTION_ORDERS: ["production_order_id", "company_id", "source_system", "article", "output_article", "quantity", "unit", "scheduled_at", "planned_output_available_at"],
   MATERIAL_MOVEMENTS: ["movement_id", "production_order_id", "company_id", "source_system", "article", "quantity", "type", "unit", "occurred_at", ...MOVEMENT_ATTRIBUTION_FIELDS],
   MASTER_BOM: ["company_id", "source_system", "parent", "component", "ratio", "unit", "revision", "valid_from"],
 });
@@ -164,7 +164,7 @@ function validateRow(name: ProductionErpProfileName, row: unknown, config: Produ
   else source(value, config);
   if (name === "INVENTORY") { requiredString(value, "warehouse_id"); unit(value); timestamp(value, "observed_at"); }
   if (name === "MOVEMENTS") { if (!/^(RECEIPT|ISSUE|TRANSFER)$/.test(requiredString(value, "type"))) fail("ERP_CAPABILITY_PAYLOAD_MISMATCH"); unit(value); timestamp(value, "occurred_at"); }
-  if (name === "PRODUCTION_ORDERS") { if (requiredString(value, "article") !== requiredString(value, "output_article")) fail("ERP_CAPABILITY_PAYLOAD_MISMATCH"); unit(value); timestamp(value, "scheduled_at"); }
+  if (name === "PRODUCTION_ORDERS") { if (requiredString(value, "article") !== requiredString(value, "output_article")) fail("ERP_CAPABILITY_PAYLOAD_MISMATCH"); unit(value); timestamp(value, "scheduled_at"); if(value.planned_output_available_at!==undefined)timestamp(value,"planned_output_available_at"); }
   if (name === "MATERIAL_MOVEMENTS") { if (requiredString(value, "type") !== "CONSUMPTION") fail("ERP_CAPABILITY_PAYLOAD_MISMATCH");if(value.production_order_ref!==undefined&&requiredString(value,"production_order_ref")!==requiredString(value,"production_order_id"))fail("ERP_SOURCE_IDENTITY_CONTRADICTION"); unit(value); timestamp(value, "occurred_at"); }
   if(name==="MOVEMENTS"||name==="MATERIAL_MOVEMENTS")movementAttribution(value);
   if (name === "MASTER_BOM") { requiredString(value, "revision"); unit(value); timestamp(value, "valid_from"); }

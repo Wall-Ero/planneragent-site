@@ -7,6 +7,20 @@
   --muted: rgba(213, 184, 124, 0.34);
   --font: Arial, Helvetica, sans-serif;
   --content-width: min(78%, 1348px);
+  --upper-frame-width: min(75%, 1292px);
+  --frame-text-gap-y: clamp(1px, 0.12vw, 2px);
+  --frame-text-gap-x: clamp(3px, 0.3vw, 5px);
+  --title-safe-gap: clamp(6px, 0.55vw, 10px);
+  --signal-safe-gap: clamp(7px, 0.65vw, 11px);
+  --section-gap-x: clamp(8px, 1vw, 18px);
+  --section-gap-y: clamp(7px, 0.7vw, 12px);
+  --cognition-gap-x: clamp(8px, 1.5vw, 26px);
+  --cognition-gap-y: clamp(8px, 0.8vw, 14px);
+  --chat-safe-padding: clamp(18px, 3vw, 52px);
+  --governance-title-gap: clamp(8px, 0.8vw, 14px);
+  --governance-row-gap: clamp(7px, 0.65vw, 11px);
+  --governance-rule-gap: clamp(8px, 1vw, 16px);
+  --help-gap: 3px;
 }
 
 * { box-sizing: border-box; }
@@ -49,27 +63,27 @@ h1, h2, p { margin: 0; }
 .text-control, .help { font-size: clamp(11px, 0.8vw, 14px); opacity: 0.75; }
 .text-control:hover, .text-control:focus-visible, .help:hover, .help:focus-visible, .composer-button:focus-visible { color: var(--bright); opacity: 1; outline: 1px solid var(--gold); outline-offset: 4px; }
 
-.activity { position: relative; width: min(68%, 1176px); height: clamp(44px, 4.25vw, 73px); margin: clamp(10px, 1.15vw, 20px) auto 0; }
-.activity-line { position: absolute; top: 49%; right: 5.6%; left: 5.6%; height: 1px; overflow: hidden; background: linear-gradient(90deg, transparent, var(--gold) 8%, var(--bright) 50%, var(--gold) 92%, transparent); box-shadow: 0 0 5px rgba(255, 200, 91, 0.62); }
+.activity { position: relative; width: var(--upper-frame-width); height: clamp(40px, 4.06vw, 70px); margin: var(--section-gap-y) auto 0; }
+.activity-line { position: absolute; top: 49%; right: max(6%, var(--frame-text-gap-x)); left: max(6%, var(--frame-text-gap-x)); height: 1px; overflow: hidden; background: linear-gradient(90deg, transparent, var(--gold) 8%, var(--bright) 50%, var(--gold) 92%, transparent); box-shadow: 0 0 5px rgba(255, 200, 91, 0.62); }
 .activity-line i { position: absolute; top: -2px; width: 8%; height: 5px; background: #050505; animation: waiting 3.6s linear infinite; }
 @keyframes waiting { from { left: 104%; } to { left: -12%; } }
 
-.data-awareness { position: relative; width: min(75%, 1294px); height: clamp(70px, 5.75vw, 100px); margin: clamp(7px, 0.65vw, 12px) auto 0; text-align: center; }
+.data-awareness { position: relative; width: var(--upper-frame-width); height: clamp(70px, 5.75vw, 100px); margin: var(--section-gap-y) auto 0; padding: var(--frame-text-gap-y) var(--frame-text-gap-x); text-align: center; }
 .data-awareness h2, .signal-panel h2, .governance h2 { font-size: clamp(10px, 0.72vw, 13px); font-weight: 500; letter-spacing: 0.28em; }
 .data-awareness h2 { position: absolute; top: 18%; width: 100%; }
-.horizontal-signals { position: absolute; right: 10%; bottom: 18%; left: 10%; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; }
-.signal { color: var(--muted); font-size: clamp(10px, 0.7vw, 12px); transition: color 0.2s, text-shadow 0.2s; }
+.horizontal-signals { position: absolute; right: 10%; bottom: 18%; left: 10%; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; column-gap: var(--signal-safe-gap); }
+.signal { color: #777a7e; font-size: clamp(10px, 0.7vw, 12px); transition: color 0.2s, text-shadow 0.2s; }
 .signal.is-active { color: var(--bright); text-shadow: 0 0 6px rgba(255, 188, 67, 0.72); }
 
-.cognition { display: grid; grid-template-columns: minmax(0, 523fr) minmax(0, 666fr) minmax(0, 523fr); gap: clamp(14px, 1.75vw, 30px); width: var(--content-width); height: clamp(144px, 11.3vw, 195px); margin: clamp(10px, 0.8vw, 14px) auto 0; }
+.cognition { display: grid; grid-template-columns: minmax(0, 523fr) minmax(0, 666fr) minmax(0, 523fr); gap: var(--cognition-gap-x); width: var(--content-width); height: clamp(144px, 11.3vw, 195px); margin: var(--cognition-gap-y) auto 0; }
 .signal-panel { position: relative; min-width: 0; text-align: center; }
 .signal-panel h2 { position: absolute; top: 13%; width: 100%; }
 .vertical-signals { position: absolute; top: 34%; right: 0; left: 0; display: grid; gap: clamp(10px, 0.9vw, 16px); }
 .pressure-panel .vertical-signals { top: 17%; }
 .pressure-panel h2 { top: auto; bottom: 13%; }
 
-.conversation { position: relative; display: grid; place-items: center; width: min(70%, 1218px); height: clamp(120px, 9.85vw, 171px); margin: clamp(12px, 1.15vw, 20px) auto 0; }
-.conversation p { position: relative; max-width: 82%; color: var(--text); font-size: clamp(12px, 0.9vw, 16px); line-height: 1.75; letter-spacing: 0.1em; text-align: center; }
+.conversation { position: relative; display: grid; place-items: center; width: min(70%, 1218px); height: clamp(120px, 9.85vw, 171px); margin: var(--section-gap-y) auto 0; padding: var(--chat-safe-padding); }
+.conversation p { position: relative; max-width: 100%; color: var(--text); font-size: clamp(12px, 0.9vw, 16px); line-height: 1.75; letter-spacing: 0.1em; text-align: center; }
 
 .composer { position: relative; display: grid; grid-template-columns: clamp(48px, 8%, 72px) minmax(0, 1fr) clamp(48px, 8%, 72px); align-items: center; width: min(57%, 984px); height: clamp(48px, 3.5vw, 60px); margin: clamp(9px, 0.7vw, 12px) auto 0; }
 .composer input { position: relative; width: 100%; min-width: 0; border: 0; outline: none; background: transparent; color: #f0d79e; font: inherit; font-size: clamp(12px, 0.82vw, 14px); }
@@ -77,39 +91,71 @@ h1, h2, p { margin: 0; }
 .composer-button { position: relative; display: grid; width: 100%; height: 100%; place-items: center; font-size: clamp(18px, 1.3vw, 22px); }
 .microphone .frame { position: relative; width: auto; max-width: 55%; height: 55%; object-fit: contain; }
 
-.governance { position: relative; width: min(57%, 982px); min-height: clamp(76px, 5.75vw, 100px); margin: clamp(10px, 0.8vw, 14px) auto clamp(18px, 2vw, 34px); padding-top: clamp(11px, 0.9vw, 16px); text-align: center; }
-.governance p { margin-top: clamp(12px, 0.9vw, 16px); font-size: clamp(10px, 0.72vw, 12px); letter-spacing: 0.1em; }
-.governance span { display: block; margin-top: 8px; color: var(--muted); font-size: clamp(9px, 0.62vw, 11px); }
-.help { position: absolute; right: clamp(20px, 4.2%, 72px); bottom: clamp(18px, 3.5%, 32px); width: 30px; height: 30px; border: 1px solid rgba(196, 154, 72, 0.4); border-radius: 50%; }
+.governance { position: relative; display: grid; gap: var(--governance-row-gap); width: min(57%, 982px); margin: var(--section-gap-y) auto clamp(18px, 2vw, 34px); text-align: center; }
+.governance-title-row { display: grid; grid-template-columns: minmax(24px, 1fr) auto minmax(24px, 1fr); align-items: center; column-gap: var(--governance-rule-gap); min-width: 0; }
+.governance-rule { position: relative; display: block; min-width: 0; height: 2px; overflow: hidden; }
+.governance-rule .frame { object-fit: fill; }
+.governance-title-row h2 { padding-inline: var(--governance-title-gap); white-space: nowrap; }
+.governance-mode-row { display: flex; align-items: center; justify-content: center; gap: var(--help-gap); min-width: 0; }
+.governance-mode-row p { min-width: 0; font-size: clamp(10px, 0.72vw, 12px); letter-spacing: 0.1em; }
+.governance-graduate-row { color: #777a7e; font-size: clamp(9px, 0.62vw, 11px); }
+.help { display: grid; flex: 0 0 24px; width: 24px; height: 24px; padding: 0; place-items: center; border: 1px solid rgba(196, 154, 72, 0.4); border-radius: 50%; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; border: 0; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
+@media (min-width: 1760px) {
+  :root { --section-gap-y: 12px; --cognition-gap-x: 26px; --governance-row-gap: 11px; }
+}
+
+@media (min-width: 1440px) and (max-width: 1759px) {
+  :root { --section-gap-y: 10px; --cognition-gap-x: 22px; --governance-row-gap: 9px; }
+}
+
+@media (min-width: 1280px) and (max-width: 1439px) {
+  :root { --section-gap-y: 8px; --cognition-gap-x: 17px; --governance-row-gap: 8px; }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  :root { --content-width: 82%; --upper-frame-width: 78%; --section-gap-y: 7px; --cognition-gap-x: 11px; --governance-row-gap: 7px; }
+}
+
+@media (min-width: 960px) and (max-width: 1023px) {
+  :root { --content-width: 90%; --upper-frame-width: 84%; --section-gap-y: 7px; --cognition-gap-x: 8px; --governance-row-gap: 7px; }
+}
+
 @media (max-width: 960px) {
-  :root { --content-width: min(88%, 720px); }
+  :root { --content-width: 94%; --upper-frame-width: 88%; --cognition-gap-x: clamp(4px, 1vw, 8px); --cognition-gap-y: 8px; --section-gap-y: 8px; --chat-safe-padding: clamp(16px, 4vw, 30px); }
   .cockpit-shell { min-height: 0; padding-bottom: 38px; overflow: hidden; }
   .cockpit-shell > [data-frame="background"] { height: 100%; }
   .header { width: min(88%, 720px); }
-  .activity { width: min(82%, 680px); height: clamp(42px, 7vw, 60px); }
-  .data-awareness { width: min(88%, 720px); height: clamp(72px, 10vw, 88px); }
-  .cognition { grid-template-columns: minmax(0, 1fr); gap: 18px; height: auto; }
-  .signal-panel { width: min(100%, 560px); height: clamp(205px, 31vw, 238px); margin: 0 auto; }
-  .pressure-panel { width: min(100%, 650px); }
+  .activity { height: clamp(38px, 7vw, 60px); }
+  .data-awareness { height: clamp(68px, 10vw, 88px); }
+  .cognition { grid-template-columns: minmax(0, 523fr) minmax(0, 666fr) minmax(0, 523fr); height: clamp(108px, 14vw, 135px); }
+  .signal-panel { width: auto; height: auto; margin: 0; }
+  .signal-panel h2 { top: 12%; font-size: clamp(8px, 1.2vw, 10px); }
+  .vertical-signals { top: 34%; gap: clamp(4px, 0.9vw, 8px); }
+  .pressure-panel .vertical-signals { top: 16%; }
+  .pressure-panel h2 { top: auto; bottom: 10%; }
+  .signal { font-size: clamp(8px, 1.2vw, 10px); }
   .conversation { width: min(88%, 720px); height: clamp(120px, 18vw, 154px); margin-top: 22px; }
   .composer, .governance { width: min(76%, 620px); }
   .composer { height: clamp(48px, 7vw, 58px); }
-  .governance { min-height: 88px; }
-  .help { right: 4%; bottom: 20px; }
 }
 
 @media (max-width: 620px) {
   :root { --content-width: 92%; }
   .header { width: 90%; }
   .header h1 { font-size: clamp(18px, 5.2vw, 24px); letter-spacing: 0.2em; }
-  .activity, .data-awareness, .conversation { width: 94%; }
+  :root { --upper-frame-width: 94%; --governance-rule-gap: 5px; --governance-title-gap: 3px; }
+  .conversation { width: 94%; }
   .horizontal-signals { right: 5%; left: 5%; }
-  .signal-panel { width: 100%; height: clamp(190px, 58vw, 225px); }
+  .cognition { width: 96%; height: clamp(104px, 27vw, 118px); }
+  .signal-panel h2, .signal { font-size: clamp(7px, 2vw, 9px); }
   .composer, .governance { width: 88%; }
   .conversation p { max-width: 78%; font-size: 11px; }
-  .help { position: relative; right: auto; bottom: auto; display: block; margin: 8px 5% 0 auto; }
+  .governance-title-row { grid-template-columns: minmax(10px, 1fr) auto minmax(10px, 1fr); }
+  .governance-title-row h2 { font-size: clamp(8px, 2.4vw, 10px); }
+  .governance-mode-row p { font-size: clamp(8px, 2.2vw, 10px); letter-spacing: 0.04em; }
+  .help { flex-basis: 22px; width: 22px; height: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

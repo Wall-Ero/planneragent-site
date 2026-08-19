@@ -23,8 +23,7 @@ async function bootstrap(){const root=document.querySelector<HTMLElement>("#app"
   </section>
   <section class="conversation" aria-label="Conversation">${frame(frames.message,"chat-message")}<p>State your role and show me operations.<br>I will reveal if reality respects the plan.</p></section>
   <form class="composer">${frame(frames.input,"chat-input")}<button type="button" class="composer-button add" aria-label="Attach data">+</button><label class="sr-only" for="message">Message PlannerAgent</label><input id="message" name="message" autocomplete="off" placeholder="Type here..."><button type="button" class="composer-button microphone" aria-label="Microphone">${frame(frames.microphone,"microphone")}</button></form>
-  <section class="governance" aria-labelledby="governance-title">${frame(frames.governance,"governance")}<h2 id="governance-title">AI OPERATIONAL GOVERNANCE</h2><p>Mode: VISION. Observation only. No execution.</p><span>GRADUATE: OFF</span></section>
-  <button class="help" type="button" aria-label="Help">?</button>
+  <section class="governance" aria-labelledby="governance-title"><div class="governance-title-row"><span class="governance-rule">${frame(frames.governance,"governance-rule")}</span><h2 id="governance-title">AI OPERATIONAL GOVERNANCE</h2><span class="governance-rule">${frame(frames.governance,"governance-rule")}</span></div><div class="governance-mode-row"><p>Mode: VISION. Observation only. No execution.</p><button class="help" type="button" aria-label="Help">?</button></div><div class="governance-graduate-row">GRADUATE: OFF</div></section>
  </main>`;
  root.querySelector<HTMLFormElement>(".composer")?.addEventListener("submit",event=>event.preventDefault());
  root.querySelectorAll<HTMLButtonElement>("[data-action]").forEach(button=>button.addEventListener("click",()=>button.setAttribute("aria-expanded",button.getAttribute("aria-expanded")==="true"?"false":"true")));

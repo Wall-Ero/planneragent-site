@@ -27,9 +27,8 @@
   --eye-signal-region: 79.09%;
   --pressure-signal-region: 83.15%;
   --pressure-title-region: 16.85%;
-  --activity-span-left: 20.1751%;
-  --activity-span-right: 20.3312%;
-  --activity-inner-gap: max(1%, var(--frame-text-gap-x));
+  --activity-span: 59.4937%;
+  --activity-track-span: 57.4937%;
 }
 
 * { box-sizing: border-box; }
@@ -73,8 +72,8 @@ h1, h2, p { margin: 0; }
 .text-control:hover, .text-control:focus-visible, .help:hover, .help:focus-visible, .composer-button:focus-visible { color: var(--bright); opacity: 1; outline: 1px solid var(--gold); outline-offset: 4px; }
 
 .activity { position: relative; width: var(--upper-frame-width); height: clamp(28px, 2.9vw, 50px); margin: var(--section-gap-y) auto 0; }
-.activity > .frame { right: var(--activity-span-right); left: var(--activity-span-left); width: auto; }
-.activity-line { position: absolute; top: 50%; right: calc(var(--activity-span-right) + var(--activity-inner-gap)); left: calc(var(--activity-span-left) + var(--activity-inner-gap)); height: 3px; overflow: hidden; transform: translateY(-50%); }
+.activity > .frame { right: auto; left: 50%; width: var(--activity-span); transform: translateX(-50%); }
+.activity-line { position: absolute; top: 50%; left: 50%; width: var(--activity-track-span); height: 3px; overflow: hidden; transform: translate(-50%, -50%); }
 .activity-line::before { position: absolute; inset: 1px 0; background: linear-gradient(90deg, transparent, var(--gold) 8%, var(--bright) 50%, var(--gold) 92%, transparent); box-shadow: inset 0 0 2px rgba(255, 200, 91, 0.62); content: ""; }
 .activity-line i { position: absolute; top: -2px; width: 8%; height: 5px; background: #050505; animation: waiting 3.6s linear infinite; }
 @keyframes waiting { from { left: 104%; } to { left: -12%; } }

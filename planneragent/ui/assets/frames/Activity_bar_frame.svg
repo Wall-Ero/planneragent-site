@@ -2,7 +2,7 @@
 <!-- Generator: Adobe Illustrator 18.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 662.314 45.222" enable-background="new 0 0 662.314 45.222" xml:space="preserve">
+	 viewBox="0 0 662.965 43.1" enable-background="new 0 0 662.965 43.1" xml:space="preserve">
 <g id="Backgroud" display="none">
 	
 		<image overflow="visible" opacity="0.4" width="1740" height="904" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABswAAAOICAIAAAD91EMBAABhWmNhQlgAAGFaanVtYgAAAB5qdW1k
@@ -26495,134 +26495,144 @@ tiuWY+fxjy4aGOp8O+ItQQUWWxFQ9jsIxiBU8wF7eZ3IS1io/40xH7852qSM+ku16iGzM/EUmf5S
 jtNe+Ham3161ub6PBDnz1j8SkmIPnoe44C6mscY3VYEhgLdZ5kSSL4W6zW8zjWuGlh5jW/Ak0R1h
 aOEEX+qBkq7/ypqywcRAEFo/pHxF4dsuiTbZFTGG9RkdUo2WYY88d6PDlg3IS8O7BXdjJNu4pZW6
 vumFr2+1KIe7ZdiyRs7c8sxF5O3VYCV8GYfkdFeskh6xLAzJCDBZm1uCYX6Dp/nUS8PH7ECgLeL7
-/wc28Y+aIgr2jAAAAABJRU5ErkJggg==" transform="matrix(1 0 0 1 -539.457 -136.5473)">
+/wc28Y+aIgr2jAAAAABJRU5ErkJggg==" transform="matrix(1 0 0 1 -538.9835 -137.6827)">
 	</image>
-	<rect x="-535.54" y="-135.795" display="inline" width="1728" height="896"/>
+	<rect x="-535.067" y="-136.931" display="inline" width="1728" height="896"/>
 </g>
 <g id="Header_-_PlannerAgent" display="none">
 	
-		<text transform="matrix(1 0 0 1 97.2053 -58.3387)" display="inline" fill="#F9B233" stroke="#FFFFFF" stroke-miterlimit="10" font-family="'Arial-BoldMT'" font-size="56">PLANNERAGENT</text>
+		<text transform="matrix(1 0 0 1 97.6788 -59.4741)" display="inline" fill="#F9B233" stroke="#FFFFFF" stroke-miterlimit="10" font-family="'Arial-BoldMT'" font-size="56">PLANNERAGENT</text>
 </g>
 <g id="Activity_Bar">
-	<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="11.841,1.741 1,12.583 1,33.868 
-		11.355,44.222 650.176,44.222 661.314,33.084 661.314,11.503 650.811,1 	"/>
+	<g>
+		<g>
+			<polyline fill="none" stroke="#F9B233" stroke-miterlimit="10" points="331.246,0.606 12.315,0.606 0.5,10.474 0.5,21.71 			"/>
+			<polyline fill="none" stroke="#F9B233" stroke-miterlimit="10" points="331.246,42.6 12.315,42.6 0.5,32.732 0.5,21.496 			"/>
+		</g>
+		<g>
+			<polyline fill="none" stroke="#F9B233" stroke-miterlimit="10" points="331.719,0.5 650.65,0.5 662.465,10.368 662.465,21.604 
+							"/>
+			<polyline fill="none" stroke="#F9B233" stroke-miterlimit="10" points="331.719,42.494 650.65,42.494 662.465,32.626 
+				662.465,21.39 			"/>
+		</g>
+	</g>
 </g>
 <g id="Data_Awareness" display="none">
 	<g display="inline">
-		<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="-102.597,123.28 -55.145,75.827 
-			330.015,75.827 		"/>
-		<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="761.248,123.28 713.795,75.827 
-			328.636,75.827 		"/>
+		<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="-102.124,122.144 -54.671,74.692 
+			330.488,74.692 		"/>
+		<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="761.721,122.144 714.269,74.692 
+			329.109,74.692 		"/>
 		<g>
-			<path fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" d="M963.57,173.28H-302.902c-6.6,0-12-5.4-12-12v-26
-				c0-6.6,5.4-12,12-12H963.57c6.6,0,12,5.4,12,12v26C975.57,167.88,970.17,173.28,963.57,173.28z"/>
+			<path fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" d="M964.043,172.144H-302.429c-6.6,0-12-5.4-12-12
+				v-26c0-6.6,5.4-12,12-12H964.043c6.6,0,12,5.4,12,12v26C976.043,166.744,970.643,172.144,964.043,172.144z"/>
 		</g>
 	</g>
 	<g display="inline">
-		<text transform="matrix(0.9361 0 0 1 -169.5444 156.7276)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">SNAPSHOT</text>
-		<text transform="matrix(1 0 0 1 253.4084 156.7276)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">BEHAVIORAL</text>
-		<text transform="matrix(0.913 0 0 1 690.5479 156.7276)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">STRUCTURAL</text>
+		<text transform="matrix(0.9361 0 0 1 -169.0709 155.5922)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">SNAPSHOT</text>
+		<text transform="matrix(1 0 0 1 253.8819 155.5922)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">BEHAVIORAL</text>
+		<text transform="matrix(0.913 0 0 1 691.0214 155.5922)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">STRUCTURAL</text>
 	</g>
 	
-		<text transform="matrix(1 0 0 1 182.4302 111.5738)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">DATA AWARENESS</text>
+		<text transform="matrix(1 0 0 1 182.9037 110.4384)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">DATA AWARENESS</text>
 </g>
 <g id="Plan" display="none">
 	<g display="inline">
-		<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="177.455,184.09 80.752,390.683 
-			1.631,390.683 -21.446,418.156 -226.941,418.156 -343.814,378.596 -343.814,210.464 -318.344,184.994 		"/>
+		<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="177.929,182.955 81.225,389.548 
+			2.104,389.548 -20.973,417.021 -226.467,417.021 -343.341,377.46 -343.341,209.328 -317.871,183.858 		"/>
 		
-			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="-343.814" y1="232.442" x2="154.822" y2="232.442"/>
+			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="-343.341" y1="231.306" x2="155.296" y2="231.306"/>
 	</g>
 	
-		<text transform="matrix(1 0 0 1 -146.0163 221.1337)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">PLAN</text>
-	<text transform="matrix(1 0 0 1 -73.1743 275.9693)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">VALID</text>
-	<text transform="matrix(1 0 0 1 -135.7168 325.5516)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">MISSING</text>
-	<text transform="matrix(1 0 0 1 -158.7233 373.0898)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">BROKEN</text>
+		<text transform="matrix(1 0 0 1 -145.5428 219.9983)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">PLAN</text>
+	<text transform="matrix(1 0 0 1 -72.7008 274.8338)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">VALID</text>
+	<text transform="matrix(1 0 0 1 -135.2433 324.4162)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">MISSING</text>
+	<text transform="matrix(1 0 0 1 -158.2498 371.9543)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">BROKEN</text>
 </g>
 <g id="Decision_Pressure" display="none">
 	<g display="inline">
-		<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="131.009,404.288 226.402,202.09 
-			435.616,202.09 531.009,404.288 		"/>
+		<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="128.269,403.152 224.973,200.955 
+			437.06,200.955 533.764,403.152 		"/>
 	</g>
-	<text transform="matrix(1 0 0 1 277.8255 312.123)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">MEDIUM</text>
-	<text transform="matrix(1 0 0 1 300.9311 379.0129)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">LOW</text>
-	<text transform="matrix(1 0 0 1 298.043 245.1558)" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">HIGH</text>
-	<text transform="matrix(1 0 0 1 166.0373 436.0461)" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">DECISION PRESSURE</text>
+	<text transform="matrix(1 0 0 1 278.299 310.9876)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">MEDIUM</text>
+	<text transform="matrix(1 0 0 1 301.4046 377.8775)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">LOW</text>
+	<text transform="matrix(1 0 0 1 298.5165 244.0204)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">HIGH</text>
+	
+		<text transform="matrix(1 0 0 1 166.5108 434.9107)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">DECISION PRESSURE</text>
 	<g display="inline">
 		<g>
-			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="331.7,404.288 114.571,404.288 
-				101.009,423.804 			"/>
-			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="331.7,443.321 114.571,443.321 
-				101.009,423.804 			"/>
+			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="332.476,404.317 20.016,404.317 
+				0.5,423.834 			"/>
+			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="332.476,443.35 20.016,443.35 
+				0.5,423.834 			"/>
 		</g>
 		<g>
-			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="330.318,404.288 547.447,404.288 
-				561.009,423.804 			"/>
-			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="330.318,443.321 547.447,443.321 
-				561.009,423.804 			"/>
+			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="330.488,404.317 642.948,404.317 
+				662.465,423.834 			"/>
+			<polyline fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="330.488,443.35 642.948,443.35 
+				662.465,423.834 			"/>
 		</g>
 	</g>
 </g>
 <g id="Reality" display="none">
 	<g display="inline">
-		<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="483.336,184.42 580.039,391.013 
-			659.16,391.013 682.237,418.486 887.732,418.486 1004.605,378.925 1004.605,210.793 979.135,185.324 		"/>
+		<polygon fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" points="483.81,183.284 580.513,389.878 
+			659.634,389.878 682.711,417.35 888.205,417.35 1005.079,377.79 1005.079,209.658 979.609,184.188 		"/>
 		
-			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="1004.605" y1="232.771" x2="505.969" y2="232.771"/>
+			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="1005.079" y1="231.636" x2="506.442" y2="231.636"/>
 	</g>
-	
-		<text transform="matrix(1 0 0 1 712.4805 220.9748)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">REALITY</text>
-	<text transform="matrix(1 0 0 1 663.9323 275.8103)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">STABLE</text>
-	<text transform="matrix(1 0 0 1 688.1227 325.3927)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">SHIFTING</text>
-	<text transform="matrix(1 0 0 1 710.1559 372.9308)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">UNSTABLE</text>
+	<text transform="matrix(1 0 0 1 712.954 219.8394)" display="inline" fill="#F9B233" font-family="'Arial-BoldMT'" font-size="31">REALITY</text>
+	<text transform="matrix(1 0 0 1 664.4058 274.6749)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">STABLE</text>
+	<text transform="matrix(1 0 0 1 688.5963 324.2573)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">SHIFTING</text>
+	<text transform="matrix(1 0 0 1 710.6295 371.7954)" display="inline" fill="#FFFFFF" font-family="'ArialMT'" font-size="26">UNSTABLE</text>
 </g>
 <g id="Chat_Message" display="none">
 	<g display="inline">
-		<path fill="none" stroke="#F9B233" stroke-miterlimit="10" stroke-dasharray="3.9996,3.9996" d="M924.64,642.026H-268.054
-			c-6.6,0-12-5.4-12-12V484.534c0-6.6,5.4-12,12-12H924.64c6.6,0,12,5.4,12,12v145.492
-			C936.64,636.626,931.24,642.026,924.64,642.026z"/>
+		<path fill="none" stroke="#F9B233" stroke-miterlimit="10" stroke-dasharray="11.9639,11.9639" d="M925.113,640.89H-267.58
+			c-6.6,0-12-5.4-12-12V483.399c0-6.6,5.4-12,12-12H925.113c6.6,0,12,5.4,12,12V628.89
+			C937.113,635.49,931.713,640.89,925.113,640.89z"/>
 	</g>
-	<text transform="matrix(1 0 0 1 80.7783 513.5328)"><tspan x="0" y="0" display="inline" fill="#FFFFFF" font-family="'Gadugi'" font-size="28">State your role and show me operations.</tspan><tspan x="16.27" y="33.6" display="inline" fill="#FFFFFF" font-family="'Gadugi'" font-size="28">I will reveal if reality respects the plan.</tspan></text>
+	<text transform="matrix(1 0 0 1 81.2518 512.3973)" display="inline"><tspan x="0" y="0" fill="#FFFFFF" font-family="'Gadugi'" font-size="28">State your role and show me operations.</tspan><tspan x="16.27" y="33.6" fill="#FFFFFF" font-family="'Gadugi'" font-size="28">I will reveal if reality respects the plan.</tspan></text>
 </g>
 <g id="Chat_Input" display="none">
-	<path display="inline" fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="5" d="M813.395,624.901h-965.704
+	<path display="inline" fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="5" d="M813.869,623.766h-965.704
 		c-4.537,0-8.25-3.712-8.25-8.25v-41.248c0-4.537,3.712-8.25,8.25-8.25h965.704c4.537,0,8.25,3.712,8.25,8.25v41.248
-		C821.645,621.189,817.932,624.901,813.395,624.901z"/>
+		C822.118,620.053,818.406,623.766,813.869,623.766z"/>
 	
-		<text transform="matrix(1 0 0 1 -89.9823 606.0279)" display="inline" fill="#FFFFFF" stroke="#FFFFFF" stroke-miterlimit="5" font-family="'Arial-ItalicMT'" font-size="28">|  Type here ...</text>
+		<text transform="matrix(1 0 0 1 -89.5088 604.8925)" display="inline" fill="#FFFFFF" stroke="#FFFFFF" stroke-miterlimit="5" font-family="'Arial-ItalicMT'" font-size="28">|  Type here ...</text>
 </g>
 <g id="Ai_Operational_Governance" display="none">
 	<g display="inline">
-		<text transform="matrix(1 0 0 1 133.9946 673.024)" fill="#F9B233" font-family="'ArialMT'" font-size="25">AI OPERATIONAL GOVERNANCE</text>
+		<text transform="matrix(1 0 0 1 134.4682 671.8885)" fill="#F9B233" font-family="'ArialMT'" font-size="25">AI OPERATIONAL GOVERNANCE</text>
 		
-			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="116.144" y1="662.525" x2="-160.559" y2="662.525"/>
+			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="116.618" y1="661.389" x2="-160.085" y2="661.389"/>
 		
-			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="821.645" y1="662.525" x2="544.942" y2="662.525"/>
+			<line fill="none" stroke="#F9B233" stroke-width="2" stroke-miterlimit="10" x1="822.118" y1="661.389" x2="545.415" y2="661.389"/>
 	</g>
 </g>
 <g id="Mode_x2F_Graduate" display="none">
-	<text transform="matrix(1 0 0 1 69.8679 708.522)" display="inline" fill="#FCEA10" font-family="'Gadugi'" font-size="25">Mode: VISION. Observation only. No execution.</text>
-	<text transform="matrix(1 0 0 1 240.3755 743.4528)" display="inline" fill="#FFFFFF" font-family="'Gadugi'" font-size="25">GRADUATE: OFF</text>
+	<text transform="matrix(1 0 0 1 70.3414 707.3866)" display="inline" fill="#FCEA10" font-family="'Gadugi'" font-size="25">Mode: VISION. Observation only. No execution.</text>
+	<text transform="matrix(1 0 0 1 240.8491 742.3174)" display="inline" fill="#FFFFFF" font-family="'Gadugi'" font-size="25">GRADUATE: OFF</text>
 </g>
 <g id="Icons" display="none">
 	<g id="FAQ" display="inline">
-		<text transform="matrix(1 0 0 1 -471.0452 -81.9161)" fill="#FFFFFF" font-family="'Arial-BoldMT'" font-size="31">FAQ</text>
+		<text transform="matrix(1 0 0 1 -470.5717 -83.0516)" fill="#FFFFFF" font-family="'Arial-BoldMT'" font-size="31">FAQ</text>
 	</g>
 	
-		<text transform="matrix(1 0 0 1 627.1503 708.5219)" display="inline" fill="#FFFFFF" font-family="'Arial-BoldMT'" font-size="31">?</text>
+		<text transform="matrix(1 0 0 1 627.6238 707.3865)" display="inline" fill="#FFFFFF" font-family="'Arial-BoldMT'" font-size="31">?</text>
 	
-		<text transform="matrix(1 0 0 1 1101.5648 -81.9163)" display="inline" fill="#FFFFFF" font-family="'Arial-BoldMT'" font-size="31">ID</text>
+		<text transform="matrix(1 0 0 1 1102.0383 -83.0517)" display="inline" fill="#FFFFFF" font-family="'Arial-BoldMT'" font-size="31">ID</text>
 	<g id="CHAT_x5F_ADD" display="inline">
-		<text transform="matrix(1 0 0 1 -132.9727 607.0279)" fill="#FFFFFF" font-family="'Gadugi'" font-size="34">+</text>
+		<text transform="matrix(1 0 0 1 -132.4991 605.8925)" fill="#FFFFFF" font-family="'Gadugi'" font-size="34">+</text>
 	</g>
 	<g id="MIC" display="inline">
 		<g>
 			<g>
-				<path fill="none" stroke="#F9B233" stroke-miterlimit="10" d="M812.321,595.217c0,7.938-7.246,14.361-16.2,14.361h3.21
+				<path fill="none" stroke="#F9B233" stroke-miterlimit="10" d="M812.795,594.082c0,7.938-7.246,14.361-16.2,14.361h3.21
 					c-8.954,0-16.2-6.423-16.2-14.361"/>
-				<line fill="none" stroke="#F9B233" stroke-miterlimit="10" x1="797.726" y1="609.579" x2="797.726" y2="620.944"/>
+				<line fill="none" stroke="#F9B233" stroke-miterlimit="10" x1="798.2" y1="608.443" x2="798.2" y2="619.808"/>
 			</g>
-			<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="797.7262" y1="602.3981" x2="797.7262" y2="575.1115">
+			<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="798.1997" y1="601.2626" x2="798.1997" y2="573.9761">
 				<stop  offset="0.3514" style="stop-color:#E9A300"/>
 				<stop  offset="0.3634" style="stop-color:#E4A217"/>
 				<stop  offset="0.4381" style="stop-color:#C09848"/>
@@ -26634,8 +26644,8 @@ vumFr2+1KIe7ZdiyRs7c8sxF5O3VYCV8GYfkdFeskh6xLAzJCDBZm1uCYX6Dp/nUS8PH7ECgLeL7
 				<stop  offset="0.9123" style="stop-color:#0F0F0E"/>
 				<stop  offset="1" style="stop-color:#000000"/>
 			</linearGradient>
-			<path fill="url(#SVGID_1_)" stroke="#F9B233" stroke-miterlimit="10" d="M799.896,602.398h-4.339c-3.85,0-7-3.15-7-7v-13.287
-				c0-3.85,3.15-7,7-7h4.339c3.85,0,7,3.15,7,7v13.287C806.896,599.248,803.746,602.398,799.896,602.398z"/>
+			<path fill="url(#SVGID_1_)" stroke="#F9B233" stroke-miterlimit="10" d="M800.369,601.263h-4.339c-3.85,0-7-3.15-7-7v-13.287
+				c0-3.85,3.15-7,7-7h4.339c3.85,0,7,3.15,7,7v13.287C807.369,598.113,804.219,601.263,800.369,601.263z"/>
 		</g>
 	</g>
 </g>

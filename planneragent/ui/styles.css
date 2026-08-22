@@ -10,6 +10,8 @@
   --gold-deep: #765321;
   --signal-off: #979590;
   --conversation: #efede7;
+  --brand-wordmark: #e5c98e;
+  --conversation-invitation: #aaa8a2;
   --data-awareness-top-span: 58.89%;
   --cockpit-section-title-size: clamp(.5rem, 1.98vw, 1.43rem);
   --shell-gap: clamp(.6rem, 1.6vw, 1.4rem);
@@ -88,9 +90,9 @@ h1, h2, p { margin: 0; }
 }
 .header h1 {
   max-width: 100%;
-  background: linear-gradient(180deg, #f8ebbd 0%, #e6c779 26%, #c99a42 47%, #885d27 62%, #d1a452 82%, #805522 100%);
+  background: none;
   background-clip: text;
-  color: transparent;
+  color: var(--brand-wordmark);
   font-size: clamp(.99rem, 3.864vw, 2.298rem);
   font-weight: 700;
   letter-spacing: .02em;
@@ -98,7 +100,7 @@ h1, h2, p { margin: 0; }
   text-align: center;
   white-space: nowrap;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: var(--brand-wordmark);
   -webkit-text-stroke: .35px rgba(118, 83, 33, .55);
   filter: drop-shadow(0 1px 0 rgba(118, 83, 33, .45));
 }
@@ -148,6 +150,7 @@ h1, h2, p { margin: 0; }
 
 .conversation { position: relative; width: 100%; height: clamp(150px, 13vw, 180px); flex: 0 0 auto; }
 .conversation-content { position: absolute; z-index: 3; inset: 8%; display: flex; min-height: 0; flex-direction: column; align-items: center; justify-content: center; gap: .4em; overflow-y: auto; color: var(--conversation); font-size: clamp(.9rem, 1.65vw, 1.35rem); line-height: 1.7; text-align: center; scrollbar-width: none; }
+.conversation-invitation { color: var(--conversation-invitation); }
 .conversation-content::-webkit-scrollbar { display: none; }
 
 .composer { position: relative; display: flex; width: min(100%, 1000px); height: clamp(50px, 4.4vw, 62px); margin: 0 auto; padding: 0 2%; align-items: center; gap: clamp(.4rem, 1.2vw, 1rem); flex: 0 0 auto; }

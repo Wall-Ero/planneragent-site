@@ -32,11 +32,11 @@ async function bootstrap(){const root=document.querySelector<HTMLElement>("#app"
    <article class="signal-panel pressure-panel">${renderDecisionPressureFrame()}<div class="vertical-signals">${signal("HIGH",presentation.pressure)}${signal("MEDIUM",presentation.pressure)}${signal("LOW",presentation.pressure)}</div><h2>DECISION PRESSURE</h2></article>
    <article class="signal-panel reality-panel">${renderRealityFrame()}<h2>REALITY</h2><div class="vertical-signals">${signal("STABLE",presentation.reality)}${signal("SHIFTING",presentation.reality)}${signal("UNSTABLE",presentation.reality)}</div></article>
   </section>
-  <section class="conversation" aria-label="Conversation">${renderChatMessageFrame()}<div class="conversation-content"><p>State your role and show me operations.</p><p>I will reveal if reality respects the plan.</p></div></section>
+  <section class="conversation" aria-label="Conversation">${renderChatMessageFrame()}${session.authenticated?"":`<div class="conversation-content conversation-invitation"><p>State your role and show me what you're facing.</p><p>I will reveal where a decision can no longer wait.</p></div>`}</section>
   <form class="composer" data-chat-state="empty">${renderChatInputFrame()}<button type="button" class="composer-button add" aria-label="Attach data">+</button><label class="sr-only" for="message">Message PlannerAgent</label><input id="message" name="message" autocomplete="off" placeholder="Type here..."><button type="button" class="composer-button microphone" aria-label="Microphone">${renderMicrophone()}</button><button type="button" class="composer-button composer-action" hidden></button></form>
   <section class="governance" aria-labelledby="governance-title"><div class="governance-title-row"><span class="governance-rule" aria-hidden="true"></span><h2 id="governance-title">AI OPERATIONAL GOVERNANCE</h2><span class="governance-rule" aria-hidden="true"></span></div><div class="governance-mode-row"><p>Mode: VISION. Observation only. No execution.</p><button class="help" type="button" aria-label="Help">?</button></div><div class="governance-graduate-row">GRADUATE: OFF</div></section>
  </main></div></div>`;
- const composer=root.querySelector<HTMLFormElement>(".composer"),message=composer?.querySelector<HTMLInputElement>("#message"),action=composer?.querySelector<HTMLButtonElement>(".composer-action");
+ const composer=root.querySelector<HTMLFormElement>(".composer"),message=composer?.querySelector<HTMLInputElement>("#message"),action=composer?.querySelector<HTMLButtonElement>(".composer-action"),invitation=root.querySelector<HTMLElement>(".conversation-invitation");
  let generating=false;
  const syncComposer=()=>{if(!composer||!message||!action)return;const ready=message.value.trim().length>0;composer.dataset.chatState=generating?"generating":ready?"ready-to-send":"empty";action.hidden=!generating&&!ready;action.textContent=generating?"\u25a0":"\u2191";action.ariaLabel=generating?"Stop response":"Send message";action.title=action.ariaLabel;};
  composer?.addEventListener("submit",event=>event.preventDefault());
@@ -52,6 +52,7 @@ async function bootstrap(){const root=document.querySelector<HTMLElement>("#app"
 
   if (message.value.trim().length === 0) return;
 
+  invitation?.remove();
   generating = true;
   message.value = "";
   syncComposer();

@@ -191,7 +191,7 @@ h1, h2, p { margin: 0; }
 }
 
 @media (min-width: 1025px) {
-  .cockpit-shell { height: auto; min-height: 100dvh; padding-top: clamp(.35rem, .9vh, 1rem); padding-bottom: clamp(.35rem, .9vh, 1rem); gap: clamp(.35rem, .9vh, 1rem); overflow: visible; }
+  .cockpit-shell { height: auto; min-height: var(--cockpit-viewport-height); padding-top: clamp(.35rem, .9vh, 1rem); padding-bottom: clamp(.35rem, .9vh, 1rem); gap: clamp(.35rem, .9vh, 1rem); overflow: visible; }
   .cockpit-shell > :not(.conversation, .lateral-chassis) { flex-shrink: 0; }
   .header h1 { font-size: clamp(.81rem, 3.168vw, 1.884rem); }
   .conversation { min-height: clamp(150px, 13vw, 180px); height: auto; flex: 1 1 0%; }

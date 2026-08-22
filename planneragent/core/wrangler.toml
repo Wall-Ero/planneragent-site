@@ -1,6 +1,7 @@
 name = "planneragent-core"
 main = "src/worker.ts"
 compatibility_date = "2026-01-02"
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
 SNAPSHOT_HMAC_SECRET = "planneragent-dev-hmac-secret-2026"

@@ -9,7 +9,7 @@ export default defineConfig({
   server: {
     port: 5174,
     proxy: {
-      "/conversation": {
+      "^/conversation$": {
         target: "http://127.0.0.1:8787",
         changeOrigin: true,
       },

@@ -24,7 +24,6 @@
 
 import type {
   AttentionEvaluationContext,
-  AttentionEvaluationResult,
 } from "./attention.types";
 
 import {
@@ -34,13 +33,23 @@ import {
 import {
   evaluateAttentionSubscriptions,
 } from "./attention.engine";
+import type { GovernedAttentionScopeV1, GovernedAttentionEvaluationV1 } from "./attention.scope.v1";
+import { bindGovernedAttentionEvaluationV1 } from "./attention.scope.v1";
 
 export async function evaluateAttentionRuntime(
   params: {
     db: D1Database;
+    scope: GovernedAttentionScopeV1;
     context: AttentionEvaluationContext;
   }
-): Promise<AttentionEvaluationResult> {
+): Promise<GovernedAttentionEvaluationV1> {
+
+  if (
+    params.context.tenant_id !== params.scope.tenant_id ||
+    params.context.company_id !== params.scope.company_id ||
+    params.context.context_id !== params.scope.context_id ||
+    params.context.actor_id !== params.scope.actor_id
+  ) throw new Error("ATTENTION_RUNTIME_SCOPE_MISMATCH");
 
   const store =
     new AttentionSubscriptionStore(
@@ -52,19 +61,10 @@ export async function evaluateAttentionRuntime(
   );
 
   const subscriptions =
-    await store.getActive({
-      company_id:
-        params.context.company_id,
-
-      context_id:
-        params.context.context_id,
-
-      actor_id:
-        params.context.actor_id,
-
-      now_iso:
-        params.context.now_iso,
-    });
+    await store.getActive(
+      params.scope,
+      params.context.now_iso,
+    );
 
   const result =
     evaluateAttentionSubscriptions({
@@ -91,6 +91,6 @@ export async function evaluateAttentionRuntime(
 
   }
 
-  return result;
+  return bindGovernedAttentionEvaluationV1(params.scope, result);
 
 }

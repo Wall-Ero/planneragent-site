@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { evaluateAttentionSubscriptions } from "../attention.engine";
 import { buildAttentionNotificationPayload } from "../attention.notification.bridge";
 import { AttentionSubscriptionStore } from "../attention.subscription";
+import type { GovernedAttentionScopeV1 } from "../attention.scope.v1";
 import type { AttentionSubscription, AttentionTrigger, CreateAttentionSubscriptionInput } from "../attention.types";
 
 const now = "2026-08-12T10:00:00.000Z";
@@ -97,11 +98,9 @@ describe("REALITY-ATTN-WU1", () => {
     const db = {
       prepare: () => ({ bind: () => ({ all: async () => ({ results: rows }) }) }),
     } as unknown as D1Database;
-    const stored = await new AttentionSubscriptionStore(db).getActive({
-      company_id: "company-1",
-      context_id: "scope:path:sku-1",
-      now_iso: now,
-    });
+    const scope = { version: 1, tenant_id: "default", company_id: "company-1",
+      context_id: "scope:path:sku-1", actor_id: "actor-1" } as unknown as GovernedAttentionScopeV1;
+    const stored = await new AttentionSubscriptionStore(db).getActive(scope, now);
     expect(stored.map((item) => item.trigger)).toEqual([
       "REALITY_DRIFTING",
       "REALITY_MISALIGNED",

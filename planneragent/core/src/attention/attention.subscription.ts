@@ -26,6 +26,8 @@ import type {
   AttentionStatus,
   CreateAttentionSubscriptionInput,
 } from "./attention.types";
+import type { GovernedAttentionScopeV1 } from "./attention.scope.v1";
+import { assertGovernedAttentionScopeV1 } from "./attention.scope.v1";
 
 function nowIso(): string {
 
@@ -312,22 +314,22 @@ export class AttentionSubscriptionStore {
   }
 
   async getActive(
-    params: {
-      company_id: string;
-      context_id?: string;
-      actor_id?: string;
-      now_iso?: string;
-    }
+    scope: GovernedAttentionScopeV1,
+    now_iso: string,
   ): Promise<AttentionSubscription[]> {
 
-    const now =
-      params.now_iso ?? nowIso();
+    assertGovernedAttentionScopeV1(scope);
+
+    const now = now_iso;
 
     const res =
       await this.db.prepare(`
         SELECT *
         FROM attention_subscriptions
-        WHERE company_id = ?
+        WHERE tenant_id = ?
+          AND company_id = ?
+          AND context_id = ?
+          AND actor_id = ?
           AND status = 'ACTIVE'
           AND (
             expires_at IS NULL
@@ -335,33 +337,16 @@ export class AttentionSubscriptionStore {
           )
         ORDER BY priority DESC, created_at ASC
       `).bind(
-        params.company_id,
+        scope.tenant_id,
+        scope.company_id,
+        scope.context_id,
+        scope.actor_id,
         now
       ).all();
 
-    let rows =
+    const rows =
       (res.results ?? [])
         .map(rowToSubscription);
-
-    if (params.context_id) {
-
-      rows =
-        rows.filter(
-          x =>
-            x.context_id === params.context_id
-        );
-
-    }
-
-    if (params.actor_id) {
-
-      rows =
-        rows.filter(
-          x =>
-            x.actor_id === params.actor_id
-        );
-
-    }
 
     return rows;
 

@@ -26,6 +26,7 @@ import {
 AttentionSubscriptionStore
 }
 from "../attention.subscription";
+import type { GovernedAttentionScopeV1 } from "../attention.scope.v1";
 
 import {
 evaluateAttentionSubscriptions
@@ -222,14 +223,12 @@ console.log(
 const subscriptions=
 
 await store.getActive({
-
-company_id:
-"WAL_SIM",
-
-context_id:
-"supply_chain"
-
-});
+version: 1,
+tenant_id: "default",
+company_id: "WAL_SIM",
+context_id: "supply_chain",
+actor_id: "operator-1"
+} as unknown as GovernedAttentionScopeV1, new Date().toISOString());
 
 console.log(
 "✅ subscriptions loaded"

@@ -18,16 +18,17 @@ const stroke = `fill="none" stroke="currentColor" stroke-miterlimit="10" vector-
 const surface = `fill="currentColor" stroke="none"`;
 
 export function renderActivityBarFrame(): string {
-  const points = "1169.615,1.79 1196,34.421 1196,66 1,66 1,33.895 27.598,1";
-  return frame("activity", "0 0 1197 67", `<polygon ${surface} points="${points}"/>`, `<polygon ${stroke} points="${points}"/>`);
+  const geometry = `<polyline ${stroke} points="49.462,12.2 41.796,4.534 15.775,4.534 0.707,19.601 16.374,35.268 248.374,35.268"/><polyline ${stroke} points="753.167,8.167 760.834,0.5 786.855,0.5 801.923,15.568 786.256,31.234 554.255,31.234"/>`;
+  return frame("activity", "0 0 802.63 35.768", "", geometry);
 }
 
 export function renderDataAwarenessFrame(): string {
+  const mainFrame = "M1280.24,40.079H12.5c-6.6,0-12,5.4-12,12v26c0,6.6,5.4,12,12,12h1267.74c6.6,0,12-5.4,12-12v-26C1292.24,45.479,1286.84,40.079,1280.24,40.079z";
   return frame(
     "data-awareness",
-    "0 0 1305.614 99.953",
-    `<polygon ${surface} points="24.307,48.953 1,72.259 1,98.953 1304.614,98.953 1304.614,73.953 1281.463,50.801"/><polygon ${surface} points="224.612,48.953 272.064,1.5 1041.004,1.5 1088.457,48.953"/>`,
-    `<polygon ${stroke} points="24.307,48.953 1,72.259 1,98.953 1304.614,98.953 1304.614,73.953 1281.463,50.801"/><polyline ${stroke} points="224.612,48.953 272.064,1.5 657.224,1.5"/><polyline ${stroke} points="1088.457,48.953 1041.004,1.5 655.845,1.5"/><line ${stroke} x1="437" y1="56" x2="437" y2="92" opacity=".55"/><line ${stroke} x1="871" y1="56" x2="871" y2="92" opacity=".55"/>`,
+    "0 0 1292.74 90.579",
+    `<path ${surface} d="${mainFrame}"/>`,
+    `<path ${stroke} d="${mainFrame}"/><line ${stroke} x1="262.932" y1="0.354" x2="223.394" y2="39.892"/><line ${stroke} x1="1031.864" y1="0.354" x2="1072.476" y2="40.966"/>`,
   );
 }
 

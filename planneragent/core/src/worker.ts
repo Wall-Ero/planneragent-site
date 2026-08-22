@@ -20,6 +20,7 @@ import { onboardingRoutes } from "./onboarding/routes.onboarding";
 
 import type { Env } from "./types/env";
 import { trustSovereigntyReadinessResponse } from "./cryptography/release/trust.sovereignty.readiness.route";
+import { anonymousVisionConversationRouteV1 } from "./conversation/anonymous.vision.conversation.route.v1";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
@@ -31,8 +32,13 @@ function json(body: unknown, status = 200): Response {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     try {
-      initializeProductionErpConnector(env);
       const url = new URL(req.url);
+
+      if (url.pathname === "/conversation") {
+        return anonymousVisionConversationRouteV1(req, env);
+      }
+
+      initializeProductionErpConnector(env);
 
       // --------------------------------------------
       // SYSTEM ROUTES (NO SNAPSHOT)

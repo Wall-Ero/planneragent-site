@@ -15,6 +15,7 @@ import {
 } from "./presentation/cockpit.frames";
 import { renderCognitionContour, renderLateralChassis } from "./presentation/cockpit.decorations";
 import { setupCockpitViewport } from "./presentation/cockpit.viewport";
+import { AnonymousConversationClientV1 } from "./conversation.client";
 
 const signal=(value:string,active?:string)=>`<span class="signal${value===active?" is-active":""}" data-state="${value===active?"active":"neutral"}" aria-current="${value===active?"true":"false"}">${value}</span>`;
 
@@ -36,27 +37,15 @@ async function bootstrap(){const root=document.querySelector<HTMLElement>("#app"
   <form class="composer" data-chat-state="empty">${renderChatInputFrame()}<button type="button" class="composer-button add" aria-label="Attach data">+</button><label class="sr-only" for="message">Message PlannerAgent</label><input id="message" name="message" autocomplete="off" placeholder="Type here..."><button type="button" class="composer-button microphone" aria-label="Microphone">${renderMicrophone()}</button><button type="button" class="composer-button composer-action" hidden></button></form>
   <section class="governance" aria-labelledby="governance-title"><div class="governance-title-row"><span class="governance-rule" aria-hidden="true"></span><h2 id="governance-title">AI OPERATIONAL GOVERNANCE</h2><span class="governance-rule" aria-hidden="true"></span></div><div class="governance-mode-row"><p>Mode: VISION. Observation only. No execution.</p><button class="help" type="button" aria-label="Help">?</button></div><div class="governance-graduate-row">GRADUATE: OFF</div></section>
  </main></div></div>`;
- const composer=root.querySelector<HTMLFormElement>(".composer"),message=composer?.querySelector<HTMLInputElement>("#message"),action=composer?.querySelector<HTMLButtonElement>(".composer-action"),invitation=root.querySelector<HTMLElement>(".conversation-invitation");
+ const composer=root.querySelector<HTMLFormElement>(".composer"),message=composer?.querySelector<HTMLInputElement>("#message"),action=composer?.querySelector<HTMLButtonElement>(".composer-action"),conversation=root.querySelector<HTMLElement>(".conversation"),invitation=conversation?.querySelector<HTMLElement>(".conversation-invitation");
+ const client=new AnonymousConversationClientV1();
  let generating=false;
  const syncComposer=()=>{if(!composer||!message||!action)return;const ready=message.value.trim().length>0;composer.dataset.chatState=generating?"generating":ready?"ready-to-send":"empty";action.hidden=!generating&&!ready;action.textContent=generating?"\u25a0":"\u2191";action.ariaLabel=generating?"Stop response":"Send message";action.title=action.ariaLabel;};
- composer?.addEventListener("submit",event=>event.preventDefault());
+ const renderResponse=(text:string)=>{if(!conversation)return;conversation.querySelector(".conversation-content")?.remove();const content=document.createElement("div");content.className="conversation-content";const paragraph=document.createElement("p");paragraph.textContent=text;content.append(paragraph);conversation.append(content);};
+ const send=async()=>{if(!message||generating)return;const text=message.value.trim();if(!text)return;invitation?.remove();generating=true;syncComposer();const result=await client.send(text);generating=false;if(result.status==="RESPONSE"){renderResponse(result.response.text);message.value="";}else if(invitation&&!conversation?.querySelector(".conversation-content")){conversation?.append(invitation);}syncComposer();};
+ composer?.addEventListener("submit",event=>{event.preventDefault();void send();});
  message?.addEventListener("input",syncComposer);
- action?.addEventListener("click",()=>{
-  if (!message) return;
-
-  if (generating) {
-    generating = false;
-    syncComposer();
-    return;
-  }
-
-  if (message.value.trim().length === 0) return;
-
-  invitation?.remove();
-  generating = true;
-  message.value = "";
-  syncComposer();
- });
+ action?.addEventListener("click",()=>{if(generating){client.stop();generating=false;syncComposer();return;}void send();});
  syncComposer();
  const viewport=root.querySelector<HTMLElement>(".cockpit-viewport"),instrument=root.querySelector<HTMLElement>(".cockpit-instrument");
  if(viewport&&instrument)setupCockpitViewport(viewport,instrument);

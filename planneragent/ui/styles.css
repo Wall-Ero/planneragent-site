@@ -152,6 +152,16 @@ h1, h2, p { margin: 0; }
 .conversation-content { position: absolute; z-index: 3; inset: 8%; display: flex; min-height: 0; flex-direction: column; align-items: center; justify-content: center; gap: .4em; overflow-y: auto; color: var(--conversation); font-size: clamp(.9rem, 1.65vw, 1.35rem); line-height: 1.7; text-align: center; scrollbar-width: none; }
 .conversation-invitation { color: var(--conversation-invitation); }
 .conversation-content::-webkit-scrollbar { display: none; }
+.conversation-transcript { position: absolute; z-index: 3; inset: 8%; min-height: 0; padding-right: clamp(.25rem, .7vw, .6rem); overflow-x: hidden; overflow-y: auto; color: var(--conversation); font-size: clamp(.82rem, 1.35vw, 1.08rem); line-height: 1.55; text-align: left; overscroll-behavior: contain; scrollbar-color: color-mix(in srgb, var(--gold) 52%, transparent) transparent; scrollbar-width: thin; }
+.conversation-exchange { padding-block: .35rem .7rem; }
+.conversation-exchange + .conversation-exchange { border-top: 1px solid color-mix(in srgb, var(--gold-deep) 45%, transparent); padding-top: .7rem; }
+.conversation-turn { min-width: 0; }
+.conversation-turn + .conversation-turn { margin-top: .6rem; }
+.conversation-speaker { margin-bottom: .16rem; color: var(--gold-soft); font-size: .68em; font-weight: 600; letter-spacing: .12em; line-height: 1.25; text-transform: uppercase; }
+.conversation-turn p { max-width: 76ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+.conversation-turn-user { color: color-mix(in srgb, var(--conversation) 72%, var(--hud-black)); }
+.conversation-turn-planneragent { color: var(--conversation); }
+.conversation-exchange[data-exchange-state="pending"] .conversation-turn-user::after { display: inline-block; margin-left: .5em; color: var(--gold); content: "\2026"; }
 
 .composer { position: relative; display: flex; width: min(100%, 1000px); height: clamp(50px, 4.4vw, 62px); margin: 0 auto; padding: 0 2%; align-items: center; gap: clamp(.4rem, 1.2vw, 1rem); flex: 0 0 auto; }
 .composer-button { position: relative; z-index: 3; display: grid; height: 100%; padding: 0; flex: 0 0 auto; color: var(--gold); line-height: 1; place-items: center; }

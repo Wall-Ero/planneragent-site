@@ -16,6 +16,7 @@ import {
 import { renderCognitionContour, renderLateralChassis } from "./presentation/cockpit.decorations";
 import { setupCockpitViewport } from "./presentation/cockpit.viewport";
 import { AnonymousConversationClientV1 } from "./conversation.client";
+import { beginConversationExchangeV1, completeConversationExchangeV1, createConversationTranscriptV1, failConversationExchangeV1, positionConversationTurnAtStartV1, trimConversationExchangesV1, type ConversationExchangeV1 } from "./conversation.transcript";
 
 const signal=(value:string,active?:string)=>`<span class="signal${value===active?" is-active":""}" data-state="${value===active?"active":"neutral"}" aria-current="${value===active?"true":"false"}">${value}</span>`;
 
@@ -40,9 +41,9 @@ async function bootstrap(){const root=document.querySelector<HTMLElement>("#app"
  const composer=root.querySelector<HTMLFormElement>(".composer"),message=composer?.querySelector<HTMLInputElement>("#message"),action=composer?.querySelector<HTMLButtonElement>(".composer-action"),conversation=root.querySelector<HTMLElement>(".conversation"),invitation=conversation?.querySelector<HTMLElement>(".conversation-invitation");
  const client=new AnonymousConversationClientV1();
  let generating=false;
+ let transcript:HTMLElement|undefined,exchanges:ConversationExchangeV1[]=[];
  const syncComposer=()=>{if(!composer||!message||!action)return;const ready=message.value.trim().length>0;composer.dataset.chatState=generating?"generating":ready?"ready-to-send":"empty";action.hidden=!generating&&!ready;action.textContent=generating?"\u25a0":"\u2191";action.ariaLabel=generating?"Stop response":"Send message";action.title=action.ariaLabel;};
- const renderResponse=(text:string)=>{if(!conversation)return;conversation.querySelector(".conversation-content")?.remove();const content=document.createElement("div");content.className="conversation-content";const paragraph=document.createElement("p");paragraph.textContent=text;content.append(paragraph);conversation.append(content);};
- const send=async()=>{if(!message||generating)return;const text=message.value.trim();if(!text)return;invitation?.remove();generating=true;syncComposer();const result=await client.send(text);generating=false;if(result.status==="RESPONSE"){renderResponse(result.response.text);message.value="";}else if(invitation&&!conversation?.querySelector(".conversation-content")){conversation?.append(invitation);}syncComposer();};
+ const send=async()=>{if(!message||!conversation||generating)return;const text=message.value.trim();if(!text)return;invitation?.remove();if(!transcript){transcript=createConversationTranscriptV1(document);conversation.append(transcript);conversation.classList.add("conversation-transcript-mode");}let exchange=beginConversationExchangeV1(document,transcript,text);exchanges.push(exchange);generating=true;syncComposer();const result=await client.send(text);generating=false;if(result.status==="RESPONSE"){exchange=completeConversationExchangeV1(document,exchange,result.response.text);message.value="";}else{exchange=failConversationExchangeV1(exchange);}const index=exchanges.findIndex(({element})=>element===exchange.element);if(index>=0)exchanges[index]=exchange;exchanges=trimConversationExchangesV1(exchanges);if(exchange.assistantTurn)positionConversationTurnAtStartV1(transcript,exchange.assistantTurn);syncComposer();};
  composer?.addEventListener("submit",event=>{event.preventDefault();void send();});
  message?.addEventListener("input",syncComposer);
  action?.addEventListener("click",()=>{if(generating){client.stop();generating=false;syncComposer();return;}void send();});

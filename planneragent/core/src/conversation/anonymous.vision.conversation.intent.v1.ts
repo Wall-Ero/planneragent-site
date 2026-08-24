@@ -1,4 +1,5 @@
 import type { AnonymousConversationAdmissionV1 } from "./anonymous.vision.conversation.policy.v1";
+import { deriveEnglishAnonymousVisionIntentNormalizationV1 } from "./anonymous.vision.conversation.normalization.v1";
 
 export type AnonymousVisionIntentFeaturesV1 = Readonly<{
   protected_disclosure: boolean;
@@ -23,17 +24,18 @@ const requesterContext = /\b(?:i(?:'m| am| don't| do not)|we(?:'re| are| keep| r
 const descriptiveStateOrChange = /\b(?:miss(?:ing|ed)?|late|delay(?:ed|s)?|slip(?:ping|s|ped)?|shortage|blocked|unstable|pressure|risk|problem|issue|keeps? (?:moving|changing|slipping)|constantly|repeatedly|changes? (?:late|at the last moment)|unclear|don't know where|do not know where|mismatch|fail(?:ing|ure|s|ed)?)\b/i;
 
 export function extractAnonymousVisionIntentFeaturesV1(message: string): AnonymousVisionIntentFeaturesV1 {
+  const normalized = deriveEnglishAnonymousVisionIntentNormalizationV1(message);
   const explicitProductTarget = namedProduct.test(message);
   const explicitProductRelationship = productRelationship.test(message);
   return Object.freeze({
-    protected_disclosure: protectedDisclosure.test(message),
-    data_introduction: dataIntroduction.test(message),
-    direct_execution: directExecution.test(message),
-    bounded_continuity: boundedContinuity.test(message),
-    explicit_product_relationship: explicitProductTarget || namedTierCapabilityQuestion.test(message) || explicitProductRelationship,
-    operational_subject: operationalSubject.test(message),
+    protected_disclosure: normalized.protected_disclosure || protectedDisclosure.test(message),
+    data_introduction: normalized.data_introduction || dataIntroduction.test(message),
+    direct_execution: normalized.direct_execution || directExecution.test(message),
+    bounded_continuity: normalized.bounded_continuity || boundedContinuity.test(message),
+    explicit_product_relationship: normalized.explicit_product_relationship || explicitProductTarget || namedTierCapabilityQuestion.test(message) || explicitProductRelationship,
+    operational_subject: normalized.operational_subject || operationalSubject.test(message),
     requester_context: requesterContext.test(message),
-    descriptive_state_or_change: descriptiveStateOrChange.test(message),
+    descriptive_state_or_change: normalized.descriptive_state_or_change || descriptiveStateOrChange.test(message),
   });
 }
 

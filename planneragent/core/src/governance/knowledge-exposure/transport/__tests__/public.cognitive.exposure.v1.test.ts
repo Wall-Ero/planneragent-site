@@ -74,8 +74,19 @@ describe("PUBLIC-COGNITIVE-EXPOSURE-V1", () => {
     const response = await mediator.dispatchPublic({ sealed, provider: "openai", model: "model-1", api_key: "secret" });
     expect(response).toMatchObject({ text: "Public answer", advisory_only: true, evidence: { request_id: "request-1", consumption_id: "consumption-1", retention: "NO_RETENTION" } });
     expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledWith("https://api.openai.com/v1/responses", expect.objectContaining({ redirect: "manual" }));
     expect(publicEvidence.events).toHaveLength(1);
     expect(JSON.stringify(publicEvidence.events)).not.toMatch(/Public product facts|Public answer|secret|company|tenant|principal|membership|session/i);
+  });
+
+  it.each([302, 500])("fails closed on provider HTTP %s", async (status) => {
+    const publicEvidence = new PublicEvidence();
+    const fetcher = vi.fn(async () => new Response("provider failure", { status }));
+    const mediator = new CognitiveTransportMediatorV1({ fetch: fetcher as any, evidence: governedEvidence, publicEvidence, now: () => "2026-08-22T12:00:00.000Z" });
+    const sealed = sealPublicCognitiveExposureV1(exposure());
+    await expect(mediator.dispatchPublic({ sealed, provider: "openai", model: "model-1", api_key: "secret" })).rejects.toMatchObject({ code: "COGNITIVE_PROVIDER_FAILURE" });
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(publicEvidence.events).toEqual([expect.objectContaining({ status: "FAILED", failure_code: "COGNITIVE_PROVIDER_FAILURE" })]);
   });
 
   it("fails invalid public exposure before provider invocation and creates no persistent store", async () => {

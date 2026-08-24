@@ -6,7 +6,7 @@
 // - if budgetRemainingEur > 0 => paid/commercial allowed
 // - if budgetRemainingEur == 0 => only free/oss allowed
 
-export type PlanTier = "BASIC" | "JUNIOR" | "SENIOR";
+import type { InferenceSource, IntelligenceMode, PlanTier } from "../llmcontracts";
 
 export type EconomicClass = "paid" | "free" | "oss";
 
@@ -23,8 +23,19 @@ export type SovereigntyPolicyV1 = {
 export function resolveSovereigntyPolicyV1(params: {
   plan: PlanTier;
   budgetRemainingEur: number; // for BASIC: global pool remaining; for others: can be Infinity
+  intelligenceMode?: IntelligenceMode;
+  inferenceSource?: InferenceSource;
 }): SovereigntyPolicyV1 {
-  const { plan, budgetRemainingEur } = params;
+  const { plan, budgetRemainingEur, inferenceSource } = params;
+
+  // Inference economics are selected independently from authority/profile.
+  if (inferenceSource === "FREE") {
+    return {
+      allowed: ["free"],
+      preferred: "free",
+      forbidPaidWhenBudgetZero: true
+    };
+  }
 
   if (plan === "BASIC") {
     if (budgetRemainingEur > 0) {

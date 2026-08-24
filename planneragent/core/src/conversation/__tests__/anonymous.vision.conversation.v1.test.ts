@@ -4,6 +4,9 @@ import { admitAnonymousVisionConversationV1, PLANNERAGENT_PUBLIC_CONVERSATION_IN
 import { AnonymousVisionConversationRateGuardV1 } from "../anonymous.vision.conversation.rate.v1";
 import { runAnonymousVisionConversationV1 } from "../anonymous.vision.conversation.runtime.v1";
 import { createPlannerAgentPublicCapabilityProjectionV1 } from "../planneragent.public.capabilities.v1";
+import { resolveLlmProviders } from "../../sandbox/llm/registry";
+import { resolveSovereigntyPolicyV1 } from "../../sandbox/llm/sovereignty";
+import type { LlmProviderCandidate } from "../../sandbox/llmcontracts";
 
 const request = (message: string) => ({ version: 1, request_id: "request-1", message });
 const response = (text = "PlannerAgent supports observation-only planning conversations in VISION.") => new Response(JSON.stringify({ choices: [{ message: { content: text } }], usage: { prompt_tokens: 10, completion_tokens: 12 } }), { status: 200 });
@@ -74,11 +77,45 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
     expect(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body)).max_tokens).toBe(ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1);
   });
 
-  it("uses the existing public-compatible OpenRouter model default", async () => {
+  it("resolves anonymous inference as VISION x EFFICIENT x FREE", async () => {
     const fetcher = vi.fn(async (_url: unknown, _init?: RequestInit) => response());
     await run("What can PlannerAgent do?", { fetch: fetcher });
     const body = JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body));
-    expect(body.model).toBe("openai/gpt-4o-mini");
+    expect(body.model).toBe("openrouter/free");
+    expect(body.model).not.toBe("openai/gpt-4o-mini");
+  });
+
+  it("does not infer FREE eligibility from zero budget", () => {
+    const policy = resolveSovereigntyPolicyV1({ plan: "VISION", budgetRemainingEur: 0, intelligenceMode: "EFFICIENT", inferenceSource: "FREE" });
+    const candidates = resolveLlmProviders("VISION", 0, policy);
+    expect(candidates).toEqual([expect.objectContaining({ id: "openrouter", model: "openrouter/free", economicClass: "free", estimatedCostEur: 0 })]);
+    expect(candidates).not.toEqual(expect.arrayContaining([expect.objectContaining({ model: "openai/gpt-4o-mini" })]));
+    expect(resolveLlmProviders("BASIC", 0)).not.toEqual(expect.arrayContaining([expect.objectContaining({ model: "openai/gpt-4o-mini", economicClass: "free" })]));
+  });
+
+  it("fails closed before transport when no FREE candidate resolves", async () => {
+    const fetcher = vi.fn();
+    const result = await run("What can PlannerAgent do?", { fetch: fetcher, resolve_providers: () => [] });
+    expect(result).toEqual({ version: 1, request_id: "request-1", error: "SERVICE_UNAVAILABLE" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("does not cross from FREE resolution into a paid fallback", async () => {
+    const fetcher = vi.fn();
+    const paid = resolveLlmProviders("JUNIOR", Infinity).filter((candidate) => candidate.economicClass === "paid");
+    const result = await run("What can PlannerAgent do?", { fetch: fetcher, resolve_providers: () => paid });
+    expect(result).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("keeps fallback resolution inside explicitly FREE candidates", () => {
+    const policy = resolveSovereigntyPolicyV1({ plan: "VISION", budgetRemainingEur: 0, intelligenceMode: "EFFICIENT", inferenceSource: "FREE" });
+    const candidates: LlmProviderCandidate[] = [
+      { id: "openrouter", model: "paid-model", allowedFor: ["VISION"], priority: 1, costType: "openrouter", economicClass: "paid", estimatedCostEur: 0.02 },
+      { id: "openrouter", model: "free-router-primary", allowedFor: ["VISION"], priority: 2, costType: "openrouter", economicClass: "free", estimatedCostEur: 0 },
+      { id: "openrouter", model: "free-router-fallback", allowedFor: ["VISION"], priority: 3, costType: "openrouter", economicClass: "free", estimatedCostEur: 0, fallback: true },
+    ];
+    expect(resolveLlmProviders("VISION", 0, policy, candidates).map(({ model }) => model)).toEqual(["free-router-primary", "free-router-fallback"]);
   });
 
   it("fails closed with a bounded error on provider failure", async () => {

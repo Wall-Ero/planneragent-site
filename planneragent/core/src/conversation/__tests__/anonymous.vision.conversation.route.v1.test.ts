@@ -20,6 +20,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-ROUTE-V1", () => {
       expect(calls).toHaveLength(1);
       expect(calls[0]?.receiver).toBe(globalThis);
       expect(calls[0]?.url).toBe("https://openrouter.ai/api/v1/chat/completions");
+      expect(JSON.parse(String(calls[0]?.init?.body)).model).toBe("openrouter/free");
     } finally {
       vi.unstubAllGlobals();
     }

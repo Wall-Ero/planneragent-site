@@ -3,6 +3,8 @@ import { ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, type AnonymousVisio
 import { admitAnonymousVisionConversationV1, PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1 } from "./anonymous.vision.conversation.policy.v1";
 import { createPlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 import { AnonymousVisionConversationRateGuardV1 } from "./anonymous.vision.conversation.rate.v1";
+import { resolveLlmProviders } from "../sandbox/llm/registry";
+import { resolveSovereigntyPolicyV1 } from "../sandbox/llm/sovereignty";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -21,8 +23,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   fetch: typeof fetch;
   now?: () => string;
   rate_guard?: AnonymousVisionConversationRateGuardV1;
-  provider?: "openai" | "anthropic" | "openrouter";
-  model?: string;
+  resolve_providers?: typeof resolveLlmProviders;
 }>): Promise<AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1> {
   const admitted = admitAnonymousVisionConversationV1(input.request);
   const requestId = admitted?.request.request_id ?? "unadmitted";
@@ -32,7 +33,12 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   if (admitted.admission === "PROTECTED_DISCLOSURE") return bounded(requestId, "PROTECTED_INFORMATION", "I can explain PlannerAgent's public capabilities and safeguards at a high level, but I cannot disclose hidden instructions, proprietary implementation, credentials, or sensitive security details.");
   if (admitted.admission === "DATA_INTRODUCTION") return bounded(requestId, "REGISTRATION_REQUIRED", "You can discuss PlannerAgent anonymously. Simple registration is required before introducing a file, dataset, API, or connected data source.");
   if (admitted.admission === "EXECUTION_REQUEST") return bounded(requestId, "EXECUTION_UNAVAILABLE", "VISION is observation-only and cannot execute actions. Execution-capable use requires an eligible higher tier and separately governed authority.");
-  const provider = input.provider ?? "openrouter", model = input.model ?? "openai/gpt-4o-mini";
+  const sovereignty = resolveSovereigntyPolicyV1({ plan: "VISION", budgetRemainingEur: 0, intelligenceMode: "EFFICIENT", inferenceSource: "FREE" });
+  const candidate = (input.resolve_providers ?? resolveLlmProviders)("VISION", 0, sovereignty)[0];
+  if (!candidate || candidate.id !== "openrouter" || candidate.model !== "openrouter/free" || candidate.economicClass !== "free" || candidate.estimatedCostEur !== 0) {
+    return Object.freeze({ version: 1, request_id: requestId, error: "SERVICE_UNAVAILABLE" });
+  }
+  const provider = candidate.id, model = candidate.model;
   const publicEvidence = new RequestLocalPublicEvidenceV1();
   const projection = JSON.stringify({
     PUBLIC_INSTRUCTION: PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1,

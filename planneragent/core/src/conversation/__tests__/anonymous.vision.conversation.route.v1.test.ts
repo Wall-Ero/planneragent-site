@@ -6,11 +6,11 @@ const request = (body: unknown, headers: HeadersInit = {}) => new Request("https
 const valid = { version: 1, request_id: "request-1", message: "What can PlannerAgent do?" };
 
 describe("ANONYMOUS-VISION-CONVERSATION-ROUTE-V1", () => {
-  it("invokes default fetch through globalThis for the OpenRouter conversation", async () => {
+  it("invokes default fetch through globalThis for the free OpenRouter conversation", async () => {
     const calls: Array<{ receiver: unknown; url: unknown; init?: RequestInit }> = [];
     const globalFetch = vi.fn(function (this: unknown, url: unknown, init?: RequestInit) {
       calls.push({ receiver: this, url, init });
-      return Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: "Public answer" } }] }), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ version: 1, answer: "Public answer" }) } }] }), { status: 200 }));
     });
     vi.stubGlobal("fetch", globalFetch);
     try {
@@ -28,7 +28,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-ROUTE-V1", () => {
 
   it("preserves an injected fetcher", async () => {
     const globalFetch = vi.fn();
-    const injectedFetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: "Injected answer" } }] }), { status: 200 }));
+    const injectedFetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ version: 1, answer: "Injected answer" }) } }] }), { status: 200 }));
     vi.stubGlobal("fetch", globalFetch);
     try {
       const response = await anonymousVisionConversationRouteV1(request({ ...valid, request_id: "request-injected" }), { OPENROUTER_API_KEY: "secret" }, { fetch: injectedFetch as any });

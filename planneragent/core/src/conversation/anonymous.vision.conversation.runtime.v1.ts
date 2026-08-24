@@ -9,6 +9,7 @@ import { enforceVisionExecutionBoundary } from "../sandbox/authority/visionExecu
 import { admitAnonymousVisionRequestContextV1 } from "../surfacing/anonymous.vision.request.context.v1";
 import { convergePlannerNarrativeSurfacingCandidateV1 } from "../surfacing/planner.narrative.surfacing.adapter.v1";
 import { createAnonymousVisionDirectResponseV1 } from "../surfacing/anonymous.vision.direct.response.v1";
+import { parseRealizationEnvelopeV1 } from "./cognitive.realization.envelope.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -75,8 +76,9 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   const sealed = sealPublicCognitiveExposureV1({ version: 1, trust_domain: "PUBLIC", scope: "REQUEST_BOUND", organizational_status: "NON_ORGANIZATIONAL", retention: "NO_RETENTION", purpose: "PUBLIC_PRODUCT_CONVERSATION", request_id: requestId, consumption_id: `public-conversation:${requestId}`, provider, model, projection: { classification: "PUBLIC_SAFE", content: projection } });
   try {
     const result = await new CognitiveTransportMediatorV1({ fetch: input.fetch, evidence: { reserve: async () => false, append: async () => undefined }, publicEvidence, now: input.now ?? (() => new Date().toISOString()) }).dispatchPublic({ sealed, provider, model, api_key: input.api_key, max_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, temperature: 0.2 });
-    if (!result.text.trim()) throw new CognitiveTransportError("COGNITIVE_PROVIDER_RESPONSE_INVALID");
-    return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", result.text);
+    const realization = parseRealizationEnvelopeV1(result.text);
+    if (!realization) throw new CognitiveTransportError("COGNITIVE_PROVIDER_RESPONSE_INVALID");
+    return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", realization.answer);
   } catch {
     return Object.freeze({ version: 1, request_id: requestId, error: "SERVICE_UNAVAILABLE" });
   }

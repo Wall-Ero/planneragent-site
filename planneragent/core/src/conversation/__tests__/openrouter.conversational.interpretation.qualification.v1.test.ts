@@ -37,22 +37,37 @@ describe("OPENROUTER-CONVERSATIONAL-INTERPRETATION-QUALIFICATION-V1", () => {
     expect(() => new OpenRouterConversationalInterpretationAdapterV1({ api_key: "key", model })).toThrowError(OpenRouterConversationalInterpretationErrorV1);
   });
 
+  it("accepts an explicit pinned free candidate without adding fallback", () => {
+    const provider = new OpenRouterConversationalInterpretationAdapterV1({ api_key: "key", model: "openai/gpt-oss-20b:free", fetch: vi.fn() as any });
+    expect(provider.descriptor).toMatchObject({ provider_id: "openrouter", model_id: "openai/gpt-oss-20b:free", capabilities: ["INTERPRETATION"] });
+    expect(JSON.stringify(provider)).not.toMatch(/openrouter\/free|fallback|paid/i);
+  });
+
   it.each([
     ["malformed output", "not-json"],
     ["authority grant", result({ grants_authority: true })],
     ["execution grant", result({ grants_execution: true })],
     ["unknown field", { ...result(), provider_id: "openrouter" }],
   ])("fails closed on %s", async (_label, providerResult) => {
-    await expect(adapter(providerResult).provider.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "PROVIDER_RESPONSE_INVALID" });
+    const code = _label === "malformed output" ? "JSON_PARSE_FAILURE" : "CONTRACT_VALIDATION_FAILURE";
+    await expect(adapter(providerResult).provider.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code });
   });
 
   it("fails closed on returned model substitution, non-2xx, and multiple choices", async () => {
     const substituted = new OpenRouterConversationalInterpretationAdapterV1({ api_key: "key", model: "vendor/pinned-model", fetch: vi.fn(async () => response(result(), { model: "other/model" })) as any });
-    await expect(substituted.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "PROVIDER_IDENTITY_MISMATCH" });
+    await expect(substituted.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "MODEL_IDENTITY_MISMATCH" });
     const failed = new OpenRouterConversationalInterpretationAdapterV1({ api_key: "key", model: "vendor/pinned-model", fetch: vi.fn(async () => new Response("denied", { status: 500 })) as any });
-    await expect(failed.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "PROVIDER_FAILURE" });
+    await expect(failed.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "PROVIDER_SERVER_FAILURE" });
     const multiple = new OpenRouterConversationalInterpretationAdapterV1({ api_key: "key", model: "vendor/pinned-model", fetch: vi.fn(async () => response(result(), { choices: [{ message: { content: "{}" } }, { message: { content: "{}" } }] })) as any });
-    await expect(multiple.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "PROVIDER_RESPONSE_INVALID" });
+    await expect(multiple.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code: "OUTPUT_EXTRACTION_FAILURE" });
+  });
+
+  it.each([
+    [401, "AUTHENTICATION_FAILURE"], [403, "AUTHENTICATION_FAILURE"], [429, "RATE_LIMITED"], [404, "MODEL_UNAVAILABLE"],
+    [402, "NO_ADMISSIBLE_PROVIDER"], [400, "PROVIDER_REQUEST_REJECTED"], [422, "PROVIDER_REQUEST_REJECTED"], [500, "PROVIDER_SERVER_FAILURE"], [418, "UNKNOWN_PROVIDER_FAILURE"],
+  ])("classifies HTTP %s without exposing provider content", async (status, code) => {
+    const provider = new OpenRouterConversationalInterpretationAdapterV1({ api_key: "key", model: "vendor/pinned-model", fetch: vi.fn(async () => new Response("sensitive provider body", { status })) as any });
+    await expect(provider.interpret(sealConversationalInterpretationRequestV1("message"))).rejects.toMatchObject({ code });
   });
 
   it("injects into the existing provider-neutral evaluator without altering the gold corpus", async () => {

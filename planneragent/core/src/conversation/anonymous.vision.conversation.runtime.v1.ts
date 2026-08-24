@@ -1,6 +1,6 @@
-import { CognitiveTransportError, CognitiveTransportMediatorV1, sealPublicCognitiveExposureV1, type PublicCognitiveTransportEvidenceRepositoryV1, type PublicCognitiveTransportEvidenceV1 } from "../governance/knowledge-exposure/transport";
+import { CognitiveTransportError, CognitiveTransportMediatorV1, type PublicCognitiveTransportEvidenceRepositoryV1, type PublicCognitiveTransportEvidenceV1 } from "../governance/knowledge-exposure/transport";
 import { ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, type AnonymousVisionConversationFailureV1, type AnonymousVisionConversationResponseV1 } from "./anonymous.vision.conversation.contracts.v1";
-import { admitAnonymousVisionConversationV1, PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1 } from "./anonymous.vision.conversation.policy.v1";
+import { admitAnonymousVisionConversationV1 } from "./anonymous.vision.conversation.policy.v1";
 import { createPlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 import { AnonymousVisionConversationRateGuardV1 } from "./anonymous.vision.conversation.rate.v1";
 import { resolveLlmProviders } from "../sandbox/llm/registry";
@@ -11,6 +11,9 @@ import { convergePlannerNarrativeSurfacingCandidateV1 } from "../surfacing/plann
 import { createAnonymousVisionDirectResponseV1 } from "../surfacing/anonymous.vision.direct.response.v1";
 import { parseRealizationEnvelopeV1 } from "./cognitive.realization.envelope.v1";
 import { createPlannerAgentVoiceProfileV1 } from "./planneragent.voice.profile.v1";
+import { CognitiveTransportConversationalRealizationAdapterV1, type CurrentPublicRealizationRouteV1, type PublicCognitiveRealizationTransportV1 } from "./cognition/cognitive.transport.conversational.realization.adapter.v1";
+import type { ConversationalRealizationProviderV1 } from "./cognition/conversational.cognition.contracts.v1";
+import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -30,6 +33,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   now?: () => string;
   rate_guard?: AnonymousVisionConversationRateGuardV1;
   resolve_providers?: typeof resolveLlmProviders;
+  create_realization_provider?: (transport: PublicCognitiveRealizationTransportV1, route: CurrentPublicRealizationRouteV1) => ConversationalRealizationProviderV1<PlannerAgentPublicCapabilityProjectionV1>;
 }>): Promise<AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1> {
   const admitted = admitAnonymousVisionConversationV1(input.request);
   const requestId = admitted?.request.request_id ?? "unadmitted";
@@ -70,16 +74,12 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   const provider = candidate.id, model = candidate.model;
   const publicEvidence = new RequestLocalPublicEvidenceV1();
   const voiceProfile = createPlannerAgentVoiceProfileV1();
-  const projection = JSON.stringify({
-    PUBLIC_INSTRUCTION: PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1,
-    PUBLIC_CAPABILITIES: createPlannerAgentPublicCapabilityProjectionV1(),
-    VOICE_PROFILE: voiceProfile,
-    USER_MESSAGE: admitted.request.message,
-  });
-  const sealed = sealPublicCognitiveExposureV1({ version: 1, trust_domain: "PUBLIC", scope: "REQUEST_BOUND", organizational_status: "NON_ORGANIZATIONAL", retention: "NO_RETENTION", purpose: "PUBLIC_PRODUCT_CONVERSATION", request_id: requestId, consumption_id: `public-conversation:${requestId}`, provider, model, projection: { classification: "PUBLIC_SAFE", content: projection } });
+  const transport = new CognitiveTransportMediatorV1({ fetch: input.fetch, evidence: { reserve: async () => false, append: async () => undefined }, publicEvidence, now: input.now ?? (() => new Date().toISOString()) });
+  const route = Object.freeze({ request_id: requestId, consumption_id: `public-conversation:${requestId}`, provider, model, api_key: input.api_key, max_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, temperature: 0.2 });
+  const realizationProvider = input.create_realization_provider?.(transport, route) ?? new CognitiveTransportConversationalRealizationAdapterV1(transport, route);
   try {
-    const result = await new CognitiveTransportMediatorV1({ fetch: input.fetch, evidence: { reserve: async () => false, append: async () => undefined }, publicEvidence, now: input.now ?? (() => new Date().toISOString()) }).dispatchPublic({ sealed, provider, model, api_key: input.api_key, max_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, temperature: 0.2 });
-    const realization = parseRealizationEnvelopeV1(result.text);
+    const rawRealization = await realizationProvider.realize(Object.freeze({ version: 1, current_user_message: admitted.request.message, governed_meaning: createPlannerAgentPublicCapabilityProjectionV1(), voice_profile: voiceProfile, required_output_contract: "REALIZATION_ENVELOPE_V1" }));
+    const realization = parseRealizationEnvelopeV1(rawRealization);
     if (!realization) throw new CognitiveTransportError("COGNITIVE_PROVIDER_RESPONSE_INVALID");
     return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", realization.answer);
   } catch {

@@ -22,7 +22,7 @@ export async function anonymousVisionConversationRouteV1(
       request: body,
       client_key: clientKey,
       api_key: env.OPENROUTER_API_KEY ?? "",
-      fetch: dependencies.fetch ?? fetch,
+      fetch: dependencies.fetch ?? ((...args) => globalThis.fetch(...args)),
     });
   } catch {
     return json({ version: 1, request_id: typeof (body as any)?.request_id === "string" ? (body as any).request_id : "unadmitted", error: "SERVICE_UNAVAILABLE" }, 503);

@@ -4,6 +4,17 @@ import { AnonymousConversationClientV1 } from "../../../../ui/conversation.clien
 const response = (requestId: string, text: string) => new Response(JSON.stringify({ version: 1, request_id: requestId, text, posture: "PUBLIC_PRODUCT_ANSWER" }), { status: 200, headers: { "content-type": "application/json" } });
 
 describe("ANONYMOUS-CONVERSATION-CLIENT-V1", () => {
+  it("invokes the default browser fetch through globalThis at call time", async () => {
+    const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async function (this: typeof globalThis, _url: string | URL | Request, init?: RequestInit) { expect(this).toBe(globalThis); const body = JSON.parse(String(init?.body)); return response(body.request_id, "Default fetch answer"); });
+    try {
+      const result = await new AnonymousConversationClientV1().send("What can you do?");
+      expect(fetcher).toHaveBeenCalledWith("/conversation", expect.objectContaining({ method: "POST" }));
+      expect(result).toMatchObject({ status: "RESPONSE", response: { text: "Default fetch answer" } });
+    } finally {
+      fetcher.mockRestore();
+    }
+  });
+
   it("sends one canonical request to /conversation and returns its response", async () => {
     const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => { const body = JSON.parse(String(init?.body)); return response(body.request_id, "PlannerAgent answer"); });
     const client = new AnonymousConversationClientV1(fetcher as any), result = await client.send("  What can you do?  ");

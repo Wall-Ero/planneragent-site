@@ -7,7 +7,7 @@ export type AnonymousConversationClientResultV1 =
 
 export class AnonymousConversationClientV1 {
   private active?: Readonly<{ requestId: string; controller: AbortController }>;
-  constructor(private readonly fetcher: typeof fetch = fetch) {}
+  constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
   get generating() { return this.active !== undefined; }
   stop(): void { const active = this.active; this.active = undefined; active?.controller.abort(); }
   async send(message: string): Promise<AnonymousConversationClientResultV1> {

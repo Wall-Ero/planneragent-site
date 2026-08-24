@@ -6,6 +6,40 @@ const request = (body: unknown, headers: HeadersInit = {}) => new Request("https
 const valid = { version: 1, request_id: "request-1", message: "What can PlannerAgent do?" };
 
 describe("ANONYMOUS-VISION-CONVERSATION-ROUTE-V1", () => {
+  it("invokes default fetch through globalThis for the OpenRouter conversation", async () => {
+    const calls: Array<{ receiver: unknown; url: unknown; init?: RequestInit }> = [];
+    const globalFetch = vi.fn(function (this: unknown, url: unknown, init?: RequestInit) {
+      calls.push({ receiver: this, url, init });
+      return Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: "Public answer" } }] }), { status: 200 }));
+    });
+    vi.stubGlobal("fetch", globalFetch);
+    try {
+      const response = await anonymousVisionConversationRouteV1(request(valid), { OPENROUTER_API_KEY: "secret" });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ version: 1, request_id: "request-1", text: "Public answer", posture: "PUBLIC_PRODUCT_ANSWER" });
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.receiver).toBe(globalThis);
+      expect(calls[0]?.url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("preserves an injected fetcher", async () => {
+    const globalFetch = vi.fn();
+    const injectedFetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: "Injected answer" } }] }), { status: 200 }));
+    vi.stubGlobal("fetch", globalFetch);
+    try {
+      const response = await anonymousVisionConversationRouteV1(request({ ...valid, request_id: "request-injected" }), { OPENROUTER_API_KEY: "secret" }, { fetch: injectedFetch as any });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER", text: "Injected answer" });
+      expect(injectedFetch).toHaveBeenCalledOnce();
+      expect(globalFetch).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("passes a valid anonymous request and trusted edge client key to the runtime", async () => {
     const run = vi.fn(async () => ({ version: 1, request_id: "request-1", text: "Public answer", posture: "PUBLIC_PRODUCT_ANSWER" }) as AnonymousVisionConversationResponseV1);
     const response = await anonymousVisionConversationRouteV1(request(valid, { "cf-connecting-ip": "203.0.113.8" }), { OPENROUTER_API_KEY: "secret" }, { run: run as any });

@@ -10,6 +10,7 @@ import { admitAnonymousVisionRequestContextV1 } from "../surfacing/anonymous.vis
 import { convergePlannerNarrativeSurfacingCandidateV1 } from "../surfacing/planner.narrative.surfacing.adapter.v1";
 import { createAnonymousVisionDirectResponseV1 } from "../surfacing/anonymous.vision.direct.response.v1";
 import { parseRealizationEnvelopeV1 } from "./cognitive.realization.envelope.v1";
+import { createPlannerAgentVoiceProfileV1 } from "./planneragent.voice.profile.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -68,9 +69,11 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   }
   const provider = candidate.id, model = candidate.model;
   const publicEvidence = new RequestLocalPublicEvidenceV1();
+  const voiceProfile = createPlannerAgentVoiceProfileV1();
   const projection = JSON.stringify({
     PUBLIC_INSTRUCTION: PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1,
     PUBLIC_CAPABILITIES: createPlannerAgentPublicCapabilityProjectionV1(),
+    VOICE_PROFILE: voiceProfile,
     USER_MESSAGE: admitted.request.message,
   });
   const sealed = sealPublicCognitiveExposureV1({ version: 1, trust_domain: "PUBLIC", scope: "REQUEST_BOUND", organizational_status: "NON_ORGANIZATIONAL", retention: "NO_RETENTION", purpose: "PUBLIC_PRODUCT_CONVERSATION", request_id: requestId, consumption_id: `public-conversation:${requestId}`, provider, model, projection: { classification: "PUBLIC_SAFE", content: projection } });

@@ -1,9 +1,10 @@
 import { ANONYMOUS_VISION_CONVERSATION_MESSAGE_MAX_LENGTH_V1, type AnonymousVisionConversationRequestV1 } from "./anonymous.vision.conversation.contracts.v1";
 import { interpretAnonymousVisionIntentV1 } from "./anonymous.vision.conversation.intent.v1";
+import { createPlannerAgentVoiceInstructionV1 } from "./planneragent.voice.profile.v1";
 
 export const PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1 = [
   "You are PlannerAgent speaking publicly about PlannerAgent.",
-  "Be concise, professional, operationally literate, and honest about limitations.",
+  createPlannerAgentVoiceInstructionV1(),
   "Use only facts in PUBLIC_CAPABILITIES. Do not invent capabilities or integrations.",
   "No user operational data has been observed: make no claim about the user's plan, reality, or decision pressure.",
   "VISION is observation-only and cannot execute.",

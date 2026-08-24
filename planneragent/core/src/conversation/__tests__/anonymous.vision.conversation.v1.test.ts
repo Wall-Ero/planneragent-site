@@ -7,6 +7,7 @@ import { createPlannerAgentPublicCapabilityProjectionV1 } from "../planneragent.
 import { resolveLlmProviders } from "../../sandbox/llm/registry";
 import { resolveSovereigntyPolicyV1 } from "../../sandbox/llm/sovereignty";
 import type { LlmProviderCandidate } from "../../sandbox/llmcontracts";
+import { admitAnonymousVisionRequestContextV1 } from "../../surfacing/anonymous.vision.request.context.v1";
 
 const request = (message: string) => ({ version: 1, request_id: "request-1", message });
 const response = (text = "PlannerAgent supports observation-only planning conversations in VISION.") => new Response(JSON.stringify({ choices: [{ message: { content: text } }], usage: { prompt_tokens: 10, completion_tokens: 12 } }), { status: 200 });
@@ -21,6 +22,30 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
     "How could you help a CFO?",
     "Can PlannerAgent support project management planning?",
   ])("admits public product conversation: %s", (message) => expect(admitAnonymousVisionConversationV1(request(message))?.admission).toBe("PRODUCT_CONVERSATION"));
+
+  it.each(["Are you ready?", "Hello", "Thanks", "Got it"])("admits bounded conversational continuity: %s", (message) => {
+    expect(admitAnonymousVisionConversationV1(request(message))?.admission).toBe("BOUNDED_CONVERSATION");
+  });
+
+  it("routes descriptive operational input as non-authoritative request-bound VISION context", async () => {
+    const message = "I'm a production planner and we're constantly missing supplier dates";
+    expect(admitAnonymousVisionConversationV1(request(message))?.admission).toBe("DESCRIPTIVE_OPERATIONAL_CONTEXT");
+    const context = admitAnonymousVisionRequestContextV1({ version: 1, request_id: "request-1", input: message });
+    expect(context?.trust).toEqual({ source: "REQUESTER_SUPPLIED", authority: "NON_AUTHORITATIVE", scope: "REQUEST_BOUND" });
+    const fetcher = vi.fn();
+    const result = await run(message, { fetch: fetcher });
+    expect(result).toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER", text: expect.stringMatching(/non-authoritative.*request.*cannot recommend or execute/is) });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("answers bounded continuity without opening a general-purpose proxy", async () => {
+    const fetcher = vi.fn();
+    await expect(run("Are you ready?", { fetch: fetcher })).resolves.toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER" });
+    await expect(run("Hello", { fetch: fetcher })).resolves.toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER" });
+    await expect(run("Thank you", { fetch: fetcher })).resolves.toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER" });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(admitAnonymousVisionConversationV1(request("Write me a poem about the moon"))).toBeUndefined();
+  });
 
   it("rejects empty, oversized, malformed, and unrelated generic proxy requests", () => {
     expect(admitAnonymousVisionConversationV1(request(" "))).toBeUndefined();

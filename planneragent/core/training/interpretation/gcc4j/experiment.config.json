@@ -1,0 +1,32 @@
+{
+  "experiment_id": "GCC-4J",
+  "candidate_id": "PA-INTERPRETATION-STUDENT-v0.1",
+  "lifecycle_state": "TRAINED_CANDIDATE",
+  "corpus_id": "PA-INTERPRETATION-PILOT-v1",
+  "corpus_version": "1",
+  "corpus_digest": "sha256:4aefcf09cf09e550450fe738089e241fe4ab980e439c05926bc1be826ef8708c",
+  "base_model": "Qwen/Qwen3-0.6B-Base",
+  "base_license": "apache-2.0",
+  "instruction": "Return only a PlannerAgent ConversationalInterpretationResultV1 JSON object matching the required contract.",
+  "seed": 4701,
+  "epochs": 3,
+  "learning_rate": 0.0002,
+  "batch_size": 2,
+  "gradient_accumulation_steps": 4,
+  "max_sequence_length": 384,
+  "max_new_tokens": 192,
+  "lora_rank": 8,
+  "lora_alpha": 16,
+  "lora_dropout": 0.05,
+  "warmup_ratio": 0.05,
+  "scheduler": "cosine",
+  "optimizer": "adamw_torch",
+  "expected_splits": {
+    "train": 120,
+    "validation": 20,
+    "qualification": 20,
+    "holdout": 20,
+    "adversarial": 20,
+    "gold": 39
+  }
+}

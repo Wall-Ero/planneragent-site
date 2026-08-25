@@ -1,6 +1,7 @@
 {
   "experiment_id": "GCC-4K",
   "candidate_id": "PA-INTERPRETATION-STUDENT-v0.2",
+  "candidate_version": "0.2",
   "lifecycle_state": "TRAINED_CANDIDATE",
   "corpus_id": "PA-INTERPRETATION-CURRICULUM-v2",
   "corpus_version": "2",

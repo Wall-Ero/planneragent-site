@@ -1,0 +1,12 @@
+{
+  "status": "TRAINING_COMPLETED_BUT_ARTIFACT_LOST",
+  "candidate_id": "PA-INTERPRETATION-STUDENT-v0.2",
+  "epochs_completed": 3,
+  "optimizer_steps": 3375,
+  "train_runtime_seconds": 5181.1426,
+  "train_loss": 0.03737618012176029,
+  "final_validation_loss": 0.0000035636426218843553,
+  "artifact_recoverable": false,
+  "blind_evaluation_preserved": false,
+  "cause": "COLAB_EPHEMERAL_RUNTIME_TERMINATED_BEFORE_ARTIFACT_DOWNLOAD"
+}

@@ -1,0 +1,9 @@
+{
+  "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+  "requester_surface_preserved": true,
+  "requester_content_non_authoritative": true,
+  "maps_to_oag_role": false,
+  "authenticates_identity": false,
+  "grants_authority": false,
+  "grants_execution": false
+}

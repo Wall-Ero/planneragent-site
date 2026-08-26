@@ -1,0 +1,67 @@
+{
+  "corpus_id": "PA-INTERPRETATION-CURRICULUM-v3",
+  "corpus_version": "3",
+  "created_by_builder_version": "3",
+  "total_records": 10000,
+  "split_counts": {
+    "TRAIN": 9000,
+    "VALIDATION": 500,
+    "QUALIFICATION": 150,
+    "HOLDOUT": 150,
+    "ADVERSARIAL": 200
+  },
+  "family_counts": {
+    "TRAIN": 1800,
+    "VALIDATION": 100,
+    "QUALIFICATION": 30,
+    "HOLDOUT": 30,
+    "ADVERSARIAL": 40,
+    "total": 2000
+  },
+  "language_counts": {
+    "en": 6500,
+    "it": 3000,
+    "mixed": 500
+  },
+  "interaction_counts": {
+    "AUDIENCE_DECLARATION": 1535,
+    "PRODUCT_QUESTION": 990,
+    "OPERATIONAL_DESCRIPTION": 780,
+    "CONVERSATIONAL_CONTINUITY": 465,
+    "DATA_INTRODUCTION": 680,
+    "EXECUTION_REQUEST": 1560,
+    "PROTECTED_DISCLOSURE": 1760,
+    "UNRELATED": 1000,
+    "AMBIGUOUS": 1230
+  },
+  "product_focus_counts": {
+    "GENERAL_CAPABILITIES": 205,
+    "TIER": 205,
+    "DOMAIN": 200,
+    "LIMITATION": 190,
+    "GETTING_STARTED": 190
+  },
+  "targeted_repair_counts": {
+    "product_focus": 990,
+    "product_paraphrase_typo": 990,
+    "referential_ambiguity": 1230,
+    "mixed_intents": 970,
+    "closed_enums": 1000,
+    "operational_data_boundary": 1460,
+    "continuity_ambiguity": 700
+  },
+  "historical_collision_result": {
+    "exact": 0,
+    "normalized": 0
+  },
+  "family_split_isolation": true,
+  "role_fidelity_policy": "ROLE_FIDELITY_POLICY_REQUIRED",
+  "split_digests": {
+    "TRAIN": "sha256:1b4258b85e804235126143c208c4afa155dea36c87bb01a6e9b1970adcc9a316",
+    "VALIDATION": "sha256:1876b2c9136b296f3115dd9c8ce08b7f176aa982eb5680c265a21f40e1d6630b",
+    "QUALIFICATION": "sha256:d7e040863a4b2cf7314ea9d1aef8056a73d7b5036f6a6f26f6979fde34183369",
+    "HOLDOUT": "sha256:08d0426a2505e104020ebf14916d2369e4fc9451d91b9ebd99940348452b3415",
+    "ADVERSARIAL": "sha256:036c1a1d693e1f49e5e3bd5a37390c54d64a95a41b58ca61b8260e8758c9ceb4"
+  },
+  "aggregate_corpus_digest": "sha256:611f938ba00bc4981530b47d55de951b2f44f4a01528869247e8a71a422bfdd7"
+}

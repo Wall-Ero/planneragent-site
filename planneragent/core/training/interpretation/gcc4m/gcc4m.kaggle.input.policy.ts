@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 
-export const GCC4M_RECOVERY_ZIP_SHA256="7c77dbcedc4110124d12d41bf8be5d5591d225bbe734a4d9654c22518a717e62";
+export const GCC4M_RECOVERY_ZIP_SHA256="31396b832db8a178ca28a923e5064087cd8b15fc28f66bb22ae6065524682e66";
 export const GCC4M_CORPUS_DIGEST="sha256:611f938ba00bc4981530b47d55de951b2f44f4a01528869247e8a71a422bfdd7";
-export const GCC4M_EXPLODED_REQUIRED=["SHA256SUMS.txt","corpus/manifest.json","corpus/train.jsonl","corpus/validation.jsonl","corpus/qualification.jsonl","corpus/holdout.jsonl","corpus/adversarial.jsonl","scripts/train_targeted_student_v03.py","scripts/evaluate_interpretation_student_v03.py","scripts/gcc4m_recovery.py","scripts/experiment.config.json","baselines/v02.evidence.review.json","policy/declared.role.fidelity.policy.json"] as const;
+export const GCC4M_TRAIN_RUNTIME_REQUIRED=["corpus/manifest.json","corpus/train.jsonl","corpus/validation.jsonl","scripts/train_targeted_student_v03.py","scripts/gcc4m_recovery.py","scripts/experiment.config.json","scripts/lost-run.evidence.json"] as const;
+export const GCC4M_EVALUATE_RUNTIME_REQUIRED=["corpus/manifest.json","corpus/validation.jsonl","corpus/qualification.jsonl","corpus/holdout.jsonl","corpus/adversarial.jsonl","historical/validation.jsonl","historical/qualification.jsonl","historical/holdout.jsonl","historical/adversarial.jsonl","historical/gold.jsonl","scripts/train_targeted_student_v03.py","scripts/evaluate_interpretation_student_v03.py","scripts/gcc4m_recovery.py","scripts/experiment.config.json","scripts/lost-run.evidence.json","baselines/v02.evidence.review.json","policy/declared.role.fidelity.policy.json"] as const;
+export const GCC4M_EXPLODED_REQUIRED=["SHA256SUMS.txt",...new Set([...GCC4M_TRAIN_RUNTIME_REQUIRED,...GCC4M_EVALUATE_RUNTIME_REQUIRED])] as const;
 export type Gcc4mKaggleInputV1={mode:"EXPLODED_KAGGLE_DATASET";root:string;outer_zip_digest:"NOT_APPLICABLE_KAGGLE_EXPLODED_INPUT"}|{mode:"RECOVERY_ZIP";root:string;outer_zip_digest:string};
 export type Gcc4mAdapterCandidateV1={path:string;sha256:string};
 

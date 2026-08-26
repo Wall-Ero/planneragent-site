@@ -1,0 +1,28 @@
+{
+  "review_id": "GCC-4L-POST-V02-EVIDENCE-REVIEW",
+  "gcc4k_result_zip": "PA-INTERPRETATION-STUDENT-v0.2-GCC4K.zip",
+  "gcc4k_result_zip_sha256": "63c91a0a8c8c98880e0e22e42ba673bc2da83c79aa7e6d810e17e9aece8f8e48",
+  "evidence_source": "verified final GCC-4K result package comparison.summary.json",
+  "v02_blind": {
+    "qualification": {"total":150,"exact_target_accuracy":0.9,"interaction_accuracy":1,"parser_valid_rate":1,"hard_boundary_recall":1,"authority_violations":0,"execution_grant_violations":0,"product_focus_accuracy":0},
+    "holdout": {"total":150,"exact_target_accuracy":0.9,"interaction_accuracy":1,"parser_valid_rate":1,"hard_boundary_recall":1,"authority_violations":0,"execution_grant_violations":0,"product_focus_accuracy":0},
+    "adversarial": {"total":200,"exact_target_accuracy":0.95,"interaction_accuracy":1,"parser_valid_rate":1,"hard_boundary_recall":1,"authority_violations":0,"execution_grant_violations":0,"product_focus_accuracy":0}
+  },
+  "non_product_blind_exact": {"qualification":"150/150","holdout":"150/150","adversarial":"200/200"},
+  "v01_blind_exact": {"qualification":0.23333333333333334,"holdout":0.21333333333333335,"adversarial":0.275},
+  "v01_blind_interaction": {"qualification":0.26666666666666666,"holdout":0.24,"adversarial":0.28},
+  "historical_v02": {
+    "gold39":{"total":39,"exact_target_accuracy":0.6410256410256411,"interaction_accuracy":0.8205128205128205,"parser_valid_rate":0.9743589743589743,"hard_boundary_recall":1,"product_focus_accuracy":0.1111111111111111},
+    "qualification":{"total":20,"exact_target_accuracy":0.65,"interaction_accuracy":0.8,"parser_valid_rate":0.95,"hard_boundary_recall":0.8,"product_focus_accuracy":0.2},
+    "holdout":{"total":20,"exact_target_accuracy":0.45,"interaction_accuracy":0.75,"parser_valid_rate":0.95,"product_focus_accuracy":0},
+    "adversarial":{"total":20,"exact_target_accuracy":0.7,"interaction_accuracy":0.7,"parser_valid_rate":1,"hard_boundary_recall":0.9333333333333333}
+  },
+  "product_focus_defect": {"classification":"SYSTEMATIC_GENERATOR_LABEL_ROTATION","source_symbol":"targetFor","cause":"global familyNumber modulo enum length used instead of semantic subtype oracle","blind_residual_cases":40},
+  "failure_taxonomy_counts": {"blind_product_focus_residual":40,"blind_non_product_residual":0,"blind_authority_violations":0,"blind_execution_grant_violations":0,"blind_parser_invalid":0},
+  "decision_100k": "NOT_YET",
+  "base_model_decision": "KEEP_QWEN3_0_6B_FOR_CONTROLLED_NEXT_EXPERIMENT",
+  "next_curriculum": "PA-INTERPRETATION-CURRICULUM-v3_QUALITY_REPAIR_10K",
+  "next_curriculum_digest": "sha256:611f938ba00bc4981530b47d55de951b2f44f4a01528869247e8a71a422bfdd7",
+  "v03_training": "NOT_STARTED",
+  "role_fidelity": "ROLE_FIDELITY_POLICY_REQUIRED"
+}

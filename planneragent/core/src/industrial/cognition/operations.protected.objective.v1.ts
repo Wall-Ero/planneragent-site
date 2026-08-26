@@ -52,3 +52,9 @@ export async function bindOperationsOrderDeliveryCommitmentV1(input:Readonly<{
 }
 
 export type OperationsProtectedObjectiveStateV1 = "PRESERVED"|"DEGRADED"|"BREACHED"|"LOST";
+
+export async function verifyOperationsOrderDeliveryCommitmentV1(value:OperationsOrderDeliveryCommitmentV1):Promise<void>{
+  const semantic={version:value.version,kind:value.kind,order_fact_ref:value.order_fact_ref,order_version_ref:value.order_version_ref,item_ref:value.item_ref,committed_quantity:value.committed_quantity,committed_due_at:value.committed_due_at,commitment_status:value.commitment_status},expected=await digest(semantic),rebuilt=await createProtectedOperationalObjectiveBindingV1(value.objective_binding);
+  const criteria=[`commitment-criteria:quantity:${value.committed_quantity.value}:EACH`,`commitment-criteria:due:${value.committed_due_at}`,`commitment-criteria:status:OPEN`,`commitment-criteria:version:${value.order_version_ref.replace(/^order-version:/,"")}`];
+  if(value.commitment_id!==`operations-order-delivery-commitment:sha256:${expected}`||value.commitment_digest!==expected||value.digest_algorithm!=="SHA-256"||value.objective_binding.objective_kind_ref!==OPERATIONS_ORDER_DELIVERY_COMMITMENT||value.objective_binding.objective_ref!==value.commitment_id||criteria.some(x=>!value.objective_binding.commitment_criteria_refs.includes(x))||rebuilt.objective_binding_id!==value.objective_binding.objective_binding_id||rebuilt.objective_binding_digest!==value.objective_binding.objective_binding_digest||value.observational_only!==true||value.grants_execution!==false||value.grants_authority!==false)throw new Error("OPS_OBJECTIVE_INTEGRITY_INVALID");
+}

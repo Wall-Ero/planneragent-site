@@ -1,0 +1,21 @@
+import { createHash } from "node:crypto";
+
+export const GCC4K_RECOVERY_ZIP_SHA256="ab13d4b3bc7c6d19b8f83f0fc5e764687dde8acdc29239ff8d4782750e80205c";
+export const GCC4K_CORPUS_DIGEST="sha256:bd1b19fc6733cca6622051e30ac03dc3cbac3a602997894c7b4a1733467f3619";
+export const GCC4K_EXPLODED_REQUIRED=["SHA256SUMS.txt","corpus/manifest.json","corpus/train.jsonl","corpus/validation.jsonl","corpus/qualification.jsonl","corpus/holdout.jsonl","corpus/adversarial.jsonl","scripts/train_targeted_student_v02.py","scripts/gcc4k_recovery.py","scripts/experiment.config.json","v01/adapter/adapter_model.safetensors"] as const;
+export type Gcc4kKaggleInputV1={mode:"EXPLODED_KAGGLE_DATASET";root:string;outer_zip_digest:"NOT_APPLICABLE_KAGGLE_EXPLODED_INPUT"}|{mode:"RECOVERY_ZIP";root:string;outer_zip_digest:string};
+
+export function safeGcc4kPayloadPathV1(value:string){return value.length>0&&!value.includes("\\")&&!value.startsWith("/")&&!/^[A-Za-z]:/.test(value)&&!value.split("/").includes("..");}
+export function selectGcc4kKaggleInputV1(explodedRoots:string[],zipPaths:string[]):Gcc4kKaggleInputV1{
+  if(explodedRoots.length>1)throw new Error("MULTIPLE_GCC4K_EXPLODED_INPUTS");
+  if(explodedRoots.length===1)return {mode:"EXPLODED_KAGGLE_DATASET",root:explodedRoots[0],outer_zip_digest:"NOT_APPLICABLE_KAGGLE_EXPLODED_INPUT"};
+  if(zipPaths.length!==1)throw new Error(zipPaths.length===0?"GCC4K_INPUT_NOT_FOUND":"MULTIPLE_GCC4K_ZIP_INPUTS");
+  return {mode:"RECOVERY_ZIP",root:zipPaths[0],outer_zip_digest:GCC4K_RECOVERY_ZIP_SHA256};
+}
+export function verifyGcc4kPayloadV1(entries:ReadonlyMap<string,Uint8Array>,sums:string,corpusDigest:string){
+  if(corpusDigest!==GCC4K_CORPUS_DIGEST)throw new Error("GCC4K_CORPUS_DIGEST_MISMATCH");
+  let verified=0;
+  for(const line of sums.split(/\r?\n/).filter(Boolean)){const match=/^([0-9a-f]{64})  (.+)$/.exec(line);if(!match||!safeGcc4kPayloadPathV1(match[2]))throw new Error("UNSAFE_GCC4K_PAYLOAD_PATH");const bytes=entries.get(match[2]);if(!bytes)throw new Error("GCC4K_PAYLOAD_MISSING");if(createHash("sha256").update(bytes).digest("hex")!==match[1])throw new Error("GCC4K_PAYLOAD_HASH_MISMATCH");verified++;}
+  for(const required of GCC4K_EXPLODED_REQUIRED)if(required!=="SHA256SUMS.txt"&&!entries.has(required))throw new Error("GCC4K_REQUIRED_INPUT_MISSING");
+  return verified;
+}

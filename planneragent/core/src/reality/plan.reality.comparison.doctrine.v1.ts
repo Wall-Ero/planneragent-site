@@ -120,3 +120,9 @@ export async function evaluateGovernedPlanRealityElementComparisonV1(input:Reado
   const comparison_digest=await sha(semantic);
   return freeze({...semantic,comparison_id:`governed-plan-reality-element-comparison:sha256:${comparison_digest}`,comparison_digest,digest_algorithm:"SHA-256"as const,element_level_only:true as const,scope_aggregation_performed:false as const,source_identity_independent:true as const,observational_only:true as const,recommended:false as const,executable:false as const,grants_authority:false as const,grants_execution:false as const});
 }
+
+export async function verifyGovernedPlanRealityElementComparisonV1(value:GovernedPlanRealityElementComparisonV1):Promise<void>{
+  const{comparison_id,comparison_digest,digest_algorithm,element_level_only,scope_aggregation_performed,source_identity_independent,observational_only,recommended,executable,grants_authority,grants_execution,...semantic}=value;
+  const expected=await sha(semantic);
+  if(comparison_digest!==expected||comparison_id!==`governed-plan-reality-element-comparison:sha256:${expected}`||digest_algorithm!=="SHA-256"||element_level_only!==true||scope_aggregation_performed!==false||source_identity_independent!==true||observational_only!==true||recommended!==false||executable!==false||grants_authority!==false||grants_execution!==false)throw new Error("PLAN_REALITY_COMPARISON_INTEGRITY_INVALID");
+}

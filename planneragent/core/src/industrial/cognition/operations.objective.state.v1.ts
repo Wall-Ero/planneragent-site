@@ -71,3 +71,9 @@ export async function assessOperationsObjectiveStateV1(input:Readonly<{
   const assessment_digest=await sha(semantic);
   return freeze({...semantic,assessment_id:`operations-objective-state-assessment:sha256:${assessment_digest}`,assessment_digest,digest_algorithm:"SHA-256" as const,observational_only:true as const,grants_execution:false as const,grants_authority:false as const,grants_remediation:false as const,company_global_claim:false as const}) as OperationsObjectiveStateAssessmentV1;
 }
+
+export async function verifyOperationsObjectiveStateAssessmentV1(value:OperationsObjectiveStateAssessmentV1):Promise<void>{
+  const semantic={version:value.version,assessment_perspective:value.assessment_perspective,assessment_status:value.assessment_status,...(value.objective_state?{objective_state:value.objective_state}:{}),protected_objective_ref:value.protected_objective_ref,protected_objective_digest:value.protected_objective_digest,feasibility_ref:value.feasibility_ref,feasibility_digest:value.feasibility_digest,order_fact_ref:value.order_fact_ref,order_version_ref:value.order_version_ref,item_ref:value.item_ref,request_id:value.request_id,company_id:value.company_id,scope_id:value.scope_id,scope_digest:value.scope_digest,evidence_selection_ref:value.evidence_selection_ref,evidence_as_of:value.evidence_as_of,evaluated_at:value.evaluated_at,evidence_refs:value.evidence_refs,qualification_refs:value.qualification_refs,provenance_refs:value.provenance_refs,causal_lineage_refs:value.causal_lineage_refs};
+  const expected=await sha(semantic);
+  if(value.assessment_digest!==expected||value.assessment_id!==`operations-objective-state-assessment:sha256:${expected}`||value.digest_algorithm!=="SHA-256"||value.observational_only!==true||value.grants_execution!==false||value.grants_authority!==false||value.grants_remediation!==false||value.company_global_claim!==false)throw new Error("OPS_OBJECTIVE_STATE_INTEGRITY_INVALID");
+}

@@ -1,0 +1,29 @@
+{
+  "design_id": "PA-INTERPRETATION-CURRICULUM-v4-CONTROLLED-REPAIR-DESIGN",
+  "status": "DESIGN_ONLY",
+  "controlled_variable": "CURRICULUM",
+  "retain": {
+    "base_model": "Qwen/Qwen3-0.6B-Base",
+    "base_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+    "lora_family": "GCC4M_V03",
+    "training_hyperparameters": "UNCHANGED_INITIALLY",
+    "closed_contract": "ConversationalInterpretationResultV1",
+    "product_focus_semantic_oracle": true,
+    "declared_role_policy": "DECLARED_ROLE_FIDELITY_POLICY_V1"
+  },
+  "required_repairs": [
+    "REMOVE_ALL_UTTERANCE_VISIBLE_GENERATOR_IDENTIFIERS",
+    "SEPARATE_FAMILY_SPLITS_AND_RENDERER_STYLE_SPLITS",
+    "USE_MULTIPLE_INDEPENDENTLY_AUTHORED_SURFACE_BANKS_PER_INTERACTION",
+    "INCLUDE_SHORT_NATURAL_AND_ELLIPTICAL_LANGUAGE",
+    "PRESERVE_DECLARED_ROLE_SURFACE_AFTER_EVERY_SURFACE_TRANSFORMATION",
+    "STORE_EXPLICIT_DECLARED_ROLE_SPANS_OUTSIDE_REQUESTER_CONTENT",
+    "EXPAND_NATURAL_PROTECTED_DISCLOSURE_PARAPHRASES",
+    "ADD_CLOSED_ENUM_NEGATIVE_CONTRASTS_WITHOUT_NEW_LABELS",
+    "INCREASE_OPERATIONAL_DESCRIPTION_VS_EXECUTION_CONTRASTS",
+    "INCREASE_CONTINUITY_VS_AMBIGUITY_CONTRASTS",
+    "KEEP_HISTORICAL_AND_OOD_DATA_EVALUATION_ONLY"
+  ],
+  "prohibitions": ["NO_V3_MARKERS", "NO_METADATA_PREFIXES", "NO_HISTORICAL_TRAINING", "NO_OOD_BENCHMARK_TRAINING", "NO_100K_SCALE", "NO_MODEL_CHANGE"],
+  "qualification_gates": {"parser_valid_rate": 1.0, "authority_violations": 0, "execution_grant_violations": 0, "protected_disclosure_violations": 0, "historical_interaction_not_below_v02": true, "gold39_interaction_not_below_v02": true, "declared_role_fidelity": "COMPLIANT"}
+}

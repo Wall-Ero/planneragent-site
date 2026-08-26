@@ -1,0 +1,50 @@
+{
+  "status": "GCC4N_GENERALIZATION_ROOT_CAUSE_FROZEN",
+  "authoritative_artifact": {
+    "path": "training-artifacts/gcc4m/PA-INTERPRETATION-STUDENT-v0.3-GCC4M.zip",
+    "sha256": "969397bca0d25bab3595005312a64542cae8c694b020d794a04e68b6e142c7c0",
+    "zip_entries_verified": 58,
+    "package_checksums_verified": 57,
+    "evaluation_checksum_files_verified": 9
+  },
+  "measured": {
+    "v3_generated": {"total": 1000, "exact": 1000, "interaction_correct": 1000, "parser_valid": 1000},
+    "historical": {"total": 119, "exact": 45, "interaction_correct": 52, "parser_valid": 111},
+    "historical_by_language": {
+      "en": {"total": 88, "exact": 31, "interaction_correct": 38, "parser_valid": 82},
+      "it": {"total": 29, "exact": 14, "interaction_correct": 14, "parser_valid": 27},
+      "mixed": {"total": 2, "exact": 0, "interaction_correct": 0, "parser_valid": 2}
+    },
+    "historical_by_expected_interaction": {
+      "AMBIGUOUS": {"total": 12, "exact": 5, "interaction_correct": 5, "parser_valid": 12},
+      "AUDIENCE_DECLARATION": {"total": 17, "exact": 0, "interaction_correct": 2, "parser_valid": 17},
+      "CONVERSATIONAL_CONTINUITY": {"total": 8, "exact": 1, "interaction_correct": 1, "parser_valid": 6},
+      "DATA_INTRODUCTION": {"total": 14, "exact": 11, "interaction_correct": 11, "parser_valid": 13},
+      "EXECUTION_REQUEST": {"total": 14, "exact": 14, "interaction_correct": 14, "parser_valid": 14},
+      "OPERATIONAL_DESCRIPTION": {"total": 16, "exact": 0, "interaction_correct": 0, "parser_valid": 15},
+      "PRODUCT_QUESTION": {"total": 19, "exact": 10, "interaction_correct": 15, "parser_valid": 17},
+      "PROTECTED_DISCLOSURE": {"total": 12, "exact": 3, "interaction_correct": 3, "parser_valid": 11},
+      "UNRELATED": {"total": 7, "exact": 1, "interaction_correct": 1, "parser_valid": 6}
+    },
+    "historical_target_field_failures": {"interaction": 59, "resolution": 20, "audience_declaration": 17, "product_focus": 14, "parser_invalid": 8},
+    "historical_product_focus": {
+      "GENERAL_CAPABILITIES": {"total": 6, "correct": 6},
+      "TIER": {"total": 8, "correct": 3},
+      "DOMAIN": {"total": 5, "correct": 1}
+    },
+    "protected_disclosure": {"total": 12, "correct": 3, "data_introduction": 3, "ambiguous": 2, "execution_request": 2, "unrelated": 1, "contract_invalid": 1},
+    "contract_invalid_labels": {"interaction.SYSTEM_PROMPT": 1, "interaction.ECHOSYSTEM_DESCRIPTION": 1, "interaction.GRANT_DESCRIPTION": 2, "product_focus.DATE": 1, "product_focus.AREA": 1, "product_focus.SERVICE_LEVEL": 1, "product_focus.TASTE": 1},
+    "role_oracle_conflicts": {"total": 45, "wrong_target_surface": 18, "diagnostic_sentence_boundary_bug": 27},
+    "invariants": {"authority_violations": 0, "execution_grant_violations": 0}
+  },
+  "classification": {
+    "family_leakage": "NOT_PROVEN",
+    "template_style_leakage": "PROVEN",
+    "generator_markers": "10000_OF_10000",
+    "split_renderer": "ONE_SHARED_RENDER_FUNCTION",
+    "product_focus_rotation": "REPAIRED",
+    "primary_bottleneck": "SUPERVISION_DISTRIBUTION_DESIGN",
+    "candidate_promotion": "REJECTED"
+  },
+  "evidence_limit": "Historical records do not define authoritative semantic_subtype metadata; no subtype was inferred from model outputs."
+}

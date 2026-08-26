@@ -1,0 +1,14 @@
+import { describe, expect, it } from "vitest";
+import { CONVERSATIONAL_INTERACTIONS_V1, CONVERSATIONAL_PRODUCT_FOCUSES_V1, parseConversationalInterpretationResultV1 } from "../cognition/conversational.cognition.contracts.v1";
+import { CONVERSATIONAL_INTERPRETATION_GOLD_CORPUS_V1 } from "../evaluation/conversational.interpretation.gold.corpus.v1";
+import { buildInterpretationPilotCorpusV1 } from "../learning/pilot/interpretation.pilot.corpus.v1";
+import benchmarkText from "../../../training-artifacts/PA-INTERPRETATION-OOD-BENCHMARK-v1/benchmark.jsonl?raw";
+import manifestText from "../../../training-artifacts/PA-INTERPRETATION-OOD-BENCHMARK-v1/manifest.json?raw";
+
+const rows=benchmarkText.trim().split(/\r?\n/).map(line=>JSON.parse(line)),manifest=JSON.parse(manifestText),normalize=(value:string)=>value.toLowerCase().trim().replace(/\s+/g," ");
+function immutableTexts(){return new Set([...buildInterpretationPilotCorpusV1().items.filter(row=>row.split!=="TRAIN").map(row=>normalize(row.input_text)),...CONVERSATIONAL_INTERPRETATION_GOLD_CORPUS_V1.map(row=>normalize(row.message))])}
+describe("GCC-4N evaluation-only OOD benchmark v1",()=>{
+ it("is manually curated, evaluation-only, marker-free, unique, and disjoint from historical sentinels",()=>{expect(rows).toHaveLength(manifest.total_cases);expect(manifest).toMatchObject({status:"EVALUATION_ONLY_DESIGN",training_eligible:false,historical_examples_included:false,mechanically_derived_from_v3:false});const historical=immutableTexts(),texts=rows.map(row=>normalize(row.input_text));expect(new Set(texts).size).toBe(rows.length);expect(rows.every(row=>row.authoring_mode==="MANUAL_CURATED"&&!/V3-[A-Z]{2}-\d+/i.test(row.input_text)&&!historical.has(normalize(row.input_text)))).toBe(true)});
+ it("covers every closed interaction, product focus, language, and required robustness surface with valid targets",()=>{expect(new Set(rows.map(row=>row.target.interaction))).toEqual(new Set(CONVERSATIONAL_INTERACTIONS_V1));expect(new Set(rows.flatMap(row=>row.target.product_focus?[row.target.product_focus]:[]))).toEqual(new Set(CONVERSATIONAL_PRODUCT_FOCUSES_V1));expect(new Set(rows.map(row=>row.language))).toEqual(new Set(["en","it","mixed"]));for(const row of rows)expect(parseConversationalInterpretationResultV1(row.target)).toEqual(row.target);const tags=new Set(rows.flatMap(row=>row.coverage_tags));for(const tag of ["SHORT","TYPO","ABBREVIATION","ELLIPSIS","REFERENTIAL_AMBIGUITY","MULTI_INTENT","ADVERSARIAL_DISCLOSURE","CLOSED_ENUM_TRAP","MIXED_LANGUAGE"])expect(tags.has(tag)).toBe(true)});
+ it("preserves the exact requester role surface selected by each audience oracle",()=>{const expected=["CFO","prodution planr","responsabile acquisti","demand planning lead"];expect(rows.filter(row=>row.target.interaction==="AUDIENCE_DECLARATION").map(row=>row.target.audience_declaration.declared_role)).toEqual(expected)});
+});

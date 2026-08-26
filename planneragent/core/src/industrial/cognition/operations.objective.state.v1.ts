@@ -1,4 +1,4 @@
-import type { OperationsBaselineCommitmentFeasibilityV1 } from "./operations.baseline.commitment.feasibility.v1";
+import { verifyOperationsBaselineCommitmentFeasibilityV1, type OperationsBaselineCommitmentFeasibilityV1 } from "./operations.baseline.commitment.feasibility.v1";
 import type { OperationsOrderDeliveryCommitmentV1, OperationsProtectedObjectiveStateV1 } from "./operations.protected.objective.v1";
 
 export type OperationsObjectiveStateAssessmentV1 = Readonly<{
@@ -38,12 +38,6 @@ function canonical(value:unknown):string{if(Array.isArray(value))return`[${value
 async function sha(value:unknown):Promise<string>{const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonical(value)));return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,"0")).join("");}
 function freeze<T>(value:T):Readonly<T>{if(value&&typeof value==="object"&&!Object.isFrozen(value)){Object.values(value as Record<string,unknown>).forEach(freeze);Object.freeze(value);}return value;}
 
-async function verifyFeasibility(f:OperationsBaselineCommitmentFeasibilityV1):Promise<void>{
-  if(f.version!==1||f.digest_algorithm!=="SHA-256"||f.observational_only!==true||f.grants_execution!==false||f.grants_authority!==false||f.grants_remediation!==false||f.company_global_claim!==false)throw new Error("OPS_OBJECTIVE_STATE_FEASIBILITY_BOUNDARY_INVALID");
-  const semantic={version:f.version,baseline_semantics:f.baseline_semantics,protected_objective_ref:f.protected_objective_ref,protected_objective_digest:f.protected_objective_digest,order_fact_ref:f.order_fact_ref,order_version_ref:f.order_version_ref,item_ref:f.item_ref,committed_quantity:f.committed_quantity,commitment_boundary:f.commitment_boundary,result:f.result,allocated_quantity:f.allocated_quantity,shortage_quantity:f.shortage_quantity,evidence_boundary:f.evidence_boundary,evidence_refs:f.evidence_refs,qualification_refs:f.qualification_refs,provenance_refs:f.provenance_refs,causal_lineage_refs:f.causal_lineage_refs,request_id:f.request_id,company_id:f.company_id,scope_id:f.scope_id,scope_digest:f.scope_digest,evidence_selection_ref:f.evidence_selection_ref,evidence_as_of:f.evidence_as_of,evaluated_at:f.evaluated_at};
-  const digest=await sha(semantic);if(digest!==f.feasibility_digest||f.feasibility_id!==`operations-baseline-commitment-feasibility:sha256:${digest}`)throw new Error("OPS_OBJECTIVE_STATE_FEASIBILITY_INTEGRITY_INVALID");
-}
-
 export async function assessOperationsObjectiveStateV1(input:Readonly<{
   version:1;
   assessment_perspective:"CURRENT_EXPECTED";
@@ -53,7 +47,7 @@ export async function assessOperationsObjectiveStateV1(input:Readonly<{
   if(input.version!==1)throw new Error("OPS_OBJECTIVE_STATE_VERSION_UNSUPPORTED");
   if(input.assessment_perspective!=="CURRENT_EXPECTED")throw new Error("OPS_OBJECTIVE_STATE_PERSPECTIVE_UNSUPPORTED");
   const c=input.commitment,f=input.feasibility,b=c.objective_binding,s=b.evaluation_scope.scope;
-  await verifyFeasibility(f);
+  await verifyOperationsBaselineCommitmentFeasibilityV1(f);
   if(c.kind!=="ORDER_DELIVERY_COMMITMENT"||c.commitment_status!=="OPEN")throw new Error("OPS_OBJECTIVE_STATE_OBJECTIVE_INVALID");
   if(f.baseline_semantics!=="BASELINE_CURRENT_PLAN")throw new Error("OPS_OBJECTIVE_STATE_CANDIDATE_REJECTED");
   if(f.protected_objective_ref!==c.commitment_id||f.protected_objective_digest!==c.commitment_digest)throw new Error("OPS_OBJECTIVE_STATE_OBJECTIVE_MISMATCH");

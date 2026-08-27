@@ -16,6 +16,11 @@ export interface Env {
   OPENROUTER_API_KEY?: string;
   DL_ENABLED?: string;
   RESEND_API_KEY?: string;
+  EMAIL_WEBHOOK_URL?: string;
+  EMAIL_WEBHOOK_TOKEN?: string;
+  EMAIL_FROM?: string;
+  EMAIL_CHALLENGE_HMAC_SECRET?: string;
+  EMAIL_IDENTITY_HMAC_SECRET?: string;
 
   // Legal
   LEGAL_STATE?: string;

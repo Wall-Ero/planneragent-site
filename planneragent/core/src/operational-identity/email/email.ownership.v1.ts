@@ -1,0 +1,58 @@
+import type { Env } from "../../types/env";
+import { sendEmailViaWebhook } from "../../notifications/channels/email.webhook";
+import { identifier } from "../contracts/identifiers.v1";
+import type { ExternalAuthenticationIdentityV1 } from "../contracts/track-a.v1";
+import { D1OperationalIdentityRepositories } from "../persistence";
+import { D1AuthenticationAuditRepository, D1AuthenticationReplayRepository, PersistedPrincipalBindingResolver } from "../authentication";
+import { ProviderAgnosticAuthenticationRuntime, type AuthenticatedOperationalSessionV1, type AuthenticationEvidenceV1 } from "../authentication";
+
+const SOURCE="EMAIL_OWNERSHIP",ISSUER="planneragent:email-ownership",AUDIENCE="planneragent-core",MAX_ATTEMPTS=5;
+const encoder=new TextEncoder();
+const text=(value:unknown,max=2048):value is string=>typeof value==="string"&&value.length>0&&value.length<=max;
+const bytes=(value:ArrayBuffer)=>[...new Uint8Array(value)].map(x=>x.toString(16).padStart(2,"0")).join("");
+
+export type EmailChallengeDeliveryV1=Readonly<{send(input:Readonly<{email:string;code:string;challenge_id:string;expires_at:string}>):Promise<boolean>}>;
+export type EmailOwnershipChallengeV1=Readonly<{version:1;challenge_id:string;expires_at:string}>;
+export type RegisteredEmailSessionV1=Readonly<{version:1;status:"REGISTERED";session:AuthenticatedOperationalSessionV1}>;
+export class EmailOwnershipErrorV1 extends Error{constructor(readonly code:string){super(code);this.name="EmailOwnershipErrorV1"}}
+
+export function normalizeEmailIdentityV1(value:unknown):string{
+ if(!text(value,320))throw new EmailOwnershipErrorV1("EMAIL_INVALID");const candidate=value.trim(),at=candidate.lastIndexOf("@");
+ if(at<=0||at===candidate.length-1||candidate.indexOf("@")!==at)throw new EmailOwnershipErrorV1("EMAIL_INVALID");
+ const local=candidate.slice(0,at),domain=candidate.slice(at+1).toLowerCase();
+ if(!local||local.length>64||!domain.includes(".")||/\s/.test(candidate))throw new EmailOwnershipErrorV1("EMAIL_INVALID");
+ return `${local}@${domain}`;
+}
+
+async function hmac(secret:string,value:string){if(!text(secret))throw new EmailOwnershipErrorV1("EMAIL_IDENTITY_CONFIGURATION_INVALID");const key=await crypto.subtle.importKey("raw",encoder.encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return bytes(await crypto.subtle.sign("HMAC",key,encoder.encode(value)))}
+function randomCode(){const data=new Uint32Array(1);crypto.getRandomValues(data);return String(data[0]!%100_000_000).padStart(8,"0")}
+
+type ChallengeRow={challenge_id:string;normalized_email:string;secret_digest:string;issued_at:string;expires_at:string;lifecycle_state:"ISSUED"|"CONSUMED"|"REVOKED";failed_attempts:number;consumed_at:string|null;evidence_id:string|null;evidence_nonce:string|null;verification_reference:string|null;audit_lineage_json:string};
+export class D1EmailOwnershipRepositoryV1{
+ constructor(readonly db:D1Database){}
+ async create(row:ChallengeRow){await this.db.prepare(`INSERT INTO email_ownership_challenges (challenge_id,normalized_email,secret_digest,issued_at,expires_at,lifecycle_state,failed_attempts,consumed_at,evidence_id,evidence_nonce,verification_reference,audit_lineage_json) VALUES (?,?,?,?,?,'ISSUED',0,NULL,NULL,NULL,NULL,?)`).bind(row.challenge_id,row.normalized_email,row.secret_digest,row.issued_at,row.expires_at,row.audit_lineage_json).run()}
+ async find(id:string){return await this.db.prepare("SELECT * FROM email_ownership_challenges WHERE challenge_id = ?").bind(id).first<ChallengeRow>()}
+ async fail(id:string){await this.db.prepare(`UPDATE email_ownership_challenges SET failed_attempts=failed_attempts+1,lifecycle_state=CASE WHEN failed_attempts+1>=? THEN 'REVOKED' ELSE 'ISSUED' END WHERE challenge_id=? AND lifecycle_state='ISSUED'`).bind(MAX_ATTEMPTS,id).run()}
+ async revoke(id:string){await this.db.prepare("UPDATE email_ownership_challenges SET lifecycle_state='REVOKED' WHERE challenge_id=? AND lifecycle_state='ISSUED'").bind(id).run()}
+ async consume(id:string,at:string,evidenceId:string,nonce:string,reference:string){const result=await this.db.prepare(`UPDATE email_ownership_challenges SET lifecycle_state='CONSUMED',consumed_at=?,evidence_id=?,evidence_nonce=?,verification_reference=? WHERE challenge_id=? AND lifecycle_state='ISSUED' AND expires_at>? AND failed_attempts<?`).bind(at,evidenceId,nonce,reference,id,at,MAX_ATTEMPTS).run();return(result.meta.changes??0)===1}
+ async enroll(binding:ExternalAuthenticationIdentityV1,principalId:string,at:string){await this.db.batch([
+  this.db.prepare("INSERT OR IGNORE INTO oir_principals (principal_id,actor_kind,lifecycle_state,created_at) VALUES (?,'HUMAN','ACTIVE',?)").bind(principalId,at),
+  this.db.prepare(`INSERT OR IGNORE INTO oir_external_authentication_bindings (external_authentication_identity_id,principal_id,actor_kind,provider,issuer,external_subject,authentication_method,assurance,verified_at,verification_reference) VALUES (?,?,'HUMAN',?,?,?,'ONE_TIME_EMAIL_CODE','SINGLE_FACTOR',?,?)`).bind(binding.external_authentication_identity_id,principalId,binding.provider,binding.issuer,binding.external_subject,binding.verified_at,binding.verification_reference),
+ ]);const row=await this.db.prepare("SELECT principal_id FROM oir_external_authentication_bindings WHERE provider=? AND issuer=? AND external_subject=?").bind(binding.provider,binding.issuer,binding.external_subject).first<{principal_id:string}>();if(!row||row.principal_id!==principalId)throw new EmailOwnershipErrorV1("EMAIL_ENROLLMENT_CONFLICT")}
+}
+
+export class EmailOwnershipRegistrationRuntimeV1{
+ constructor(private readonly d:Readonly<{store:D1EmailOwnershipRepositoryV1;delivery:EmailChallengeDeliveryV1;challenge_secret:string;identity_secret:string;now:()=>string;challenge_ttl_ms:number;session_ttl_ms:number;ids?:Readonly<{challenge():string;evidence():string;nonce():string;audit():string;session():string}>}>){ }
+ private ids(){return this.d.ids??{challenge:()=>crypto.randomUUID(),evidence:()=>crypto.randomUUID(),nonce:()=>crypto.randomUUID(),audit:()=>crypto.randomUUID(),session:()=>crypto.randomUUID()}}
+ async challenge(rawEmail:unknown):Promise<EmailOwnershipChallengeV1>{const email=normalizeEmailIdentityV1(rawEmail),now=this.d.now(),expires=new Date(Date.parse(now)+this.d.challenge_ttl_ms).toISOString(),id=this.ids().challenge(),code=randomCode(),digest=await hmac(this.d.challenge_secret,`${id}:${code}`);await this.d.store.create({challenge_id:id,normalized_email:email,secret_digest:digest,issued_at:now,expires_at:expires,lifecycle_state:"ISSUED",failed_attempts:0,consumed_at:null,evidence_id:null,evidence_nonce:null,verification_reference:null,audit_lineage_json:"[]"});if(!await this.d.delivery.send({email,code,challenge_id:id,expires_at:expires})){await this.d.store.revoke(id);throw new EmailOwnershipErrorV1("EMAIL_DELIVERY_FAILED")}return Object.freeze({version:1,challenge_id:id,expires_at:expires})}
+ async verify(input:Readonly<{challenge_id:unknown;code:unknown;requested_session_id?:unknown}>):Promise<RegisteredEmailSessionV1>{if(!text(input?.challenge_id,128)||!text(input?.code,32)||(input.requested_session_id!==undefined&&!text(input.requested_session_id,128)))throw new EmailOwnershipErrorV1("EMAIL_CHALLENGE_MALFORMED");const row=await this.d.store.find(input.challenge_id);if(!row)throw new EmailOwnershipErrorV1("EMAIL_CHALLENGE_UNKNOWN");if(row.lifecycle_state!=="ISSUED")throw new EmailOwnershipErrorV1("EMAIL_CHALLENGE_ALREADY_USED");const now=this.d.now();if(Date.parse(row.expires_at)<=Date.parse(now)){await this.d.store.revoke(row.challenge_id);throw new EmailOwnershipErrorV1("EMAIL_CHALLENGE_EXPIRED")}const digest=await hmac(this.d.challenge_secret,`${row.challenge_id}:${input.code}`);if(digest!==row.secret_digest){await this.d.store.fail(row.challenge_id);throw new EmailOwnershipErrorV1("EMAIL_CHALLENGE_INVALID")}
+  const ids=this.ids(),evidenceId=ids.evidence(),nonce=ids.nonce(),reference=`email-challenge:${row.challenge_id}`;if(!await this.d.store.consume(row.challenge_id,now,evidenceId,nonce,reference))throw new EmailOwnershipErrorV1("EMAIL_CHALLENGE_ALREADY_USED");
+  const subject=await hmac(this.d.identity_secret,`email:${row.normalized_email}`),principalId=identifier("PrincipalId",`email-${subject}`),externalId=identifier("ExternalAuthenticationIdentityId",`email-${subject}`),binding:ExternalAuthenticationIdentityV1=Object.freeze({version:1,external_authentication_identity_id:externalId,actor_kind:"HUMAN",provider:SOURCE,issuer:ISSUER,external_subject:subject,authentication_method:"ONE_TIME_EMAIL_CODE",assurance:"SINGLE_FACTOR",verified_at:now,verification_reference:reference});
+  const repositories=new D1OperationalIdentityRepositories(this.d.store.db),existing=await repositories.externalBindings.resolve(SOURCE,ISSUER,subject);if(!existing)await this.d.store.enroll(binding,principalId,now);
+  const evidence:AuthenticationEvidenceV1=Object.freeze({version:1,evidence_id:evidenceId as AuthenticationEvidenceV1["evidence_id"],authentication_source:SOURCE,actor_kind:"HUMAN",issuer:ISSUER,subject,audience:Object.freeze([AUDIENCE]),issued_at:now,expires_at:new Date(Date.parse(now)+this.d.session_ttl_ms).toISOString(),nonce,claims:Object.freeze({challenge_id:row.challenge_id}),verification_method:"ONE_TIME_EMAIL_CODE",verification_result:"VERIFIED",assurance:"SINGLE_FACTOR",evidence_lineage:Object.freeze([identifier("AuditLineageReference",reference)])});
+  const runtime=new ProviderAgnosticAuthenticationRuntime({verifier:{verify:async candidate=>{const challenge=await this.d.store.find(String(candidate.claims.challenge_id??""));return challenge?.lifecycle_state==="CONSUMED"&&challenge.evidence_id===candidate.evidence_id&&challenge.evidence_nonce===candidate.nonce&&challenge.verification_reference===reference?{verified:true,verification_reference:reference}:{verified:false}}},replay:new D1AuthenticationReplayRepository(this.d.store.db),bindings:new PersistedPrincipalBindingResolver(repositories.externalBindings),principals:repositories.principals,sessions:repositories.sessions,audit:new D1AuthenticationAuditRepository(this.d.store.db),ids:{sessionId:()=>identifier("SessionId",ids.session()),auditEventId:()=>ids.audit()},now:this.d.now},{session_ttl_ms:this.d.session_ttl_ms,allowed_clock_skew_ms:30_000,executing_runtime:"operational-identity.email-ownership.v1"});
+  const session=await runtime.authenticate({version:1,evidence,expected_issuer:ISSUER,expected_audience:AUDIENCE,minimum_assurance:"SINGLE_FACTOR",...(input.requested_session_id?{requested_session_id:identifier("SessionId",input.requested_session_id)}:{}),correlation_id:identifier("CorrelationId",row.challenge_id)});return Object.freeze({version:1,status:"REGISTERED",session})
+ }
+}
+
+export function createEmailOwnershipRuntimeV1(env:Pick<Env,"POLICIES_DB"|"EMAIL_CHALLENGE_HMAC_SECRET"|"EMAIL_IDENTITY_HMAC_SECRET"|"EMAIL_WEBHOOK_URL"|"EMAIL_WEBHOOK_TOKEN"|"EMAIL_FROM">){return new EmailOwnershipRegistrationRuntimeV1({store:new D1EmailOwnershipRepositoryV1(env.POLICIES_DB),challenge_secret:env.EMAIL_CHALLENGE_HMAC_SECRET??"",identity_secret:env.EMAIL_IDENTITY_HMAC_SECRET??"",challenge_ttl_ms:10*60_000,session_ttl_ms:30*24*60*60_000,now:()=>new Date().toISOString(),delivery:{send:async input=>(await sendEmailViaWebhook(env,{to:input.email,message:{subject:"Your PlannerAgent verification code",body:`Your verification code is ${input.code}. It expires at ${input.expires_at}.`}})).ok}})}

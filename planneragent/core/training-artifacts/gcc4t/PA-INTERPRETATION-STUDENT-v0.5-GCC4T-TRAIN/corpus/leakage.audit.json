@@ -1,0 +1,333 @@
+{
+  "visible_synthetic_identifier_count": 0,
+  "exact_collision_count": 0,
+  "normalized_collision_count": 0,
+  "family_collision_count": 0,
+  "renderer_cross_split_overlap_count": 0,
+  "role_span_conflict_count": 0,
+  "oracle_conflict_count": 0,
+  "product_focus_rotation_count": 0,
+  "constitutional_invariant_violations": 0,
+  "historical_exact_overlap": 0,
+  "historical_normalized_overlap": 0,
+  "ood_exact_overlap": 0,
+  "ood_normalized_overlap": 0,
+  "style_red_team": {
+    "unique_skeleton_count": 5879,
+    "max_repeated_skeleton_count": 9,
+    "max_repeated_skeleton_concentration": 0.001034,
+    "renderer_families_covering_all_interactions": 10,
+    "renderer_family_count": 10,
+    "incomplete_renderer_families": [],
+    "visible_renderer_identifier_count": 0,
+    "generator_only_label_shortcut_count": 0,
+    "top_class_associated_tokens": {
+      "PROTECTED_DISCLOSURE": [
+        {
+          "token": "context",
+          "count": 763
+        },
+        {
+          "token": "briefing",
+          "count": 491
+        },
+        {
+          "token": "chat",
+          "count": 341
+        },
+        {
+          "token": "planning",
+          "count": 341
+        },
+        {
+          "token": "contesto",
+          "count": 331
+        },
+        {
+          "token": "configuration",
+          "count": 277
+        },
+        {
+          "token": "afternoon",
+          "count": 260
+        },
+        {
+          "token": "end",
+          "count": 253
+        }
+      ],
+      "AUDIENCE_DECLARATION": [
+        {
+          "token": "context",
+          "count": 760
+        },
+        {
+          "token": "briefing",
+          "count": 486
+        },
+        {
+          "token": "planning",
+          "count": 344
+        },
+        {
+          "token": "chat",
+          "count": 343
+        },
+        {
+          "token": "contesto",
+          "count": 327
+        },
+        {
+          "token": "team",
+          "count": 277
+        },
+        {
+          "token": "morning",
+          "count": 267
+        },
+        {
+          "token": "afternoon",
+          "count": 259
+        }
+      ],
+      "EXECUTION_REQUEST": [
+        {
+          "token": "context",
+          "count": 642
+        },
+        {
+          "token": "briefing",
+          "count": 418
+        },
+        {
+          "token": "contesto",
+          "count": 309
+        },
+        {
+          "token": "chat",
+          "count": 284
+        },
+        {
+          "token": "planning",
+          "count": 284
+        },
+        {
+          "token": "friday",
+          "count": 267
+        },
+        {
+          "token": "morning",
+          "count": 225
+        },
+        {
+          "token": "afternoon",
+          "count": 220
+        }
+      ],
+      "AMBIGUOUS": [
+        {
+          "token": "context",
+          "count": 634
+        },
+        {
+          "token": "briefing",
+          "count": 415
+        },
+        {
+          "token": "other",
+          "count": 324
+        },
+        {
+          "token": "contesto",
+          "count": 311
+        },
+        {
+          "token": "one",
+          "count": 304
+        },
+        {
+          "token": "chat",
+          "count": 283
+        },
+        {
+          "token": "planning",
+          "count": 283
+        },
+        {
+          "token": "item",
+          "count": 227
+        }
+      ],
+      "UNRELATED": [
+        {
+          "token": "context",
+          "count": 642
+        },
+        {
+          "token": "briefing",
+          "count": 410
+        },
+        {
+          "token": "contesto",
+          "count": 298
+        },
+        {
+          "token": "chat",
+          "count": 288
+        },
+        {
+          "token": "planning",
+          "count": 288
+        },
+        {
+          "token": "film",
+          "count": 228
+        },
+        {
+          "token": "end",
+          "count": 222
+        },
+        {
+          "token": "shift",
+          "count": 222
+        }
+      ],
+      "PRODUCT_QUESTION": [
+        {
+          "token": "context",
+          "count": 676
+        },
+        {
+          "token": "briefing",
+          "count": 431
+        },
+        {
+          "token": "planning",
+          "count": 419
+        },
+        {
+          "token": "chat",
+          "count": 306
+        },
+        {
+          "token": "contesto",
+          "count": 301
+        },
+        {
+          "token": "product",
+          "count": 247
+        },
+        {
+          "token": "can",
+          "count": 241
+        },
+        {
+          "token": "afternoon",
+          "count": 228
+        }
+      ],
+      "OPERATIONAL_DESCRIPTION": [
+        {
+          "token": "context",
+          "count": 641
+        },
+        {
+          "token": "briefing",
+          "count": 417
+        },
+        {
+          "token": "contesto",
+          "count": 308
+        },
+        {
+          "token": "chat",
+          "count": 289
+        },
+        {
+          "token": "planning",
+          "count": 289
+        },
+        {
+          "token": "morning",
+          "count": 220
+        },
+        {
+          "token": "afternoon",
+          "count": 214
+        },
+        {
+          "token": "end",
+          "count": 207
+        }
+      ],
+      "DATA_INTRODUCTION": [
+        {
+          "token": "context",
+          "count": 625
+        },
+        {
+          "token": "briefing",
+          "count": 402
+        },
+        {
+          "token": "contesto",
+          "count": 300
+        },
+        {
+          "token": "planning",
+          "count": 284
+        },
+        {
+          "token": "chat",
+          "count": 282
+        },
+        {
+          "token": "end",
+          "count": 212
+        },
+        {
+          "token": "shift",
+          "count": 212
+        },
+        {
+          "token": "morning",
+          "count": 207
+        }
+      ],
+      "CONVERSATIONAL_CONTINUITY": [
+        {
+          "token": "context",
+          "count": 526
+        },
+        {
+          "token": "briefing",
+          "count": 354
+        },
+        {
+          "token": "contesto",
+          "count": 308
+        },
+        {
+          "token": "next",
+          "count": 305
+        },
+        {
+          "token": "continue",
+          "count": 261
+        },
+        {
+          "token": "yes",
+          "count": 239
+        },
+        {
+          "token": "comes",
+          "count": 237
+        },
+        {
+          "token": "okay",
+          "count": 237
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "status": "RECOVERY_POLICY_HISTORICAL_INPUT",
+  "source_experiment": "GCC-4K",
+  "affected_candidate": "PA-INTERPRETATION-STUDENT-v0.2",
+  "current_candidate": "PA-INTERPRETATION-STUDENT-v0.5",
+  "current_training_status": "NOT_STARTED",
+  "historical_cause": "COLAB_EPHEMERAL_RUNTIME_TERMINATED_BEFORE_ARTIFACT_DOWNLOAD",
+  "required_control": "PERSIST_AND_HASH_ADAPTER_BEFORE_SESSION_EXIT"
+}

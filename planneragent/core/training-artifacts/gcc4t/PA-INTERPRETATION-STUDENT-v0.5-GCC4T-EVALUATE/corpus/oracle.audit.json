@@ -1,0 +1,8 @@
+{
+  "oracle_conflict_count": 0,
+  "role_span_conflict_count": 0,
+  "product_focus_rotation_count": 0,
+  "constitutional_invariant_violations": 0,
+  "closed_enum_compliance_percent": 100,
+  "declared_role_fidelity_percent": 100
+}

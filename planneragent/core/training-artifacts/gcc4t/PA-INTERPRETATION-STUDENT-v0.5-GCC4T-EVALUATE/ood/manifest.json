@@ -1,0 +1,14 @@
+{
+  "benchmark_id": "PA-INTERPRETATION-OOD-BENCHMARK-v1",
+  "version": "1",
+  "status": "EVALUATION_ONLY_DESIGN",
+  "authoring": "MANUALLY_CURATED",
+  "total_cases": 33,
+  "training_eligible": false,
+  "historical_examples_included": false,
+  "mechanically_derived_from_v3": false,
+  "required_languages": ["en", "it", "mixed"],
+  "required_interactions": ["AUDIENCE_DECLARATION", "PRODUCT_QUESTION", "OPERATIONAL_DESCRIPTION", "CONVERSATIONAL_CONTINUITY", "DATA_INTRODUCTION", "EXECUTION_REQUEST", "PROTECTED_DISCLOSURE", "UNRELATED", "AMBIGUOUS"],
+  "required_product_focus": ["GENERAL_CAPABILITIES", "TIER", "DOMAIN", "LIMITATION", "GETTING_STARTED"],
+  "prohibited_use": ["TRAINING", "FINE_TUNING", "PROMPT_FEW_SHOT_EXAMPLES", "CURRICULUM_GENERATION_SEED"]
+}

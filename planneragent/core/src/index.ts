@@ -22,5 +22,6 @@ export * from "./decision/canonical.decision.pressure.composition.v1";
 export * from "./attention/canonicalAttention";
 export * from "./reality/canonical.operational.reality.composition.v1";
 export * from "./reality/governed.acquisition.evaluation.batch.v1";
+export * from "./industrial/cognition/operations.canonical.reality.cognition.projection.v1";
 export * from "./experience/observedOutcome";
 export * from "./learning/governedLearning";

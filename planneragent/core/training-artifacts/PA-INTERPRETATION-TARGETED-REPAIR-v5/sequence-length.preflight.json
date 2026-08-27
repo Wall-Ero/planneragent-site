@@ -1,0 +1,12 @@
+{
+  "status": "GCC4S_SEQUENCE_LENGTH_POLICY_DECISION_REQUIRED",
+  "tokenizer": "Qwen/Qwen3-0.6B-Base@da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+  "reason": "PINNED_TOKENIZER_EXECUTABLE_UNAVAILABLE_IN_LOCAL_PREFLIGHT_ENVIRONMENT",
+  "max_input_chars": 263,
+  "max_output_chars": 254,
+  "max_utf8_byte_upper_bound": 672,
+  "records_exactly_tokenized": 0,
+  "records_exceeding_384": "NOT_ASSERTABLE",
+  "percentage_exceeding_384": "NOT_ASSERTABLE",
+  "silent_truncation_permitted": false
+}

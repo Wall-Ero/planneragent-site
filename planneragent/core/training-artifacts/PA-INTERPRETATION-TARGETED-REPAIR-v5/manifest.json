@@ -1,0 +1,32 @@
+{
+  "corpus_id": "PA-INTERPRETATION-TARGETED-REPAIR-v5",
+  "corpus_version": "5-repair",
+  "status": "STATIC_GATES_PASS_SEQUENCE_PREFLIGHT_PENDING",
+  "total_records": 720,
+  "split_counts": {
+    "TRAIN": 480,
+    "VALIDATION": 80,
+    "QUALIFICATION": 60,
+    "HOLDOUT": 50,
+    "ADVERSARIAL": 50
+  },
+  "category_counts": {
+    "ROLE_SURFACE_FIDELITY": 144,
+    "DATA_INTRODUCTION_BOUNDARY": 240,
+    "PRODUCT_FOCUS_TARGETED": 240,
+    "CLOSED_PROTOCOL_RESISTANCE": 96
+  },
+  "language_counts": {
+    "en": 549,
+    "it": 123,
+    "mixed": 48
+  },
+  "aggregate_repair_delta_digest": "sha256:215d67de9a9358456da2b7f0c0490e35f6e058670f1276ec27928041b07fa1db",
+  "base_curriculum": {
+    "corpus_id": "PA-INTERPRETATION-CURRICULUM-v4",
+    "aggregate_corpus_digest": "sha256:b5db5a57c5e0f1cc041e5bd138cd53e06359f349a8d7f4a5ec36018c985d64ef",
+    "mutated": false
+  },
+  "decision_100k": "100K_NOT_JUSTIFIED",
+  "model_size_decision": "QWEN_0_6B_CAPACITY_NOT_YET_LIMITING"
+}

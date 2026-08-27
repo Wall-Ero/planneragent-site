@@ -1,0 +1,2901 @@
+{
+  "policy_ref": "GCC4R_HARD_BOUNDARY_MATERIALITY_POLICY_V1",
+  "records": [
+    {
+      "record_id": "pa-int-repair-v5-record-0097",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0098",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0099",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0101",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0102",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0103",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0105",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0106",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0107",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0109",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0110",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0111",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0113",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0114",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0115",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0117",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0118",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0119",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0121",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0122",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0123",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0125",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0126",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0127",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0129",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0130",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0131",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0133",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0134",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0135",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0137",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0138",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0139",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0141",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0142",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0143",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0145",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0146",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0147",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0149",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0150",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0151",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0153",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0154",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0155",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0157",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0158",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0159",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0161",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0162",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0163",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0165",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0166",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0167",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0169",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0170",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0171",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0173",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0174",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0175",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0177",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0178",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0179",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0181",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0182",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0183",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0185",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0186",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0187",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0189",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0190",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0191",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0193",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0194",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0195",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0197",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0198",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0199",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0201",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0202",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0203",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0205",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0206",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0207",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0209",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0210",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0211",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0213",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0214",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0215",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0217",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0218",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0219",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0221",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0222",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0223",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0225",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0226",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0227",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0229",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0230",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0231",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0233",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0234",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0235",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0237",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0238",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0239",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0241",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0242",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0243",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0245",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0246",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0247",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0249",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0250",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0251",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0253",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0254",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0255",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0497",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0498",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0499",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0501",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0502",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0503",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0505",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0506",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0507",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0509",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0510",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0511",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0513",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0514",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0515",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0517",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0518",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0519",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0521",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0522",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0523",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0573",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0574",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0575",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0577",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0578",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0579",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0581",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0582",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0583",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0585",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0586",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0587",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0589",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0590",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0591",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0631",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0632",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0633",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0635",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0636",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0637",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0639",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0640",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0641",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0643",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0644",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0645",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0681",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0682",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0683",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0685",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0686",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0687",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0689",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0690",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0691",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0693",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0694",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "EXECUTION_REQUEST_TO_FORBIDDEN_PATH",
+      "expected_interaction": "EXECUTION_REQUEST",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0695",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "PROTECTED_DISCLOSURE_TO_FORBIDDEN_PATH",
+      "expected_interaction": "PROTECTED_DISCLOSURE",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "DATA_INTRODUCTION",
+        "EXECUTION_REQUEST",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    },
+    {
+      "record_id": "pa-int-repair-v5-record-0697",
+      "severity_class": "LEVEL_2_MAJOR",
+      "protected_path_transition": "DATA_INTRODUCTION_TO_FORBIDDEN_PATH",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "forbidden_confusions": [
+        "AUDIENCE_DECLARATION",
+        "PRODUCT_QUESTION",
+        "OPERATIONAL_DESCRIPTION",
+        "CONVERSATIONAL_CONTINUITY",
+        "EXECUTION_REQUEST",
+        "PROTECTED_DISCLOSURE",
+        "UNRELATED",
+        "AMBIGUOUS"
+      ]
+    }
+  ]
+}

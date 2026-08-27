@@ -1,0 +1,9 @@
+{
+  "renderer_family_count": 80,
+  "cross_split_renderer_overlap": 0,
+  "visible_synthetic_markers": 0,
+  "unique_lexical_skeleton_count": 720,
+  "max_repeated_skeleton_count": 1,
+  "max_skeleton_concentration": 0.001389,
+  "generator_only_shortcuts": 0
+}

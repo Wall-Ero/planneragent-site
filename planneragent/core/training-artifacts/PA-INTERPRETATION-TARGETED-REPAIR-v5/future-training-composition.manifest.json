@@ -1,0 +1,38 @@
+{
+  "experiment_id": "GCC-4T",
+  "candidate_id": "PA-INTERPRETATION-STUDENT-v0.5",
+  "initialization": "FRESH_PINNED_BASE",
+  "base_training_corpus": {
+    "corpus_id": "PA-INTERPRETATION-CURRICULUM-v4",
+    "digest": "sha256:b5db5a57c5e0f1cc041e5bd138cd53e06359f349a8d7f4a5ec36018c985d64ef",
+    "allowed_split": "TRAIN"
+  },
+  "repair_delta": {
+    "corpus_id": "PA-INTERPRETATION-TARGETED-REPAIR-v5",
+    "digest": "sha256:215d67de9a9358456da2b7f0c0490e35f6e058670f1276ec27928041b07fa1db",
+    "allowed_training_split": "TRAIN",
+    "excluded_from_training": [
+      "VALIDATION",
+      "QUALIFICATION",
+      "HOLDOUT",
+      "ADVERSARIAL"
+    ]
+  },
+  "training_authorized": false,
+  "configuration": {
+    "base_model": "Qwen/Qwen3-0.6B-Base",
+    "base_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+    "epochs": 3,
+    "seed": 4701,
+    "learning_rate": 0.0002,
+    "batch_size": 2,
+    "gradient_accumulation_steps": 4,
+    "max_sequence_length": 384,
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "scheduler": "cosine",
+    "warmup_ratio": 0.05,
+    "optimizer": "adamw_torch"
+  }
+}

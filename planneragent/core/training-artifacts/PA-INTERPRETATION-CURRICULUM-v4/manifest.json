@@ -1,0 +1,84 @@
+{
+  "corpus_id": "PA-INTERPRETATION-CURRICULUM-v4",
+  "corpus_version": "4",
+  "created_by_builder_version": "4",
+  "total_records": 8702,
+  "candidate_counts": {
+    "TRAIN": 9000,
+    "VALIDATION": 500,
+    "QUALIFICATION": 150,
+    "HOLDOUT": 150,
+    "ADVERSARIAL": 200
+  },
+  "split_counts": {
+    "TRAIN": 7712,
+    "VALIDATION": 492,
+    "QUALIFICATION": 149,
+    "HOLDOUT": 150,
+    "ADVERSARIAL": 199
+  },
+  "family_counts": {
+    "TRAIN": 4383,
+    "VALIDATION": 250,
+    "QUALIFICATION": 75,
+    "HOLDOUT": 75,
+    "ADVERSARIAL": 100,
+    "total": 4883
+  },
+  "renderer_family_counts": {
+    "TRAIN": 2,
+    "VALIDATION": 2,
+    "QUALIFICATION": 2,
+    "HOLDOUT": 2,
+    "ADVERSARIAL": 2
+  },
+  "language_counts": {
+    "en": 5438,
+    "it": 2793,
+    "mixed": 471
+  },
+  "interaction_counts": {
+    "AUDIENCE_DECLARATION": 1087,
+    "PRODUCT_QUESTION": 977,
+    "OPERATIONAL_DESCRIPTION": 949,
+    "CONVERSATIONAL_CONTINUITY": 834,
+    "DATA_INTRODUCTION": 925,
+    "EXECUTION_REQUEST": 951,
+    "PROTECTED_DISCLOSURE": 1094,
+    "UNRELATED": 940,
+    "AMBIGUOUS": 945
+  },
+  "product_focus_counts": {
+    "GENERAL_CAPABILITIES": 214,
+    "TIER": 189,
+    "DOMAIN": 184,
+    "LIMITATION": 190,
+    "GETTING_STARTED": 200
+  },
+  "role_fidelity_policy": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+  "audits": {
+    "visible_synthetic_identifier_count": 0,
+    "exact_collision_count": 0,
+    "normalized_collision_count": 0,
+    "family_collision_count": 0,
+    "renderer_cross_split_overlap_count": 0,
+    "role_span_conflict_count": 0,
+    "oracle_conflict_count": 0,
+    "product_focus_rotation_count": 0,
+    "constitutional_invariant_violations": 0
+  },
+  "split_digests": {
+    "TRAIN": "sha256:f00c2913aeb3f35191b11463196b51f3524714d8c23044a98acffb8e9db62a4b",
+    "VALIDATION": "sha256:f096b613106e6879a79df620415e0b8873174c3777c697b1089def9a89d6d5c5",
+    "QUALIFICATION": "sha256:a9b6d222e3b86e8bebc7d5211caca4ded3cd603723d0abe2dda0ef01bc4799ec",
+    "HOLDOUT": "sha256:7b34a210fb8a4b0a7974560484ffb7aefdb2c7d1a3887d0614372fa4723733f9",
+    "ADVERSARIAL": "sha256:ac2bfe93ee96788e77beec6a1d6dd3ad5bbbb574abbbb73b376a9c38f41b6353"
+  },
+  "aggregate_corpus_digest": "sha256:b5db5a57c5e0f1cc041e5bd138cd53e06359f349a8d7f4a5ec36018c985d64ef",
+  "sentinel_isolation": {
+    "historical_exact_overlap": 0,
+    "historical_normalized_overlap": 0,
+    "ood_exact_overlap": 0,
+    "ood_normalized_overlap": 0
+  }
+}

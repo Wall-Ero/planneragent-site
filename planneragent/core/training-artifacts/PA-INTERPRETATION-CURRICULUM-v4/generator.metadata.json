@@ -1,0 +1,7 @@
+{
+  "generator": "interpretation.curriculum.v4",
+  "builder": "build.interpretation.curriculum.v4",
+  "candidate_policy": "bounded deterministic candidates; normalized duplicates rejected",
+  "style_allocation": "two split-exclusive renderer families per split",
+  "target_order": "semantic spec -> final surface -> explicit spans -> target"
+}

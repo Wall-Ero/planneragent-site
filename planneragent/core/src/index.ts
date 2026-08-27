@@ -24,5 +24,6 @@ export * from "./reality/canonical.operational.reality.composition.v1";
 export * from "./reality/governed.acquisition.evaluation.batch.v1";
 export * from "./industrial/cognition/operations.canonical.reality.cognition.projection.v1";
 export * from "./industrial/cognition/operations.order.item.requirement.v1";
+export * from "./conversation/governed.vision.operational.projection.v1";
 export * from "./experience/observedOutcome";
 export * from "./learning/governedLearning";

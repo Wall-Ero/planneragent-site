@@ -10,6 +10,7 @@ import {
   type PublicCognitiveRealizationTransportV1,
 } from "../cognition/cognitive.transport.conversational.realization.adapter.v1";
 import { createConversationalProviderDescriptorV1, type ConversationalRealizationProviderV1, type SealedConversationalRealizationRequestV1 } from "../cognition/conversational.cognition.contracts.v1";
+import { createGovernedVisionOperationalRealizationAdapterV1, GOVERNED_VISION_OPERATIONAL_REALIZATION_INSTRUCTION_V1, type GovernedVisionOperationalProjectionV1 } from "../governed.vision.operational.projection.v1";
 
 const route = Object.freeze({ request_id: "request-1", consumption_id: "public-conversation:request-1", provider: "openrouter" as const, model: "openrouter/free", api_key: "key", max_tokens: 700, temperature: 0.2 });
 const request = (message = "What can you dot?") => Object.freeze({
@@ -51,6 +52,22 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     expect(raw).toBe("not an envelope");
     expect(parseRealizationEnvelopeV1(raw)).toBeUndefined();
     expectTypeOf<CognitiveTransportConversationalRealizationAdapterV1>().toMatchTypeOf<ConversationalRealizationProviderV1<ReturnType<typeof createPlannerAgentPublicCapabilityProjectionV1>>>();
+  });
+
+  it("carries governed VISION meaning through the existing realization transport and envelope", async () => {
+    const governed = Object.freeze({ version: 1, projection_kind: "GOVERNED_VISION_OPERATIONAL_MEANING" }) as GovernedVisionOperationalProjectionV1;
+    const dispatchPublic = vi.fn(async ({ sealed }) => {
+      const exposed = JSON.parse(sealed.canonical_projection);
+      const content = JSON.parse(exposed.content);
+      expect(content.PUBLIC_INSTRUCTION).toBe(GOVERNED_VISION_OPERATIONAL_REALIZATION_INSTRUCTION_V1);
+      expect(content.GOVERNED_MEANING).toEqual(governed);
+      expect(content).not.toHaveProperty("PUBLIC_CAPABILITIES");
+      return advisory('{"version":1,"answer":"PlannerAgent observes a bounded shortage."}');
+    });
+    const adapter = createGovernedVisionOperationalRealizationAdapterV1({ dispatchPublic }, route);
+    const raw = await adapter.realize(Object.freeze({ version: 1, current_user_message: "What do you observe?", governed_meaning: governed, voice_profile: createPlannerAgentVoiceProfileV1(), required_output_contract: "REALIZATION_ENVELOPE_V1" }));
+    expect(parseRealizationEnvelopeV1(raw)).toEqual({ version: 1, answer: "PlannerAgent observes a bounded shortage." });
+    expect(dispatchPublic).toHaveBeenCalledOnce();
   });
 
   it("makes the Product runtime invoke the provider-neutral seam while Core retains envelope acceptance", async () => {

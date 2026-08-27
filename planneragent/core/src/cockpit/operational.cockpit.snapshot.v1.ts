@@ -197,3 +197,24 @@ export async function buildOperationalCockpitSnapshotV1(
   };
   return deepFreeze(snapshot) as OperationalCockpitSnapshotV1;
 }
+
+export async function verifyOperationalCockpitSnapshotV1(value: OperationalCockpitSnapshotV1): Promise<void> {
+  const rebuilt = await buildOperationalCockpitSnapshotV1({
+    request_id: value.request_id,
+    company_id: value.company_id,
+    domain: value.domain,
+    evaluation_scope: value.evaluation_scope,
+    data_awareness: value.signals.data_awareness,
+    plan: value.signals.plan,
+    reality: value.signals.reality,
+    decision_pressure: value.signals.decision_pressure,
+    ...(value.signals.operational_availability ? { operational_availability: value.signals.operational_availability } : {}),
+    ...(value.canonical_cognition ? { canonical_cognition: value.canonical_cognition } : {}),
+  });
+  if (value.snapshot_id !== rebuilt.snapshot_id || value.snapshot_digest !== rebuilt.snapshot_digest ||
+      value.digest_algorithm !== "SHA-256" || value.company_global_claim !== false ||
+      value.grants_execution !== false || value.observational_only !== true ||
+      canonicalJson(value.lineage_refs) !== canonicalJson(rebuilt.lineage_refs)) {
+    throw new Error("COCKPIT_SNAPSHOT_INTEGRITY_INVALID");
+  }
+}

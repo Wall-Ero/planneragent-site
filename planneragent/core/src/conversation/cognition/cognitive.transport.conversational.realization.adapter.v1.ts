@@ -30,10 +30,10 @@ export interface PublicCognitiveRealizationTransportV1 {
   }>): Promise<PublicCognitiveAdvisoryResponseV1>;
 }
 
-export class CognitiveTransportConversationalRealizationAdapterV1 implements ConversationalRealizationProviderV1<PlannerAgentPublicCapabilityProjectionV1> {
+export class CognitiveTransportConversationalRealizationAdapterV1<TGovernedMeaning = PlannerAgentPublicCapabilityProjectionV1> implements ConversationalRealizationProviderV1<TGovernedMeaning> {
   readonly descriptor: ConversationalProviderDescriptorV1;
 
-  constructor(private readonly transport: PublicCognitiveRealizationTransportV1, private readonly route: CurrentPublicRealizationRouteV1) {
+  constructor(private readonly transport: PublicCognitiveRealizationTransportV1, private readonly route: CurrentPublicRealizationRouteV1, private readonly instruction = PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1, private readonly meaningKey: "PUBLIC_CAPABILITIES" | "GOVERNED_MEANING" = "PUBLIC_CAPABILITIES") {
     this.descriptor = createConversationalProviderDescriptorV1({
       version: 1,
       provider_id: route.provider,
@@ -47,11 +47,11 @@ export class CognitiveTransportConversationalRealizationAdapterV1 implements Con
     });
   }
 
-  async realize(input: SealedConversationalRealizationRequestV1<PlannerAgentPublicCapabilityProjectionV1>): Promise<string> {
+  async realize(input: SealedConversationalRealizationRequestV1<TGovernedMeaning>): Promise<string> {
     if (input.version !== 1 || input.required_output_contract !== "REALIZATION_ENVELOPE_V1") throw new TypeError("INVALID_CONVERSATIONAL_REALIZATION_REQUEST");
     const content = JSON.stringify({
-      PUBLIC_INSTRUCTION: PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1,
-      PUBLIC_CAPABILITIES: input.governed_meaning,
+      PUBLIC_INSTRUCTION: this.instruction,
+      [this.meaningKey]: input.governed_meaning,
       VOICE_PROFILE: input.voice_profile,
       USER_MESSAGE: input.current_user_message,
     });

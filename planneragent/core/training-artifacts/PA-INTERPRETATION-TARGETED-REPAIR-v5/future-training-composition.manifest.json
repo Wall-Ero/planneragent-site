@@ -18,7 +18,12 @@
       "ADVERSARIAL"
     ]
   },
-  "training_authorized": false,
+  "training_authorized": true,
+  "training_authorization_basis": {
+    "status": "GCC4S1_SEQ384_PHYSICAL_PREFLIGHT_COMPLETE",
+    "decision": "SEQ384_PHYSICAL_PREFLIGHT_PASS",
+    "measurement_digest": "sha256:b1bea4ee9a60acf4f16bd4d3b51cd4bbaa2bbb2f2bb8ca26d48207591fb92318"
+  },
   "configuration": {
     "base_model": "Qwen/Qwen3-0.6B-Base",
     "base_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",

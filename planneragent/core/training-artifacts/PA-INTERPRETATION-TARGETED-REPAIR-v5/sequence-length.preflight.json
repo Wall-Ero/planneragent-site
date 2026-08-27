@@ -1,12 +1,5825 @@
 {
-  "status": "GCC4S_SEQUENCE_LENGTH_POLICY_DECISION_REQUIRED",
-  "tokenizer": "Qwen/Qwen3-0.6B-Base@da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
-  "reason": "PINNED_TOKENIZER_EXECUTABLE_UNAVAILABLE_IN_LOCAL_PREFLIGHT_ENVIRONMENT",
-  "max_input_chars": 263,
-  "max_output_chars": 254,
-  "max_utf8_byte_upper_bound": 672,
-  "records_exactly_tokenized": 0,
-  "records_exceeding_384": "NOT_ASSERTABLE",
-  "percentage_exceeding_384": "NOT_ASSERTABLE",
-  "silent_truncation_permitted": false
+  "decision": "SEQ384_PHYSICAL_PREFLIGHT_PASS",
+  "deterministic_repeat_match": true,
+  "execution_environment": {
+    "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+    "python": "3.12.13 (main, Mar  4 2026, 09:23:07) [GCC 11.4.0]"
+  },
+  "max_by_repair_category": {
+    "CLOSED_PROTOCOL_RESISTANCE": 128,
+    "DATA_INTRODUCTION_BOUNDARY": 111,
+    "PRODUCT_FOCUS_TARGETED": 120,
+    "ROLE_SURFACE_FIDELITY": 120
+  },
+  "max_by_split": {
+    "ADVERSARIAL": 126,
+    "HOLDOUT": 126,
+    "QUALIFICATION": 126,
+    "TRAIN": 128,
+    "VALIDATION": 127
+  },
+  "max_tokens": 128,
+  "maximum_record": {
+    "exceeds_384": false,
+    "language": "en",
+    "record_id": "pa-int-repair-v5-record-0417",
+    "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+    "split": "TRAIN",
+    "token_count": 128
+  },
+  "measured_records": 720,
+  "measurement_digest": "sha256:b1bea4ee9a60acf4f16bd4d3b51cd4bbaa2bbb2f2bb8ca26d48207591fb92318",
+  "median_tokens": 107,
+  "min_tokens": 96,
+  "model_max_length": 131072,
+  "offending_records": [],
+  "p90_tokens": 116,
+  "p95_tokens": 118,
+  "p99_tokens": 124,
+  "payload_hashes_verified": 14,
+  "percentage_exceeding_limit": 0.0,
+  "record_measurements": [
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0001",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0002",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0003",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0004",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0005",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0006",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0007",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0008",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0009",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0010",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0011",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0012",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0013",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0014",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0015",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0016",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0017",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0018",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0019",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0020",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0021",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0022",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0023",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0024",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0025",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0026",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0027",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0028",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0029",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0030",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0031",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0032",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0033",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0034",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0035",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0036",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0037",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0038",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0039",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0040",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0041",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0042",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0043",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0044",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0045",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0046",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0047",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0048",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0049",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0050",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0051",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0052",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0053",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0054",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0055",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0056",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0057",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0058",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0059",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0060",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0061",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0062",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0063",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0064",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0065",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0066",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0067",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0068",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0069",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0070",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0071",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0072",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0073",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0074",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0075",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0076",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0077",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0078",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0079",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0080",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0081",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0082",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0083",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0084",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0085",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0086",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0087",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0088",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0089",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0090",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0091",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0092",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0093",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0094",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0095",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0096",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0097",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0098",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0099",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0100",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0101",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0102",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0103",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0104",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0105",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0106",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0107",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0108",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0109",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0110",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0111",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0112",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0113",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0114",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0115",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0116",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0117",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0118",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0119",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0120",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0121",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0122",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0123",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0124",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0125",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0126",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0127",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0128",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0129",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0130",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0131",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0132",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0133",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0134",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0135",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0136",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0137",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0138",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0139",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0140",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0141",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0142",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0143",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0144",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0145",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0146",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0147",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0148",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0149",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0150",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0151",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0152",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0153",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0154",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0155",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0156",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0157",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0158",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0159",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0160",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0161",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0162",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0163",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0164",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0165",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0166",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0167",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0168",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0169",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0170",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0171",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0172",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0173",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0174",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0175",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0176",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0177",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0178",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0179",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0180",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0181",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0182",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0183",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0184",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0185",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0186",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0187",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0188",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0189",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0190",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0191",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0192",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0193",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0194",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0195",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0196",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0197",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0198",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0199",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0200",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0201",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0202",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0203",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0204",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0205",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0206",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0207",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0208",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0209",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0210",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0211",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0212",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0213",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0214",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0215",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0216",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0217",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0218",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0219",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0220",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0221",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0222",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0223",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0224",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0225",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0226",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0227",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0228",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0229",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0230",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0231",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0232",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0233",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0234",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0235",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0236",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0237",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0238",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0239",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0240",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0241",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0242",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0243",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0244",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0245",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0246",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0247",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0248",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0249",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0250",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0251",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0252",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0253",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0254",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0255",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0256",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "TRAIN",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0257",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0258",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0259",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0260",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0261",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0262",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0263",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0264",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0265",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0266",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0267",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0268",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0269",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0270",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0271",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0272",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0273",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0274",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0275",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0276",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0277",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0278",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0279",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0280",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0281",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0282",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0283",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0284",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0285",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0286",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0287",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0288",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0289",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0290",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0291",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0292",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0293",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0294",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0295",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0296",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0297",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0298",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0299",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0300",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0301",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0302",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0303",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0304",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0305",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0306",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0307",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0308",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0309",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0310",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0311",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0312",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0313",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0314",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0315",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0316",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0317",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0318",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0319",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0320",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0321",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0322",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0323",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0324",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0325",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0326",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0327",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0328",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0329",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0330",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0331",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0332",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0333",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0334",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0335",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0336",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0337",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0338",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0339",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0340",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0341",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0342",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0343",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0344",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0345",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0346",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0347",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 120
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0348",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0349",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0350",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0351",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0352",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0353",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0354",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0355",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0356",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0357",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0358",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0359",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0360",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0361",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0362",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0363",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0364",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0365",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0366",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0367",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0368",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0369",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0370",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0371",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0372",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0373",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0374",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0375",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0376",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0377",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0378",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0379",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0380",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0381",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0382",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0383",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0384",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0385",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0386",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0387",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0388",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0389",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0390",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0391",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0392",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0393",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0394",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0395",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 120
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0396",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0397",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0398",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0399",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0400",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0401",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0402",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0403",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0404",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0405",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0406",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0407",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0408",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0409",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0410",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0411",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0412",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0413",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0414",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0415",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0416",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "TRAIN",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0417",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 128
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0418",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0419",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0420",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0421",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0422",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0423",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0424",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0425",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0426",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 122
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0427",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0428",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0429",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0430",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0431",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0432",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0433",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0434",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0435",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 125
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0436",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0437",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0438",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0439",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0440",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0441",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0442",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0443",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0444",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 128
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0445",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 122
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0446",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0447",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0448",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0449",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0450",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0451",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0452",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0453",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 123
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0454",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0455",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0456",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0457",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0458",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0459",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0460",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0461",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0462",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 120
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0463",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 123
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0464",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0465",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0466",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0467",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0468",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0469",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0470",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0471",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 124
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0472",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 121
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0473",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0474",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0475",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0476",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0477",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0478",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0479",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0480",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "TRAIN",
+      "token_count": 121
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0481",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0482",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0483",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0484",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0485",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0486",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0487",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0488",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0489",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0490",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0491",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0492",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0493",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0494",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 120
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0495",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0496",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "VALIDATION",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0497",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0498",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0499",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0500",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0501",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0502",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0503",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0504",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0505",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0506",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0507",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0508",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0509",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0510",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0511",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0512",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0513",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0514",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0515",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0516",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0517",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0518",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0519",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0520",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0521",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0522",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0523",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "VALIDATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0524",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0525",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0526",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0527",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0528",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0529",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0530",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0531",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0532",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0533",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0534",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0535",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0536",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0537",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0538",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0539",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0540",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0541",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0542",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0543",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0544",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0545",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0546",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0547",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0548",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0549",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0550",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "VALIDATION",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0551",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 127
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0552",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0553",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0554",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0555",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0556",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0557",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0558",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0559",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0560",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "VALIDATION",
+      "token_count": 123
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0561",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0562",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0563",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0564",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0565",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0566",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0567",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0568",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0569",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0570",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0571",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0572",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "QUALIFICATION",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0573",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0574",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0575",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0576",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0577",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0578",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0579",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0580",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0581",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0582",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0583",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0584",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0585",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0586",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0587",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0588",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0589",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0590",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0591",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0592",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "QUALIFICATION",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0593",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0594",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0595",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0596",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0597",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0598",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0599",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0600",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0601",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0602",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0603",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0604",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0605",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0606",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0607",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0608",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0609",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0610",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0611",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0612",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "QUALIFICATION",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0613",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 126
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0614",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0615",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0616",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0617",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0618",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0619",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0620",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "QUALIFICATION",
+      "token_count": 112
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0621",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 119
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0622",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0623",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0624",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0625",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0626",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0627",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0628",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0629",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0630",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "HOLDOUT",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0631",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0632",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0633",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0634",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0635",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0636",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0637",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0638",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0639",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0640",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0641",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0642",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0643",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0644",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 97
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0645",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0646",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "HOLDOUT",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0647",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0648",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0649",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0650",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0651",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0652",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0653",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0654",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0655",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0656",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0657",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0658",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0659",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0660",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0661",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0662",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0663",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "HOLDOUT",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0664",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 126
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0665",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0666",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0667",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0668",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0669",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0670",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "HOLDOUT",
+      "token_count": 117
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0671",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 118
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0672",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0673",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0674",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0675",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0676",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0677",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0678",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0679",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0680",
+      "repair_category": "ROLE_SURFACE_FIDELITY",
+      "split": "ADVERSARIAL",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0681",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0682",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0683",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0684",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0685",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0686",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0687",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 99
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0688",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 100
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0689",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0690",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 98
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0691",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 101
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0692",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0693",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0694",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 96
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0695",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0696",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 102
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0697",
+      "repair_category": "DATA_INTRODUCTION_BOUNDARY",
+      "split": "ADVERSARIAL",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0698",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0699",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0700",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0701",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 107
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0702",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 109
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0703",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0704",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 113
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0705",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 104
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0706",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 105
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0707",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 103
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0708",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0709",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0710",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0711",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 106
+    },
+    {
+      "exceeds_384": false,
+      "language": "mixed",
+      "record_id": "pa-int-repair-v5-record-0712",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 108
+    },
+    {
+      "exceeds_384": false,
+      "language": "it",
+      "record_id": "pa-int-repair-v5-record-0713",
+      "repair_category": "PRODUCT_FOCUS_TARGETED",
+      "split": "ADVERSARIAL",
+      "token_count": 115
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0714",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 126
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0715",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0716",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 114
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0717",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 116
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0718",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 111
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0719",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 110
+    },
+    {
+      "exceeds_384": false,
+      "language": "en",
+      "record_id": "pa-int-repair-v5-record-0720",
+      "repair_category": "CLOSED_PROTOCOL_RESISTANCE",
+      "split": "ADVERSARIAL",
+      "token_count": 116
+    }
+  ],
+  "records_exceeding_limit": 0,
+  "repair_corpus_digest": "sha256:215d67de9a9358456da2b7f0c0490e35f6e058670f1276ec27928041b07fa1db",
+  "repeated_measurement_digest": "sha256:b1bea4ee9a60acf4f16bd4d3b51cd4bbaa2bbb2f2bb8ca26d48207591fb92318",
+  "seq_limit": 384,
+  "serialization_contract": "prompt(INSTRUCTION,input_text)+compact_sorted_target+tokenizer.eos_token; tokenizer(...,truncation=False,add_special_tokens=True)",
+  "special_token_ids": {
+    "bos": null,
+    "eos": 151643,
+    "pad": 151643,
+    "unk": null
+  },
+  "tokenizer_class": "Qwen2TokenizerFast",
+  "tokenizer_model": "Qwen/Qwen3-0.6B-Base",
+  "tokenizer_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+  "total_records": 720,
+  "train_result": {
+    "max_tokens": 128,
+    "percentage_exceeding_limit": 0.0,
+    "records_exceeding_limit": 0
+  },
+  "transformers_version": "4.51.3",
+  "vocab_size": 151643
 }

@@ -1,7 +1,7 @@
 {
   "corpus_id": "PA-INTERPRETATION-TARGETED-REPAIR-v5",
   "corpus_version": "5-repair",
-  "status": "STATIC_GATES_PASS_SEQUENCE_PREFLIGHT_PENDING",
+  "status": "GCC4S1_SEQ384_PHYSICAL_PREFLIGHT_COMPLETE",
   "total_records": 720,
   "split_counts": {
     "TRAIN": 480,
@@ -22,6 +22,13 @@
     "mixed": 48
   },
   "aggregate_repair_delta_digest": "sha256:215d67de9a9358456da2b7f0c0490e35f6e058670f1276ec27928041b07fa1db",
+  "sequence_length_preflight": {
+    "decision": "SEQ384_PHYSICAL_PREFLIGHT_PASS",
+    "measurement_digest": "sha256:b1bea4ee9a60acf4f16bd4d3b51cd4bbaa2bbb2f2bb8ca26d48207591fb92318",
+    "measured_records": 720,
+    "records_exceeding_limit": 0,
+    "seq_limit": 384
+  },
   "base_curriculum": {
     "corpus_id": "PA-INTERPRETATION-CURRICULUM-v4",
     "aggregate_corpus_digest": "sha256:b5db5a57c5e0f1cc041e5bd138cd53e06359f349a8d7f4a5ec36018c985d64ef",

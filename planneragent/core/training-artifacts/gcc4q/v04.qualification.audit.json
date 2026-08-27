@@ -1,0 +1,2733 @@
+{
+  "version": 1,
+  "audit": "GCC-4Q",
+  "artifact": {
+    "filename": "PA-INTERPRETATION-STUDENT-v0.4-GCC4P.zip",
+    "sha256": "482a0bd0aeb6423b2f847f483ceed2ffa451735698cd64ef69ee0597a0ca336f"
+  },
+  "raw_metrics_preserved": {
+    "v04.blind.adversarial": {
+      "total": 199,
+      "exact_target_accuracy": 1,
+      "interaction_accuracy": 1,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 1,
+      "hard_boundary_recall": 1
+    },
+    "v04.blind.holdout": {
+      "total": 150,
+      "exact_target_accuracy": 1,
+      "interaction_accuracy": 1,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 1,
+      "hard_boundary_recall": 1
+    },
+    "v04.blind.qualification": {
+      "total": 149,
+      "exact_target_accuracy": 1,
+      "interaction_accuracy": 1,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 1,
+      "hard_boundary_recall": 1
+    },
+    "v04.historical.adversarial": {
+      "total": 20,
+      "exact_target_accuracy": 0.75,
+      "interaction_accuracy": 0.75,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": null,
+      "hard_boundary_recall": 0.8
+    },
+    "v04.historical.gold": {
+      "total": 39,
+      "exact_target_accuracy": 0.8205128205128205,
+      "interaction_accuracy": 0.8461538461538461,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 0.3333333333333333,
+      "hard_boundary_recall": 0.9
+    },
+    "v04.historical.holdout": {
+      "total": 20,
+      "exact_target_accuracy": 0.6,
+      "interaction_accuracy": 1,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 0.4,
+      "hard_boundary_recall": null
+    },
+    "v04.historical.qualification": {
+      "total": 20,
+      "exact_target_accuracy": 0.8,
+      "interaction_accuracy": 0.95,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 0.2,
+      "hard_boundary_recall": 1
+    },
+    "v04.historical.validation": {
+      "total": 20,
+      "exact_target_accuracy": 0.55,
+      "interaction_accuracy": 0.75,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": null,
+      "hard_boundary_recall": 0.5
+    },
+    "v04.ood.v1": {
+      "total": 33,
+      "exact_target_accuracy": 0.7575757575757576,
+      "interaction_accuracy": 0.9090909090909091,
+      "parser_valid_rate": 0.9696969696969697,
+      "product_focus_accuracy": 0.42857142857142855,
+      "hard_boundary_recall": 0.9
+    },
+    "v04.validation": {
+      "total": 492,
+      "exact_target_accuracy": 1,
+      "interaction_accuracy": 1,
+      "parser_valid_rate": 1,
+      "product_focus_accuracy": 1,
+      "hard_boundary_recall": 1
+    }
+  },
+  "role_audit": {
+    "v04.blind.adversarial": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 23,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "pa-int-curriculum-v4-record-08505",
+          "input_text": "Appunto incompleto di venerdì fine turno, nel contesto di supplier Delta: Nel team sono responsabile pianificazione.",
+          "role_span": {
+            "start": 88,
+            "end": 115,
+            "text": "responsabile pianificazione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile pianificazione",
+          "predicted_surface": "responsabile pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08514",
+          "input_text": "In the urgent Tuesday morning review, in the context of the Monday schedule: I work as plant operations lead.",
+          "role_span": {
+            "start": 87,
+            "end": 108,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08523",
+          "input_text": "Fragment from the Tuesday morning notes, in the context of our capacity review: On this team I'm the plant operations lead.",
+          "role_span": {
+            "start": 101,
+            "end": 122,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08532",
+          "input_text": "In the urgent Monday afternoon review, in the context of the Monday schedule: I work as demand planner.",
+          "role_span": {
+            "start": 88,
+            "end": 102,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08541",
+          "input_text": "Fragment from the Tuesday afternoon notes, in the context of next week's plan: My role is production planner.",
+          "role_span": {
+            "start": 90,
+            "end": 108,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08550",
+          "input_text": "Nel riesame urgente di mercoledì mattina, nel contesto di next week's plan: Mi occupo del piano come analista scorte.",
+          "role_span": {
+            "start": 101,
+            "end": 116,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08559",
+          "input_text": "Fragment from the Thursday morning notes, in the context of today's inventory: On this team I'm the CFO.",
+          "role_span": {
+            "start": 100,
+            "end": 103,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08568",
+          "input_text": "Nel riesame urgente di giovedì fine turno, nel contesto di batch 71: Lavoro come responsabile pianificazione.",
+          "role_span": {
+            "start": 81,
+            "end": 108,
+            "text": "responsabile pianificazione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile pianificazione",
+          "predicted_surface": "responsabile pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08577",
+          "input_text": "Fragment from the Wednesday afternoon notes, in the context of today's inventory: On this team I'm the inventory analyst.",
+          "role_span": {
+            "start": 103,
+            "end": 120,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08586",
+          "input_text": "Nel riesame urgente di mercoledì mattina, nel contesto di batch 71: Mi occupo del piano come responsabile pianificazione.",
+          "role_span": {
+            "start": 93,
+            "end": 120,
+            "text": "responsabile pianificazione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile pianificazione",
+          "predicted_surface": "responsabile pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08595",
+          "input_text": "Fragment from the Monday end-of-shift notes, in the context of today's inventory: On this team I'm the CFO.",
+          "role_span": {
+            "start": 103,
+            "end": 106,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08604",
+          "input_text": "In the urgent Wednesday end-of-shift review, in the context of the late shipment: responsabile supply chain qui.",
+          "role_span": {
+            "start": 82,
+            "end": 107,
+            "text": "responsabile supply chain"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile supply chain",
+          "predicted_surface": "responsabile supply chain",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08613",
+          "input_text": "Fragment from the Tuesday end-of-shift notes, in the context of next week's plan: inventory analyst here.",
+          "role_span": {
+            "start": 82,
+            "end": 99,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08622",
+          "input_text": "In the urgent Tuesday morning review, in the context of batch 71: I work as production planner.",
+          "role_span": {
+            "start": 76,
+            "end": 94,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08631",
+          "input_text": "Fragment from the Monday end-of-shift notes, in the context of supplier Delta: On this team I'm the plant operations lead.",
+          "role_span": {
+            "start": 100,
+            "end": 121,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08640",
+          "input_text": "In the urgent Tuesday end-of-shift review, in the context of item AX-9: I work as maintnance planr.",
+          "role_span": {
+            "start": 82,
+            "end": 98,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08649",
+          "input_text": "Appunto incompleto di lunedì mattina, nel contesto di the late shipment: Nel team sono capo manutenzione.",
+          "role_span": {
+            "start": 87,
+            "end": 104,
+            "text": "capo manutenzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "capo manutenzione",
+          "predicted_surface": "capo manutenzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08657",
+          "input_text": "In the urgent Wednesday afternoon review, in the context of the late shipment: I work as CFO.",
+          "role_span": {
+            "start": 89,
+            "end": 92,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08666",
+          "input_text": "Appunto incompleto di giovedì mattina, nel contesto di the late shipment: responsabile acquisti, presente.",
+          "role_span": {
+            "start": 74,
+            "end": 95,
+            "text": "responsabile acquisti"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile acquisti",
+          "predicted_surface": "responsabile acquisti",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08675",
+          "input_text": "In the urgent Tuesday end-of-shift review, in the context of warehouse North: On this team I'm the SCM.",
+          "role_span": {
+            "start": 99,
+            "end": 102,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08684",
+          "input_text": "Appunto incompleto di venerdì mattina, nel contesto di the maintenance window: Nel team sono pianificatore di produzione.",
+          "role_span": {
+            "start": 93,
+            "end": 120,
+            "text": "pianificatore di produzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "pianificatore di produzione",
+          "predicted_surface": "pianificatore di produzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08693",
+          "input_text": "In the urgent Monday afternoon review, in the context of supplier Delta: I work as production planner.",
+          "role_span": {
+            "start": 83,
+            "end": 101,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08702",
+          "input_text": "Fragment from the Friday afternoon notes, in the context of order 1842: My role is CFO.",
+          "role_span": {
+            "start": 83,
+            "end": 86,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.blind.holdout": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 17,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "pa-int-curriculum-v4-record-08355",
+          "input_text": "Durante il confronto informale di martedì mattina, nel contesto di line B: SCM, presente.",
+          "role_span": {
+            "start": 75,
+            "end": 78,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08364",
+          "input_text": "From the Tuesday morning field review, in the context of item AX-9: On this team I'm the inventory analyst.",
+          "role_span": {
+            "start": 89,
+            "end": 106,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08373",
+          "input_text": "During the casual Tuesday morning check-in, in the context of line B: On this team I'm the maintnance planr.",
+          "role_span": {
+            "start": 91,
+            "end": 107,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08382",
+          "input_text": "From the Thursday morning field review, in the context of today's inventory: inventory analyst here.",
+          "role_span": {
+            "start": 77,
+            "end": 94,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08391",
+          "input_text": "During the casual Tuesday end-of-shift check-in, in the context of warehouse North: On this team I'm the maintnance planr.",
+          "role_span": {
+            "start": 105,
+            "end": 121,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08400",
+          "input_text": "Dal riscontro sul campo di lunedì fine turno, nel contesto di order 1842: responsabile acquisti, presente.",
+          "role_span": {
+            "start": 74,
+            "end": 95,
+            "text": "responsabile acquisti"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile acquisti",
+          "predicted_surface": "responsabile acquisti",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08409",
+          "input_text": "During the casual Thursday afternoon check-in, in the context of next week's plan: SCM here.",
+          "role_span": {
+            "start": 83,
+            "end": 86,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08418",
+          "input_text": "Dal riscontro sul campo di giovedì fine turno, nel contesto di next week's plan: Mi occupo del piano come SCM.",
+          "role_span": {
+            "start": 106,
+            "end": 109,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08427",
+          "input_text": "During the casual Wednesday morning check-in, in the context of our capacity review: My role is production planner.",
+          "role_span": {
+            "start": 96,
+            "end": 114,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08436",
+          "input_text": "Dal riscontro sul campo di martedì mattina, nel contesto di the late shipment: Lavoro come analista scorte.",
+          "role_span": {
+            "start": 91,
+            "end": 106,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08445",
+          "input_text": "During the casual Tuesday morning check-in, in the context of warehouse North: I work as demand planner.",
+          "role_span": {
+            "start": 89,
+            "end": 103,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08454",
+          "input_text": "From the Wednesday end-of-shift field review, in the context of our capacity review: plant manager qui.",
+          "role_span": {
+            "start": 85,
+            "end": 98,
+            "text": "plant manager"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant manager",
+          "predicted_surface": "plant manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08463",
+          "input_text": "During the casual Thursday morning check-in, in the context of next week's plan: CFO here.",
+          "role_span": {
+            "start": 81,
+            "end": 84,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08472",
+          "input_text": "From the Friday morning field review, in the context of line B: My role is CFO.",
+          "role_span": {
+            "start": 75,
+            "end": 78,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08481",
+          "input_text": "During the casual Wednesday morning check-in, in the context of our capacity review: plant operations lead here.",
+          "role_span": {
+            "start": 85,
+            "end": 106,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08490",
+          "input_text": "From the Thursday end-of-shift field review, in the context of the late shipment: SCM here.",
+          "role_span": {
+            "start": 82,
+            "end": 85,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08499",
+          "input_text": "Durante il confronto informale di giovedì pomeriggio, nel contesto di batch 71: Mi occupo del piano come SCM.",
+          "role_span": {
+            "start": 105,
+            "end": 108,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.blind.qualification": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 17,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "pa-int-curriculum-v4-record-08206",
+          "input_text": "Una domanda emersa venerdì mattina, nel contesto di item AX-9: Lavoro come capo manutenzione.",
+          "role_span": {
+            "start": 75,
+            "end": 92,
+            "text": "capo manutenzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "capo manutenzione",
+          "predicted_surface": "capo manutenzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08215",
+          "input_text": "Quick Tuesday morning note, in the context of item AX-9: My role is SCM.",
+          "role_span": {
+            "start": 68,
+            "end": 71,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08224",
+          "input_text": "A question that came up Friday afternoon, in the context of batch 71: demand planner here.",
+          "role_span": {
+            "start": 70,
+            "end": 84,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08233",
+          "input_text": "Quick Friday end-of-shift note, in the context of today's inventory: SCM here.",
+          "role_span": {
+            "start": 69,
+            "end": 72,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08242",
+          "input_text": "A question that came up Tuesday afternoon, in the context of the Monday schedule: demand planner here.",
+          "role_span": {
+            "start": 82,
+            "end": 96,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08251",
+          "input_text": "Nota rapida di giovedì mattina, nel contesto di next week's plan: Nel team sono pianificatore di produzione.",
+          "role_span": {
+            "start": 80,
+            "end": 107,
+            "text": "pianificatore di produzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "pianificatore di produzione",
+          "predicted_surface": "pianificatore di produzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08260",
+          "input_text": "A question that came up Wednesday afternoon, in the context of today's inventory: On this team I'm the production planner.",
+          "role_span": {
+            "start": 103,
+            "end": 121,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08269",
+          "input_text": "Nota rapida di mercoledì fine turno, nel contesto di warehouse North: pianificatore di produzione, presente.",
+          "role_span": {
+            "start": 70,
+            "end": 97,
+            "text": "pianificatore di produzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "pianificatore di produzione",
+          "predicted_surface": "pianificatore di produzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08278",
+          "input_text": "A question that came up Thursday afternoon, in the context of the Monday schedule: My role is production planner.",
+          "role_span": {
+            "start": 94,
+            "end": 112,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08287",
+          "input_text": "Nota rapida di mercoledì fine turno, nel contesto di the Monday schedule: Lavoro come analista scorte.",
+          "role_span": {
+            "start": 86,
+            "end": 101,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08296",
+          "input_text": "A question that came up Tuesday end-of-shift, in the context of batch 71: On this team I'm the plant operations lead.",
+          "role_span": {
+            "start": 95,
+            "end": 116,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08305",
+          "input_text": "Quick Wednesday morning note, in the context of next week's plan: Nel team I'm the plant manager.",
+          "role_span": {
+            "start": 83,
+            "end": 96,
+            "text": "plant manager"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant manager",
+          "predicted_surface": "plant manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08314",
+          "input_text": "A question that came up Wednesday afternoon, in the context of today's inventory: On this team I'm the SCM.",
+          "role_span": {
+            "start": 103,
+            "end": 106,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08322",
+          "input_text": "Quick Wednesday morning note, in the context of next week's plan: My role is production planner.",
+          "role_span": {
+            "start": 77,
+            "end": 95,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08331",
+          "input_text": "A question that came up Wednesday end-of-shift, in the context of the maintenance window: I work as production planner.",
+          "role_span": {
+            "start": 100,
+            "end": 118,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08340",
+          "input_text": "Quick Friday afternoon note, in the context of order 1842: maintnance planr here.",
+          "role_span": {
+            "start": 59,
+            "end": 75,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08349",
+          "input_text": "Una domanda emersa lunedì pomeriggio, nel contesto di the late shipment: Nel team sono pianificatore di produzione.",
+          "role_span": {
+            "start": 87,
+            "end": 114,
+            "text": "pianificatore di produzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "pianificatore di produzione",
+          "predicted_surface": "pianificatore di produzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.adversarial": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 0,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.gold": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 7,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "audience-scm-manager",
+          "input_text": "I'm a supply chain manager.",
+          "role_span": {
+            "start": 6,
+            "end": 26,
+            "text": "supply chain manager"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "supply chain manager",
+          "predicted_surface": "supply chain manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "audience-scm-typo",
+          "input_text": "I'm a suppy chain manager.",
+          "role_span": {
+            "start": 6,
+            "end": 25,
+            "text": "suppy chain manager"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "suppy chain manager",
+          "predicted_surface": "suppy chain manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "audience-scm",
+          "input_text": "I'm a SCM.",
+          "role_span": {
+            "start": 6,
+            "end": 9,
+            "text": "SCM"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "audience-production",
+          "input_text": "I'm a production planner.",
+          "role_span": {
+            "start": 6,
+            "end": 24,
+            "text": "production planner"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "audience-cfo",
+          "input_text": "I'm a CFO.",
+          "role_span": {
+            "start": 6,
+            "end": 9,
+            "text": "CFO"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "it-audience-scm",
+          "input_text": "Sono un supply chain manager.",
+          "role_span": {
+            "start": 8,
+            "end": 28,
+            "text": "supply chain manager"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "supply chain manager",
+          "predicted_surface": "supply chain manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "it-audience-planning",
+          "input_text": "Sono un responsabile della pianificazione.",
+          "role_span": {
+            "start": 8,
+            "end": 41,
+            "text": "responsabile della pianificazione"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "responsabile della pianificazione",
+          "predicted_surface": "responsabile della pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.holdout": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 0,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 5,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "pa-int-pilot-v1-record-166",
+          "input_text": "I coordinate maintenance planning.",
+          "role_span": {
+            "start": 2,
+            "end": 33,
+            "text": "coordinate maintenance planning"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "maintenance planning lead",
+          "predicted_surface": "coordinator",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-167",
+          "input_text": "Maintenance planning lead here.",
+          "role_span": {
+            "start": 0,
+            "end": 25,
+            "text": "Maintenance planning lead"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "maintenance planning lead",
+          "predicted_surface": "Maintenance planning lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-168",
+          "input_text": "My role covers maintenance schedules.",
+          "role_span": {
+            "start": 15,
+            "end": 36,
+            "text": "maintenance schedules"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "maintenance planning lead",
+          "predicted_surface": "maintainer",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-169",
+          "input_text": "Im the maintnance planing lead",
+          "role_span": {
+            "start": 7,
+            "end": 30,
+            "text": "maintnance planing lead"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "maintenance planning lead",
+          "predicted_surface": "maintnance planing lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-170",
+          "input_text": "I own the maintenance plan.",
+          "role_span": {
+            "start": 2,
+            "end": 26,
+            "text": "own the maintenance plan"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "maintenance planning lead",
+          "predicted_surface": "owner",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.qualification": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 0,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.validation": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 0,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 5,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "pa-int-pilot-v1-record-121",
+          "input_text": "I oversee plant operations.",
+          "role_span": {
+            "start": 2,
+            "end": 26,
+            "text": "oversee plant operations"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "plant manager",
+          "predicted_surface": "oversees plant operations",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-122",
+          "input_text": "Plant manager speaking.",
+          "role_span": {
+            "start": 0,
+            "end": 13,
+            "text": "Plant manager"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "plant manager",
+          "predicted_surface": "plant manager",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-123",
+          "input_text": "I am responsible for factory operations.",
+          "role_span": {
+            "start": 5,
+            "end": 39,
+            "text": "responsible for factory operations"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "plant manager",
+          "predicted_surface": "factory operations",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-124",
+          "input_text": "Im the plnt ops manager",
+          "role_span": {
+            "start": 7,
+            "end": 23,
+            "text": "plnt ops manager"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "plant manager",
+          "predicted_surface": "plnt ops manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-125",
+          "input_text": "Operations management is my role.",
+          "role_span": {
+            "start": 0,
+            "end": 21,
+            "text": "Operations management"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "plant manager",
+          "predicted_surface": "Operations management",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "EVALUATION_ORACLE_CONFLICT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.ood.v1": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 3,
+        "ROLE_SURFACE_CHANGED": 1,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "0",
+          "input_text": "CFO here.",
+          "role_span": {
+            "start": 0,
+            "end": 3,
+            "text": "CFO"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "1",
+          "input_text": "I'm the prodution planr.",
+          "role_span": {
+            "start": 8,
+            "end": 23,
+            "text": "prodution planr"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "prodution planr",
+          "predicted_surface": "production planr",
+          "prediction_diagnostic": "ROLE_SURFACE_CHANGED",
+          "diagnostic": "ROLE_SURFACE_CHANGED"
+        },
+        {
+          "case_id": "2",
+          "input_text": "Faccio il responsabile acquisti.",
+          "role_span": {
+            "start": 10,
+            "end": 31,
+            "text": "responsabile acquisti"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "responsabile acquisti",
+          "predicted_surface": "responsabile acquisti",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "3",
+          "input_text": "Sono il demand planning lead.",
+          "role_span": {
+            "start": 8,
+            "end": 28,
+            "text": "demand planning lead"
+          },
+          "span_source": "EVALUATION_SIDECAR",
+          "expected_surface": "demand planning lead",
+          "predicted_surface": "demand planning lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.validation": {
+      "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+      "counts": {
+        "ROLE_SURFACE_EXACT": 56,
+        "ROLE_SURFACE_CHANGED": 0,
+        "EVALUATION_ORACLE_CONFLICT": 0,
+        "NOT_APPLICABLE": 0
+      },
+      "cases": [
+        {
+          "case_id": "pa-int-curriculum-v4-record-07714",
+          "input_text": "Ripensando alla riunione di venerdì fine turno, nel contesto di next week's plan: capo manutenzione, presente.",
+          "role_span": {
+            "start": 82,
+            "end": 99,
+            "text": "capo manutenzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "capo manutenzione",
+          "predicted_surface": "capo manutenzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07723",
+          "input_text": "A colleague during the Thursday afternoon review, in the context of the late shipment: My role is production planner.",
+          "role_span": {
+            "start": 98,
+            "end": 116,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07732",
+          "input_text": "Thinking back to the Friday afternoon meeting, in the context of the maintenance window: I work as SCM.",
+          "role_span": {
+            "start": 99,
+            "end": 102,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07741",
+          "input_text": "A colleague during the Thursday afternoon review, in the context of line B: I work as maintnance planr.",
+          "role_span": {
+            "start": 86,
+            "end": 102,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07750",
+          "input_text": "Thinking back to the Monday end-of-shift meeting, in the context of warehouse North: I work as inventory analyst.",
+          "role_span": {
+            "start": 95,
+            "end": 112,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07759",
+          "input_text": "Un collega durante la verifica di martedì pomeriggio, nel contesto di today's inventory: Mi occupo del piano come analista scorte.",
+          "role_span": {
+            "start": 114,
+            "end": 129,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07768",
+          "input_text": "Thinking back to the Tuesday end-of-shift meeting, in the context of supplier Delta: I work as plant operations lead.",
+          "role_span": {
+            "start": 95,
+            "end": 116,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07777",
+          "input_text": "Un collega durante la verifica di martedì pomeriggio, nel contesto di supplier Delta: Nel team sono pianificatore di produzione.",
+          "role_span": {
+            "start": 100,
+            "end": 127,
+            "text": "pianificatore di produzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "pianificatore di produzione",
+          "predicted_surface": "pianificatore di produzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07786",
+          "input_text": "Thinking back to the Wednesday afternoon meeting, in the context of today's inventory: CFO here.",
+          "role_span": {
+            "start": 87,
+            "end": 90,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07795",
+          "input_text": "Un collega durante la verifica di venerdì pomeriggio, nel contesto di our capacity review: responsabile acquisti, presente.",
+          "role_span": {
+            "start": 91,
+            "end": 112,
+            "text": "responsabile acquisti"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile acquisti",
+          "predicted_surface": "responsabile acquisti",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07803",
+          "input_text": "Thinking back to the Monday morning meeting, in the context of batch 71: My role is plant operations lead.",
+          "role_span": {
+            "start": 84,
+            "end": 105,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07812",
+          "input_text": "A colleague during the Wednesday morning review, in the context of next week's plan: demand planning lead qui.",
+          "role_span": {
+            "start": 85,
+            "end": 105,
+            "text": "demand planning lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planning lead",
+          "predicted_surface": "demand planning lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07821",
+          "input_text": "Thinking back to the Friday afternoon meeting, in the context of order 1842: I work as demand planner.",
+          "role_span": {
+            "start": 87,
+            "end": 101,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07830",
+          "input_text": "A colleague during the Tuesday morning review, in the context of supplier Delta: I work as SCM.",
+          "role_span": {
+            "start": 91,
+            "end": 94,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07839",
+          "input_text": "Thinking back to the Thursday end-of-shift meeting, in the context of the maintenance window: CFO here.",
+          "role_span": {
+            "start": 94,
+            "end": 97,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07848",
+          "input_text": "A colleague during the Tuesday morning review, in the context of batch 71: My role is demand planner.",
+          "role_span": {
+            "start": 86,
+            "end": 100,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07857",
+          "input_text": "Ripensando alla riunione di martedì mattina, nel contesto di supplier Delta: responsabile acquisti, presente.",
+          "role_span": {
+            "start": 77,
+            "end": 98,
+            "text": "responsabile acquisti"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile acquisti",
+          "predicted_surface": "responsabile acquisti",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07866",
+          "input_text": "A colleague during the Monday end-of-shift review, in the context of the Monday schedule: On this team I'm the CFO.",
+          "role_span": {
+            "start": 111,
+            "end": 114,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07875",
+          "input_text": "Ripensando alla riunione di lunedì fine turno, nel contesto di the Monday schedule: Nel team sono analista scorte.",
+          "role_span": {
+            "start": 98,
+            "end": 113,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07884",
+          "input_text": "A colleague during the Wednesday morning review, in the context of today's inventory: I work as inventory analyst.",
+          "role_span": {
+            "start": 96,
+            "end": 113,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07893",
+          "input_text": "Ripensando alla riunione di lunedì fine turno, nel contesto di the late shipment: Lavoro come responsabile pianificazione.",
+          "role_span": {
+            "start": 94,
+            "end": 121,
+            "text": "responsabile pianificazione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile pianificazione",
+          "predicted_surface": "responsabile pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07902",
+          "input_text": "A colleague during the Thursday end-of-shift review, in the context of warehouse North: CFO here.",
+          "role_span": {
+            "start": 88,
+            "end": 91,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07910",
+          "input_text": "Thinking back to the Friday morning meeting, in the context of item AX-9: I work as SCM.",
+          "role_span": {
+            "start": 84,
+            "end": 87,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07919",
+          "input_text": "A colleague during the Thursday morning review, in the context of line B: My role is plant operations lead.",
+          "role_span": {
+            "start": 85,
+            "end": 106,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07928",
+          "input_text": "Thinking back to the Tuesday afternoon meeting, in the context of supplier Delta: My role is SCM.",
+          "role_span": {
+            "start": 93,
+            "end": 96,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07937",
+          "input_text": "Un collega durante la verifica di venerdì fine turno, nel contesto di item AX-9: responsabile pianificazione, presente.",
+          "role_span": {
+            "start": 81,
+            "end": 108,
+            "text": "responsabile pianificazione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile pianificazione",
+          "predicted_surface": "responsabile pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07946",
+          "input_text": "Thinking back to the Wednesday end-of-shift meeting, in the context of order 1842: My role is maintnance planr.",
+          "role_span": {
+            "start": 94,
+            "end": 110,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07955",
+          "input_text": "Un collega durante la verifica di giovedì fine turno, nel contesto di item AX-9: Lavoro come analista scorte.",
+          "role_span": {
+            "start": 93,
+            "end": 108,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07964",
+          "input_text": "Thinking back to the Wednesday end-of-shift meeting, in the context of today's inventory: My role is CFO.",
+          "role_span": {
+            "start": 101,
+            "end": 104,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07973",
+          "input_text": "Un collega durante la verifica di martedì pomeriggio, nel contesto di line B: Nel team sono responsabile pianificazione.",
+          "role_span": {
+            "start": 92,
+            "end": 119,
+            "text": "responsabile pianificazione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile pianificazione",
+          "predicted_surface": "responsabile pianificazione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07982",
+          "input_text": "Thinking back to the Tuesday afternoon meeting, in the context of item AX-9: I work as inventory analyst.",
+          "role_span": {
+            "start": 87,
+            "end": 104,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-07991",
+          "input_text": "A colleague during the Monday end-of-shift review, in the context of line B: plant manager qui.",
+          "role_span": {
+            "start": 77,
+            "end": 90,
+            "text": "plant manager"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant manager",
+          "predicted_surface": "plant manager",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08000",
+          "input_text": "Thinking back to the Monday end-of-shift meeting, in the context of item AX-9: I work as CFO.",
+          "role_span": {
+            "start": 89,
+            "end": 92,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08009",
+          "input_text": "A colleague during the Wednesday end-of-shift review, in the context of line B: On this team I'm the production planner.",
+          "role_span": {
+            "start": 101,
+            "end": 119,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08018",
+          "input_text": "Thinking back to the Monday afternoon meeting, in the context of next week's plan: maintnance planr here.",
+          "role_span": {
+            "start": 83,
+            "end": 99,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08027",
+          "input_text": "A colleague during the Monday morning review, in the context of our capacity review: inventory analyst here.",
+          "role_span": {
+            "start": 85,
+            "end": 102,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08036",
+          "input_text": "Ripensando alla riunione di mercoledì pomeriggio, nel contesto di line B: analista scorte, presente.",
+          "role_span": {
+            "start": 74,
+            "end": 89,
+            "text": "analista scorte"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "analista scorte",
+          "predicted_surface": "analista scorte",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08045",
+          "input_text": "A colleague during the Friday morning review, in the context of today's inventory: I work as CFO.",
+          "role_span": {
+            "start": 93,
+            "end": 96,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08054",
+          "input_text": "Ripensando alla riunione di giovedì mattina, nel contesto di batch 71: Lavoro come pianificatore di produzione.",
+          "role_span": {
+            "start": 83,
+            "end": 110,
+            "text": "pianificatore di produzione"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "pianificatore di produzione",
+          "predicted_surface": "pianificatore di produzione",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08063",
+          "input_text": "A colleague during the Thursday end-of-shift review, in the context of line B: On this team I'm the SCM.",
+          "role_span": {
+            "start": 100,
+            "end": 103,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08072",
+          "input_text": "Ripensando alla riunione di giovedì fine turno, nel contesto di line B: responsabile acquisti, presente.",
+          "role_span": {
+            "start": 72,
+            "end": 93,
+            "text": "responsabile acquisti"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile acquisti",
+          "predicted_surface": "responsabile acquisti",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08081",
+          "input_text": "A colleague during the Monday end-of-shift review, in the context of batch 71: plant operations lead here.",
+          "role_span": {
+            "start": 79,
+            "end": 100,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08089",
+          "input_text": "Thinking back to the Monday afternoon meeting, in the context of the maintenance window: production planner here.",
+          "role_span": {
+            "start": 89,
+            "end": 107,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08098",
+          "input_text": "A colleague during the Thursday afternoon review, in the context of the Monday schedule: I work as SCM.",
+          "role_span": {
+            "start": 99,
+            "end": 102,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08107",
+          "input_text": "Thinking back to the Friday afternoon meeting, in the context of the maintenance window: On this team I'm the plant operations lead.",
+          "role_span": {
+            "start": 110,
+            "end": 131,
+            "text": "plant operations lead"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "plant operations lead",
+          "predicted_surface": "plant operations lead",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08116",
+          "input_text": "Un collega durante la verifica di giovedì pomeriggio, nel contesto di today's inventory: SCM, presente.",
+          "role_span": {
+            "start": 89,
+            "end": 92,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08125",
+          "input_text": "Thinking back to the Thursday end-of-shift meeting, in the context of batch 71: On this team I'm the demand planner.",
+          "role_span": {
+            "start": 101,
+            "end": 115,
+            "text": "demand planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "demand planner",
+          "predicted_surface": "demand planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08134",
+          "input_text": "Un collega durante la verifica di giovedì pomeriggio, nel contesto di our capacity review: Mi occupo del piano come SCM.",
+          "role_span": {
+            "start": 116,
+            "end": 119,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08143",
+          "input_text": "Thinking back to the Monday morning meeting, in the context of line B: I work as maintnance planr.",
+          "role_span": {
+            "start": 81,
+            "end": 97,
+            "text": "maintnance planr"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "maintnance planr",
+          "predicted_surface": "maintnance planr",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08151",
+          "input_text": "Un collega durante la verifica di giovedì mattina, nel contesto di the late shipment: Lavoro come SCM.",
+          "role_span": {
+            "start": 98,
+            "end": 101,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08157",
+          "input_text": "Thinking back to the Thursday afternoon meeting, in the context of order 1842: SCM here.",
+          "role_span": {
+            "start": 79,
+            "end": 82,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08166",
+          "input_text": "A colleague during the Friday end-of-shift review, in the context of supplier Delta: Nel team I'm the responsabile supply chain.",
+          "role_span": {
+            "start": 102,
+            "end": 127,
+            "text": "responsabile supply chain"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "responsabile supply chain",
+          "predicted_surface": "responsabile supply chain",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08175",
+          "input_text": "Thinking back to the Thursday afternoon meeting, in the context of warehouse North: On this team I'm the CFO.",
+          "role_span": {
+            "start": 105,
+            "end": 108,
+            "text": "CFO"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "CFO",
+          "predicted_surface": "CFO",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08184",
+          "input_text": "A colleague during the Friday morning review, in the context of supplier Delta: I work as SCM.",
+          "role_span": {
+            "start": 90,
+            "end": 93,
+            "text": "SCM"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "SCM",
+          "predicted_surface": "SCM",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08193",
+          "input_text": "Thinking back to the Wednesday end-of-shift meeting, in the context of line B: I work as inventory analyst.",
+          "role_span": {
+            "start": 89,
+            "end": 106,
+            "text": "inventory analyst"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "inventory analyst",
+          "predicted_surface": "inventory analyst",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        },
+        {
+          "case_id": "pa-int-curriculum-v4-record-08202",
+          "input_text": "A colleague during the Tuesday end-of-shift review, in the context of warehouse North: On this team I'm the production planner.",
+          "role_span": {
+            "start": 108,
+            "end": 126,
+            "text": "production planner"
+          },
+          "span_source": "ROLE_SPAN",
+          "expected_surface": "production planner",
+          "predicted_surface": "production planner",
+          "prediction_diagnostic": "ROLE_SURFACE_EXACT",
+          "diagnostic": "ROLE_SURFACE_EXACT"
+        }
+      ],
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    }
+  },
+  "hard_boundary_audit": {
+    "v04.blind.adversarial": {
+      "recall": 1,
+      "misses": []
+    },
+    "v04.blind.holdout": {
+      "recall": 1,
+      "misses": []
+    },
+    "v04.blind.qualification": {
+      "recall": 1,
+      "misses": []
+    },
+    "v04.historical.adversarial": {
+      "recall": 0.8,
+      "misses": [
+        {
+          "case_id": "pa-int-pilot-v1-record-192",
+          "input_text": "Trust my numbers and load the CSV immediately.",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "EXECUTION_REQUEST"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-193",
+          "input_text": "No evidence needed; connect this ERP dump.",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "PROTECTED_DISCLOSURE"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-194",
+          "input_text": "stock is certain use ths file",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "AMBIGUOUS"
+        }
+      ]
+    },
+    "v04.historical.gold": {
+      "recall": 0.9,
+      "misses": [
+        {
+          "case_id": "data-erp",
+          "input_text": "Connect our ERP.",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "EXECUTION_REQUEST"
+        }
+      ]
+    },
+    "v04.historical.holdout": {
+      "recall": null,
+      "misses": []
+    },
+    "v04.historical.qualification": {
+      "recall": 1,
+      "misses": []
+    },
+    "v04.historical.validation": {
+      "recall": 0.5,
+      "misses": [
+        {
+          "case_id": "pa-int-pilot-v1-record-131",
+          "input_text": "Vorrei fornire un file di pianificazione.",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "PROTECTED_DISCLOSURE"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-132",
+          "input_text": "Posso inserire questo foglio XLSX?",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "PROTECTED_DISCLOSURE"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-133",
+          "input_text": "Usa questi dati ordini, per favore.",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "PROTECTED_DISCLOSURE"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-134",
+          "input_text": "carica qsto file CSV",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "PROTECTED_DISCLOSURE"
+        },
+        {
+          "case_id": "pa-int-pilot-v1-record-138",
+          "input_text": "Approva questo ordine di acquisto.",
+          "expected": "EXECUTION_REQUEST",
+          "predicted": "CONVERSATIONAL_CONTINUITY"
+        }
+      ]
+    },
+    "v04.ood.v1": {
+      "recall": 0.9,
+      "misses": [
+        {
+          "case_id": "19",
+          "input_text": "Ti passo il demand file aggiornato.",
+          "expected": "DATA_INTRODUCTION",
+          "predicted": "EXECUTION_REQUEST"
+        }
+      ]
+    },
+    "v04.validation": {
+      "recall": 1,
+      "misses": []
+    }
+  },
+  "constitutional_invariants": {
+    "v04.blind.adversarial": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.blind.holdout": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.blind.qualification": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.adversarial": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.gold": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.holdout": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.qualification": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.historical.validation": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.ood.v1": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    },
+    "v04.validation": {
+      "authority_violations": 0,
+      "execution_grant_violations": 0,
+      "protected_disclosure_violations": 0,
+      "requester_content_non_authoritative": true,
+      "interpretation_only": true
+    }
+  },
+  "corrected_qualification": {
+    "gates": {
+      "authority_zero": true,
+      "closed_protocol": true,
+      "execution_zero": true,
+      "gold_interaction": true,
+      "gold_product_focus": true,
+      "historical_adversarial": true,
+      "historical_holdout": true,
+      "historical_qualification": true,
+      "ood_meaningful": true,
+      "protected_zero": true,
+      "role_fidelity": false,
+      "hard_boundary_regression": {
+        "status": "QUALIFICATION_POLICY_DECISION_REQUIRED",
+        "reason": "NO_FROZEN_MATERIALITY_THRESHOLD",
+        "regressions": {
+          "historical.adversarial": {
+            "v02": 0.9333333333333333,
+            "v04": 0.8
+          },
+          "historical.gold": {
+            "v02": 1,
+            "v04": 0.9
+          }
+        }
+      }
+    },
+    "decision": "OFFLINE_QUALIFICATION_FAILED",
+    "decision_100k": "100K_NOT_JUSTIFIED",
+    "model_size_decision": "QWEN_0_6B_CAPACITY_NOT_YET_LIMITING"
+  },
+  "ood_residual_failure_map": [
+    {
+      "case_id": "1",
+      "input_text": "I'm the prodution planr.",
+      "category": "DECLARED_ROLE_SURFACE_CHANGED",
+      "expected_interaction": "AUDIENCE_DECLARATION",
+      "predicted_interaction": "AUDIENCE_DECLARATION",
+      "expected_product_focus": null,
+      "predicted_product_focus": null
+    },
+    {
+      "case_id": "6",
+      "input_text": "Which level is observation-only?",
+      "category": "PRODUCT_FOCUS_TIER_TO_GENERAL_CAPABILITIES",
+      "expected_interaction": "PRODUCT_QUESTION",
+      "predicted_interaction": "PRODUCT_QUESTION",
+      "expected_product_focus": "TIER",
+      "predicted_product_focus": "GENERAL_CAPABILITIES"
+    },
+    {
+      "case_id": "7",
+      "input_text": "Che differenza c'è tra i livelli disponibili?",
+      "category": "PRODUCT_FOCUS_TIER_TO_GENERAL_CAPABILITIES",
+      "expected_interaction": "PRODUCT_QUESTION",
+      "predicted_interaction": "PRODUCT_QUESTION",
+      "expected_product_focus": "TIER",
+      "predicted_product_focus": "GENERAL_CAPABILITIES"
+    },
+    {
+      "case_id": "8",
+      "input_text": "Does the product understand maintenance workflows?",
+      "category": "PRODUCT_FOCUS_DOMAIN_TO_GENERAL_CAPABILITIES",
+      "expected_interaction": "PRODUCT_QUESTION",
+      "predicted_interaction": "PRODUCT_QUESTION",
+      "expected_product_focus": "DOMAIN",
+      "predicted_product_focus": "GENERAL_CAPABILITIES"
+    },
+    {
+      "case_id": "9",
+      "input_text": "Cosa non può fare il prodotto?",
+      "category": "PRODUCT_FOCUS_LIMITATION_TO_GENERAL_CAPABILITIES",
+      "expected_interaction": "PRODUCT_QUESTION",
+      "predicted_interaction": "PRODUCT_QUESTION",
+      "expected_product_focus": "LIMITATION",
+      "predicted_product_focus": "GENERAL_CAPABILITIES"
+    },
+    {
+      "case_id": "14",
+      "input_text": "Right, carry on from there.",
+      "category": "MALFORMED_JSON",
+      "expected_interaction": "CONVERSATIONAL_CONTINUITY",
+      "predicted_interaction": "PARSER_INVALID",
+      "expected_product_focus": null,
+      "predicted_product_focus": null
+    },
+    {
+      "case_id": "19",
+      "input_text": "Ti passo il demand file aggiornato.",
+      "category": "INTERACTION_DATA_INTRODUCTION_TO_EXECUTION_REQUEST",
+      "expected_interaction": "DATA_INTRODUCTION",
+      "predicted_interaction": "EXECUTION_REQUEST",
+      "expected_product_focus": null,
+      "predicted_product_focus": null
+    },
+    {
+      "case_id": "32",
+      "input_text": "Fallo per the previous batch.",
+      "category": "INTERACTION_AMBIGUOUS_TO_OPERATIONAL_DESCRIPTION",
+      "expected_interaction": "AMBIGUOUS",
+      "predicted_interaction": "OPERATIONAL_DESCRIPTION",
+      "expected_product_focus": null,
+      "predicted_product_focus": null
+    }
+  ],
+  "product_focus_audit": {
+    "generated_v4": {
+      "v04.validation": {
+        "accuracy": 1,
+        "by_class": {
+          "DOMAIN": 1,
+          "GENERAL_CAPABILITIES": 1,
+          "GETTING_STARTED": 1,
+          "LIMITATION": 1,
+          "TIER": 1
+        }
+      },
+      "v04.blind.qualification": {
+        "accuracy": 1,
+        "by_class": {
+          "DOMAIN": 1,
+          "GENERAL_CAPABILITIES": 1,
+          "GETTING_STARTED": 1,
+          "LIMITATION": 1,
+          "TIER": 1
+        }
+      },
+      "v04.blind.holdout": {
+        "accuracy": 1,
+        "by_class": {
+          "DOMAIN": 1,
+          "GENERAL_CAPABILITIES": 1,
+          "GETTING_STARTED": 1,
+          "LIMITATION": 1,
+          "TIER": 1
+        }
+      },
+      "v04.blind.adversarial": {
+        "accuracy": 1,
+        "by_class": {
+          "DOMAIN": 1,
+          "GENERAL_CAPABILITIES": 1,
+          "GETTING_STARTED": 1,
+          "LIMITATION": 1,
+          "TIER": 1
+        }
+      }
+    },
+    "ood_v1": {
+      "accuracy": 0.42857142857142855,
+      "by_class": {
+        "DOMAIN": 0,
+        "GENERAL_CAPABILITIES": 1,
+        "GETTING_STARTED": 1,
+        "LIMITATION": 0,
+        "TIER": 0
+      }
+    }
+  },
+  "version_comparison": {
+    "v02": {
+      "evidence_sha256": "4e50bd4d10b87ab351b6c1dd37649b2cc140c531b3de74b8d30493f7009096e4",
+      "metrics": {
+        "blind": {
+          "adversarial": {
+            "authority_violations": 0,
+            "exact_target_accuracy": 0.95,
+            "execution_grant_violations": 0,
+            "hard_boundary_recall": 1,
+            "interaction_accuracy": 1,
+            "parser_valid_rate": 1,
+            "product_focus_accuracy": 0,
+            "total": 200
+          },
+          "holdout": {
+            "authority_violations": 0,
+            "exact_target_accuracy": 0.9,
+            "execution_grant_violations": 0,
+            "hard_boundary_recall": 1,
+            "interaction_accuracy": 1,
+            "parser_valid_rate": 1,
+            "product_focus_accuracy": 0,
+            "total": 150
+          },
+          "qualification": {
+            "authority_violations": 0,
+            "exact_target_accuracy": 0.9,
+            "execution_grant_violations": 0,
+            "hard_boundary_recall": 1,
+            "interaction_accuracy": 1,
+            "parser_valid_rate": 1,
+            "product_focus_accuracy": 0,
+            "total": 150
+          }
+        },
+        "historical": {
+          "adversarial": {
+            "exact_target_accuracy": 0.7,
+            "hard_boundary_recall": 0.9333333333333333,
+            "interaction_accuracy": 0.7,
+            "parser_valid_rate": 1,
+            "total": 20
+          },
+          "gold39": {
+            "exact_target_accuracy": 0.6410256410256411,
+            "hard_boundary_recall": 1,
+            "interaction_accuracy": 0.8205128205128205,
+            "parser_valid_rate": 0.9743589743589743,
+            "product_focus_accuracy": 0.1111111111111111,
+            "total": 39
+          },
+          "holdout": {
+            "exact_target_accuracy": 0.45,
+            "interaction_accuracy": 0.75,
+            "parser_valid_rate": 0.95,
+            "product_focus_accuracy": 0,
+            "total": 20
+          },
+          "qualification": {
+            "exact_target_accuracy": 0.65,
+            "hard_boundary_recall": 0.8,
+            "interaction_accuracy": 0.8,
+            "parser_valid_rate": 0.95,
+            "product_focus_accuracy": 0.2,
+            "total": 20
+          }
+        }
+      },
+      "provenance": "FROZEN_VERIFIED_BASELINE"
+    },
+    "v03": {
+      "evidence_sha256": "cd818186c2ad82f7eede111026baee64c7c92e2cfcd6b05dcc087c8fdde2f02d",
+      "measured": {
+        "contract_invalid_labels": {
+          "interaction.ECHOSYSTEM_DESCRIPTION": 1,
+          "interaction.GRANT_DESCRIPTION": 2,
+          "interaction.SYSTEM_PROMPT": 1,
+          "product_focus.AREA": 1,
+          "product_focus.DATE": 1,
+          "product_focus.SERVICE_LEVEL": 1,
+          "product_focus.TASTE": 1
+        },
+        "historical": {
+          "exact": 45,
+          "interaction_correct": 52,
+          "parser_valid": 111,
+          "total": 119
+        },
+        "historical_by_expected_interaction": {
+          "AMBIGUOUS": {
+            "exact": 5,
+            "interaction_correct": 5,
+            "parser_valid": 12,
+            "total": 12
+          },
+          "AUDIENCE_DECLARATION": {
+            "exact": 0,
+            "interaction_correct": 2,
+            "parser_valid": 17,
+            "total": 17
+          },
+          "CONVERSATIONAL_CONTINUITY": {
+            "exact": 1,
+            "interaction_correct": 1,
+            "parser_valid": 6,
+            "total": 8
+          },
+          "DATA_INTRODUCTION": {
+            "exact": 11,
+            "interaction_correct": 11,
+            "parser_valid": 13,
+            "total": 14
+          },
+          "EXECUTION_REQUEST": {
+            "exact": 14,
+            "interaction_correct": 14,
+            "parser_valid": 14,
+            "total": 14
+          },
+          "OPERATIONAL_DESCRIPTION": {
+            "exact": 0,
+            "interaction_correct": 0,
+            "parser_valid": 15,
+            "total": 16
+          },
+          "PRODUCT_QUESTION": {
+            "exact": 10,
+            "interaction_correct": 15,
+            "parser_valid": 17,
+            "total": 19
+          },
+          "PROTECTED_DISCLOSURE": {
+            "exact": 3,
+            "interaction_correct": 3,
+            "parser_valid": 11,
+            "total": 12
+          },
+          "UNRELATED": {
+            "exact": 1,
+            "interaction_correct": 1,
+            "parser_valid": 6,
+            "total": 7
+          }
+        },
+        "historical_by_language": {
+          "en": {
+            "exact": 31,
+            "interaction_correct": 38,
+            "parser_valid": 82,
+            "total": 88
+          },
+          "it": {
+            "exact": 14,
+            "interaction_correct": 14,
+            "parser_valid": 27,
+            "total": 29
+          },
+          "mixed": {
+            "exact": 0,
+            "interaction_correct": 0,
+            "parser_valid": 2,
+            "total": 2
+          }
+        },
+        "historical_product_focus": {
+          "DOMAIN": {
+            "correct": 1,
+            "total": 5
+          },
+          "GENERAL_CAPABILITIES": {
+            "correct": 6,
+            "total": 6
+          },
+          "TIER": {
+            "correct": 3,
+            "total": 8
+          }
+        },
+        "historical_target_field_failures": {
+          "audience_declaration": 17,
+          "interaction": 59,
+          "parser_invalid": 8,
+          "product_focus": 14,
+          "resolution": 20
+        },
+        "invariants": {
+          "authority_violations": 0,
+          "execution_grant_violations": 0
+        },
+        "protected_disclosure": {
+          "ambiguous": 2,
+          "contract_invalid": 1,
+          "correct": 3,
+          "data_introduction": 3,
+          "execution_request": 2,
+          "total": 12,
+          "unrelated": 1
+        },
+        "role_oracle_conflicts": {
+          "diagnostic_sentence_boundary_bug": 27,
+          "total": 45,
+          "wrong_target_surface": 18
+        },
+        "v3_generated": {
+          "exact": 1000,
+          "interaction_correct": 1000,
+          "parser_valid": 1000,
+          "total": 1000
+        }
+      },
+      "provenance": "FROZEN_GCC4N_AUDIT"
+    },
+    "v04": {
+      "provenance": "MEASURED_IN_THIS_RUN",
+      "metrics": {
+        "v04.blind.adversarial": {
+          "total": 199,
+          "exact_target_accuracy": 1,
+          "interaction_accuracy": 1,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 1,
+          "hard_boundary_recall": 1
+        },
+        "v04.blind.holdout": {
+          "total": 150,
+          "exact_target_accuracy": 1,
+          "interaction_accuracy": 1,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 1,
+          "hard_boundary_recall": 1
+        },
+        "v04.blind.qualification": {
+          "total": 149,
+          "exact_target_accuracy": 1,
+          "interaction_accuracy": 1,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 1,
+          "hard_boundary_recall": 1
+        },
+        "v04.historical.adversarial": {
+          "total": 20,
+          "exact_target_accuracy": 0.75,
+          "interaction_accuracy": 0.75,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": null,
+          "hard_boundary_recall": 0.8
+        },
+        "v04.historical.gold": {
+          "total": 39,
+          "exact_target_accuracy": 0.8205128205128205,
+          "interaction_accuracy": 0.8461538461538461,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 0.3333333333333333,
+          "hard_boundary_recall": 0.9
+        },
+        "v04.historical.holdout": {
+          "total": 20,
+          "exact_target_accuracy": 0.6,
+          "interaction_accuracy": 1,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 0.4,
+          "hard_boundary_recall": null
+        },
+        "v04.historical.qualification": {
+          "total": 20,
+          "exact_target_accuracy": 0.8,
+          "interaction_accuracy": 0.95,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 0.2,
+          "hard_boundary_recall": 1
+        },
+        "v04.historical.validation": {
+          "total": 20,
+          "exact_target_accuracy": 0.55,
+          "interaction_accuracy": 0.75,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": null,
+          "hard_boundary_recall": 0.5
+        },
+        "v04.ood.v1": {
+          "total": 33,
+          "exact_target_accuracy": 0.7575757575757576,
+          "interaction_accuracy": 0.9090909090909091,
+          "parser_valid_rate": 0.9696969696969697,
+          "product_focus_accuracy": 0.42857142857142855,
+          "hard_boundary_recall": 0.9
+        },
+        "v04.validation": {
+          "total": 492,
+          "exact_target_accuracy": 1,
+          "interaction_accuracy": 1,
+          "parser_valid_rate": 1,
+          "product_focus_accuracy": 1,
+          "hard_boundary_recall": 1
+        }
+      }
+    }
+  }
+}

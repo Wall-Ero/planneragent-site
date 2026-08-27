@@ -61,8 +61,9 @@ def role_fidelity(records):
     for row in records:
         if row["expected"].get("interaction")!="AUDIENCE_DECLARATION":counts["NOT_APPLICABLE"]+=1;continue
         surface=declared_role_surface(row);expected=row["expected"].get("audience_declaration",{}).get("declared_role");predicted=(row["parsed_output"] or {}).get("audience_declaration",{}).get("declared_role")
-        if surface is not None and expected!=surface:counts["EVALUATION_ORACLE_CONFLICT"]+=1
-        elif surface is not None and predicted==surface:counts["ROLE_SURFACE_EXACT"]+=1
+        if surface is None:counts["NOT_APPLICABLE"]+=1
+        elif expected is not None and " ".join(expected.split())!=surface:counts["EVALUATION_ORACLE_CONFLICT"]+=1
+        elif predicted is not None and " ".join(predicted.split())==surface:counts["ROLE_SURFACE_EXACT"]+=1
         else:counts["ROLE_SURFACE_CHANGED"]+=1
     return {"policy_ref":ROLE_POLICY,"counts":counts,"raw_historical_score_preserved":True,"requester_role_non_authoritative":True,"grants_authority":False,"grants_execution":False}
 

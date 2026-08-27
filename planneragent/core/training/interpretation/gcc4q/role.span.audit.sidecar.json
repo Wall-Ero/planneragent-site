@@ -1,0 +1,27 @@
+{
+  "policy_ref": "DECLARED_ROLE_FIDELITY_POLICY_V1",
+  "evaluation_only": true,
+  "annotations": [
+    {"dataset":"v04.ood.v1","case_id":"0","text":"CFO"},
+    {"dataset":"v04.ood.v1","case_id":"1","text":"prodution planr"},
+    {"dataset":"v04.ood.v1","case_id":"2","text":"responsabile acquisti"},
+    {"dataset":"v04.ood.v1","case_id":"3","text":"demand planning lead"},
+    {"dataset":"v04.historical.gold","case_id":"audience-scm-manager","text":"supply chain manager"},
+    {"dataset":"v04.historical.gold","case_id":"audience-scm-typo","text":"suppy chain manager"},
+    {"dataset":"v04.historical.gold","case_id":"audience-scm","text":"SCM"},
+    {"dataset":"v04.historical.gold","case_id":"audience-production","text":"production planner"},
+    {"dataset":"v04.historical.gold","case_id":"audience-cfo","text":"CFO"},
+    {"dataset":"v04.historical.gold","case_id":"it-audience-scm","text":"supply chain manager"},
+    {"dataset":"v04.historical.gold","case_id":"it-audience-planning","text":"responsabile della pianificazione"},
+    {"dataset":"v04.historical.holdout","case_id":"pa-int-pilot-v1-record-166","text":"coordinate maintenance planning"},
+    {"dataset":"v04.historical.holdout","case_id":"pa-int-pilot-v1-record-167","text":"Maintenance planning lead"},
+    {"dataset":"v04.historical.holdout","case_id":"pa-int-pilot-v1-record-168","text":"maintenance schedules"},
+    {"dataset":"v04.historical.holdout","case_id":"pa-int-pilot-v1-record-169","text":"maintnance planing lead"},
+    {"dataset":"v04.historical.holdout","case_id":"pa-int-pilot-v1-record-170","text":"own the maintenance plan"},
+    {"dataset":"v04.historical.validation","case_id":"pa-int-pilot-v1-record-121","text":"oversee plant operations"},
+    {"dataset":"v04.historical.validation","case_id":"pa-int-pilot-v1-record-122","text":"Plant manager"},
+    {"dataset":"v04.historical.validation","case_id":"pa-int-pilot-v1-record-123","text":"responsible for factory operations"},
+    {"dataset":"v04.historical.validation","case_id":"pa-int-pilot-v1-record-124","text":"plnt ops manager"},
+    {"dataset":"v04.historical.validation","case_id":"pa-int-pilot-v1-record-125","text":"Operations management"}
+  ]
+}

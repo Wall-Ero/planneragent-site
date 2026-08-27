@@ -1,0 +1,72 @@
+{
+  "design_id": "GCC4S_V05_TARGETED_REPAIR_DESIGN_V1",
+  "version": 1,
+  "status": "AUTHORIZED_FOR_FUTURE_EXPERIMENT_PREPARATION_ONLY",
+  "training_authorized_in_gcc4r": false,
+  "candidate": "PA-INTERPRETATION-STUDENT-v0.5",
+  "experiment": "GCC-4S_TARGETED_REPAIR",
+  "fixed_experiment_controls": {
+    "base_model": "Qwen/Qwen3-0.6B-Base",
+    "base_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+    "architecture": "UNCHANGED_FROM_V0.4",
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "seed": 4701,
+    "evaluation_datasets": "UNCHANGED_FROZEN_V0.4_SET",
+    "ood_benchmark": "UNCHANGED_GCC4N_OOD_V1"
+  },
+  "targeted_delta": {
+    "total_records": 720,
+    "split_counts": {"TRAIN": 480, "VALIDATION": 80, "QUALIFICATION": 60, "HOLDOUT": 50, "ADVERSARIAL": 50},
+    "categories": [
+      {
+        "category": "DECLARED_ROLE_SURFACE_FIDELITY",
+        "records": 144,
+        "coverage": ["typos", "abbreviations", "mixed_language", "unusual_casing", "punctuation", "malformed_occupational_phrases", "partial_roles", "short_roles", "noncanonical_titles"],
+        "negative_pairs": [
+          ["prodution planr", "production planner"],
+          ["ops mgr", "operations manager"],
+          ["resp acquisti", "responsabile acquisti"],
+          ["CFO", "chief financial officer"],
+          ["plant ops", "plant manager"]
+        ],
+        "target_rule": "declared_role equals the literal requester role span after surrounding-whitespace normalization only"
+      },
+      {
+        "category": "DATA_INTRODUCTION_BOUNDARY",
+        "records": 240,
+        "contrasts": ["DATA_INTRODUCTION_vs_EXECUTION_REQUEST", "DATA_INTRODUCTION_vs_PROTECTED_DISCLOSURE", "DATA_INTRODUCTION_vs_AMBIGUOUS"],
+        "surface_requirements": ["connect", "load", "upload", "use this file", "ERP dump", "CSV", "trust my numbers", "low-quality grammar", "typos", "adversarial imperative wording"],
+        "rule": "Introducing evidence or a source is not operational execution and is not protected disclosure. No keyword classifier is added."
+      },
+      {
+        "category": "PRODUCT_FOCUS_TARGETED",
+        "records": 240,
+        "balanced_focus_counts": {"TIER": 80, "DOMAIN": 80, "LIMITATION": 80},
+        "requirements": ["natural phrasing", "English", "Italian", "mixed language", "indirect questions", "no renderer-identifying style"],
+        "enum": "UNCHANGED"
+      },
+      {
+        "category": "CLOSED_PROTOCOL_RESISTANCE",
+        "records": 96,
+        "requirements": ["valid JSON only", "exact closed enum", "no extra labels", "no prose wrapper", "no truncated object"],
+        "new_labels_allowed": false
+      }
+    ],
+    "diversity_rule": "Add independent semantic and renderer families; do not multiply paraphrases inside one template family.",
+    "sentinel_isolation": "No exact or normalized overlap with historical, GOLD, or OOD evaluation cases."
+  },
+  "qualification_evidence_required": [
+    "zero constitutional violations",
+    "zero requester role surface changes on all non-oracle-conflict cases",
+    "zero parser-invalid or out-of-enum results",
+    "hard-boundary materiality policy PASS",
+    "no material historical or GOLD interaction regression",
+    "OOD interaction remains meaningful",
+    "OOD TIER DOMAIN and LIMITATION each improve above zero without GENERAL_CAPABILITIES or GETTING_STARTED regression",
+    "unchanged raw evaluation artifacts with checksums"
+  ],
+  "decision_100k": "100K_NOT_JUSTIFIED",
+  "model_size_decision": "QWEN_0_6B_CAPACITY_NOT_YET_LIMITING"
+}

@@ -1,5 +1,6 @@
 import type { Env } from "../../types/env";
-import { sendEmailViaWebhook } from "../../notifications/channels/email.webhook";
+import { deliverEmailViaResendBridgeV1, type ResendBridgeResultV1 } from "./email.resend.delivery.bridge.v1";
+import { normalizeEmailIdentityV1 as normalizeCanonicalEmailV1 } from "./email.normalization.v1";
 import { identifier } from "../contracts/identifiers.v1";
 import type { ExternalAuthenticationIdentityV1 } from "../contracts/track-a.v1";
 import { D1OperationalIdentityRepositories } from "../persistence";
@@ -16,13 +17,7 @@ export type EmailOwnershipChallengeV1=Readonly<{version:1;challenge_id:string;ex
 export type RegisteredEmailSessionV1=Readonly<{version:1;status:"REGISTERED";session:AuthenticatedOperationalSessionV1}>;
 export class EmailOwnershipErrorV1 extends Error{constructor(readonly code:string){super(code);this.name="EmailOwnershipErrorV1"}}
 
-export function normalizeEmailIdentityV1(value:unknown):string{
- if(!text(value,320))throw new EmailOwnershipErrorV1("EMAIL_INVALID");const candidate=value.trim(),at=candidate.lastIndexOf("@");
- if(at<=0||at===candidate.length-1||candidate.indexOf("@")!==at)throw new EmailOwnershipErrorV1("EMAIL_INVALID");
- const local=candidate.slice(0,at),domain=candidate.slice(at+1).toLowerCase();
- if(!local||local.length>64||!domain.includes(".")||/\s/.test(candidate))throw new EmailOwnershipErrorV1("EMAIL_INVALID");
- return `${local}@${domain}`;
-}
+export function normalizeEmailIdentityV1(value:unknown):string{try{return normalizeCanonicalEmailV1(value)}catch{throw new EmailOwnershipErrorV1("EMAIL_INVALID")}}
 
 async function hmac(secret:string,value:string){if(!text(secret))throw new EmailOwnershipErrorV1("EMAIL_IDENTITY_CONFIGURATION_INVALID");const key=await crypto.subtle.importKey("raw",encoder.encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return bytes(await crypto.subtle.sign("HMAC",key,encoder.encode(value)))}
 function randomCode(){const data=new Uint32Array(1);crypto.getRandomValues(data);return String(data[0]!%100_000_000).padStart(8,"0")}
@@ -55,4 +50,4 @@ export class EmailOwnershipRegistrationRuntimeV1{
  }
 }
 
-export function createEmailOwnershipRuntimeV1(env:Pick<Env,"POLICIES_DB"|"EMAIL_CHALLENGE_HMAC_SECRET"|"EMAIL_IDENTITY_HMAC_SECRET"|"EMAIL_WEBHOOK_URL"|"EMAIL_WEBHOOK_TOKEN"|"EMAIL_FROM">){return new EmailOwnershipRegistrationRuntimeV1({store:new D1EmailOwnershipRepositoryV1(env.POLICIES_DB),challenge_secret:env.EMAIL_CHALLENGE_HMAC_SECRET??"",identity_secret:env.EMAIL_IDENTITY_HMAC_SECRET??"",challenge_ttl_ms:10*60_000,session_ttl_ms:30*24*60*60_000,now:()=>new Date().toISOString(),delivery:{send:async input=>(await sendEmailViaWebhook(env,{to:input.email,message:{subject:"Your PlannerAgent verification code",body:`Your verification code is ${input.code}. It expires at ${input.expires_at}.`}})).ok}})}
+export function createEmailOwnershipRuntimeV1(env:Pick<Env,"POLICIES_DB"|"EMAIL_CHALLENGE_HMAC_SECRET"|"EMAIL_IDENTITY_HMAC_SECRET"|"RESEND_API_KEY"|"EMAIL_FROM">,deliver:(env:Pick<Env,"RESEND_API_KEY"|"EMAIL_FROM">,input:Readonly<{to:unknown;subject:unknown;body:unknown}>)=>Promise<ResendBridgeResultV1>=deliverEmailViaResendBridgeV1){return new EmailOwnershipRegistrationRuntimeV1({store:new D1EmailOwnershipRepositoryV1(env.POLICIES_DB),challenge_secret:env.EMAIL_CHALLENGE_HMAC_SECRET??"",identity_secret:env.EMAIL_IDENTITY_HMAC_SECRET??"",challenge_ttl_ms:10*60_000,session_ttl_ms:30*24*60*60_000,now:()=>new Date().toISOString(),delivery:{send:async input=>(await deliver(env,{to:input.email,subject:"Your PlannerAgent verification code",body:`Your verification code is ${input.code}. It expires at ${input.expires_at}.`})).ok}})}

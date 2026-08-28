@@ -1,12 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../../../types/env";
 import { emailResendRelayRouteV1 } from "../email.resend.relay.route.v1";
+import { deliverEmailViaResendBridgeV1 } from "../email.resend.delivery.bridge.v1";
 
 const env = { EMAIL_WEBHOOK_TOKEN: "relay-secret", RESEND_API_KEY: "resend-secret", EMAIL_FROM: "PlannerAgent <identity@example.com>" } as Env;
 const request = (body: unknown, token = "relay-secret") => new Request("https://planneragent.test/internal/email/relay", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
 const payload = { to: "Person@EXAMPLE.COM", from: env.EMAIL_FROM!, subject: "Verify", body: "Code <123> & keep\nprivate" };
 
 describe("protected Resend email relay v1", () => {
+  it("uses the shared in-process bridge and fails closed without provider configuration", async () => {
+    const send = vi.fn(async () => ({ id: "message-bridge" }));
+    expect(await deliverEmailViaResendBridgeV1(env, { to: payload.to, subject: payload.subject, body: payload.body }, send)).toEqual({ ok: true, status: "MESSAGE_ACCEPTED_FOR_DELIVERY" });
+    expect(send).toHaveBeenCalledOnce();
+    expect(await deliverEmailViaResendBridgeV1({ ...env, RESEND_API_KEY: undefined }, payload, send)).toEqual({ ok: false, reason: "DELIVERY_NOT_CONFIGURED" });
+    expect(await deliverEmailViaResendBridgeV1({ ...env, EMAIL_FROM: undefined }, payload, send)).toEqual({ ok: false, reason: "DELIVERY_NOT_CONFIGURED" });
+    expect(send).toHaveBeenCalledOnce();
+  });
   it("authenticates, validates, escapes, and hands off once to the existing provider boundary", async () => {
     const send = vi.fn(async () => ({ id: "message-1" }));
     const response = await emailResendRelayRouteV1(request(payload), env, send);

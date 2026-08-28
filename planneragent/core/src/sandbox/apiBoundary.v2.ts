@@ -5,19 +5,21 @@
 // ===============================
 
 import type {
+  DatasetDescriptor,
   SandboxEvaluateRequestV2,
   PlanTier,
   PlanningDomain, // 👈 QUESTA
 } from "./contracts.v2";
-
-import type { DataAwarenessLevel } from "../reality/reality.types";
 
 // -------------------------------
 // Local helper types
 // -------------------------------
 
 type DatasetDescriptorLike = {
-  awareness_level?: number;
+  hasSnapshot?: unknown;
+  hasBehavioralEvents?: unknown;
+  hasStructuralData?: unknown;
+  awareness_level?: unknown;
 };
 
 // -------------------------------
@@ -49,35 +51,31 @@ function normalizePlan(plan: unknown): PlanTier {
 
 function normalizeDatasetDescriptor(
   x: unknown
-): { awareness_level?: DataAwarenessLevel } | undefined {
+): DatasetDescriptor | undefined {
   if (!x || typeof x !== "object") return undefined;
 
-  const raw = x as Record<string, unknown>;
-
-  let awareness: DataAwarenessLevel | undefined;
-
-  // 🔹 STRING → NUMBER (EDGE → CORE)
-  if (typeof raw.awareness_level === "string") {
-    const map: Record<string, DataAwarenessLevel> = {
-      NONE: 0,
-      SNAPSHOT: 1,
-      BEHAVIORAL: 2,
-      STRUCTURAL: 3,
+  const raw: DatasetDescriptorLike = x;
+  if (
+    typeof raw.hasSnapshot === "boolean" &&
+    typeof raw.hasBehavioralEvents === "boolean" &&
+    typeof raw.hasStructuralData === "boolean"
+  ) {
+    return {
+      hasSnapshot: raw.hasSnapshot,
+      hasBehavioralEvents: raw.hasBehavioralEvents,
+      hasStructuralData: raw.hasStructuralData,
     };
-
-    awareness = map[raw.awareness_level];
   }
 
-  // 🔹 NUMBER → NUMBER (compatibilità)
-  if (typeof raw.awareness_level === "number") {
-    if ([0, 1, 2, 3].includes(raw.awareness_level)) {
-      awareness = raw.awareness_level as DataAwarenessLevel;
-    }
-  }
+  const awareness = typeof raw.awareness_level === "string"
+    ? { NONE: 0, SNAPSHOT: 1, BEHAVIORAL: 2, STRUCTURAL: 3 }[raw.awareness_level]
+    : raw.awareness_level;
 
-  return {
-    awareness_level: awareness,
-  };
+  if (awareness === 0) return { hasSnapshot: false, hasBehavioralEvents: false, hasStructuralData: false };
+  if (awareness === 1) return { hasSnapshot: true, hasBehavioralEvents: false, hasStructuralData: false };
+  if (awareness === 2) return { hasSnapshot: true, hasBehavioralEvents: true, hasStructuralData: false };
+  if (awareness === 3) return { hasSnapshot: true, hasBehavioralEvents: true, hasStructuralData: true };
+  return undefined;
 }
 export function normalizeDomain(domain: unknown): PlanningDomain {
   const d = String(domain ?? "").toLowerCase();
@@ -96,7 +94,9 @@ export function normalizeDomain(domain: unknown): PlanningDomain {
 // Snapshot MUST NOT be provided by client
 // -------------------------------
 
-export function parseEdgeRequestV2(body: any) {
+export function parseEdgeRequestV2(
+  body: any
+): SandboxEvaluateRequestV2 & Required<Pick<SandboxEvaluateRequestV2, "actor_id">> {
   if (!body) throw new Error("EMPTY_BODY");
 
   const required = [
@@ -188,7 +188,7 @@ export function parseSandboxEvaluateRequestV2(body: any): SandboxEvaluateRequest
 
     baseline_metrics: body.baseline_metrics,
 
-    dataset_descriptor: normalizeDatasetDescriptor(body.dataset_descriptor) as any,
+    dataset_descriptor: normalizeDatasetDescriptor(body.dataset_descriptor),
 
     snapshot: body.snapshot,
 

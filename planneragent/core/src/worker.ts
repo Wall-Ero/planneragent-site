@@ -23,6 +23,7 @@ import { trustSovereigntyReadinessResponse } from "./cryptography/release/trust.
 import { anonymousVisionConversationRouteV1 } from "./conversation/anonymous.vision.conversation.route.v1";
 import { emailOwnershipRouteV1 } from "./operational-identity/email/email.ownership.route.v1";
 import { emailResendRelayRouteV1 } from "./operational-identity/email/email.resend.relay.route.v1";
+import { emailSessionRouteV1 } from "./operational-identity/email/email.session.route.v1";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
@@ -41,6 +42,9 @@ export default {
       }
       if (url.pathname === "/identity/email/challenge" || url.pathname === "/identity/email/verify") {
         return emailOwnershipRouteV1(req, env);
+      }
+      if (url.pathname === "/identity/session" || url.pathname === "/identity/logout") {
+        return emailSessionRouteV1(req, env);
       }
       if (url.pathname === "/internal/email/relay") {
         return emailResendRelayRouteV1(req, env);

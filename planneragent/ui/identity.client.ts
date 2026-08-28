@@ -1,0 +1,10 @@
+import type { AccountSessionState } from "./auth/AuthProvider";
+export class IdentityClientErrorV1 extends Error { constructor(readonly code: string) { super(code); } }
+export class IdentityClientV1 {
+  constructor(private readonly fetcher: typeof fetch = (...args) => globalThis.fetch(...args)) {}
+  private async post(path: string, body?: unknown) { const response = await this.fetcher(path, { method: "POST", credentials: "same-origin", headers: body === undefined ? undefined : { "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) }); const value = await response.json().catch(() => ({})) as any; if (!response.ok) throw new IdentityClientErrorV1(typeof value.error === "string" ? value.error : "TEMPORARY_FAILURE"); return value; }
+  async session(): Promise<AccountSessionState> { try { const response = await this.fetcher("/identity/session", { method: "GET", credentials: "same-origin" }); if (!response.ok) return { status: "ANONYMOUS" }; const value = await response.json() as any; return value?.status === "REGISTERED" && typeof value.expires_at === "string" ? { status: "REGISTERED", expires_at: value.expires_at } : { status: "ANONYMOUS" }; } catch { return { status: "ANONYMOUS" }; } }
+  async challenge(email: string) { const value = await this.post("/identity/email/challenge", { email }); if (typeof value.challenge_id !== "string" || typeof value.expires_at !== "string") throw new IdentityClientErrorV1("TEMPORARY_FAILURE"); return { challenge_id: value.challenge_id, expires_at: value.expires_at } as const; }
+  async verify(challenge_id: string, code: string): Promise<Extract<AccountSessionState, { status: "REGISTERED" }>> { const value = await this.post("/identity/email/verify", { challenge_id, code }); if (value.status !== "REGISTERED" || typeof value.expires_at !== "string") throw new IdentityClientErrorV1("TEMPORARY_FAILURE"); return { status: "REGISTERED", expires_at: value.expires_at }; }
+  async logout() { await this.post("/identity/logout"); return { status: "ANONYMOUS" } as const; }
+}

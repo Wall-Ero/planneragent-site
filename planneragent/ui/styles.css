@@ -108,6 +108,19 @@ h1, h2, p { margin: 0; }
 .text-control:first-child { justify-self: start; margin-left: 14px; }
 .text-control:last-child { justify-self: end; margin-right: 14px; }
 .text-control:focus-visible, .composer-button:focus-visible, .help:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+.identity-control[data-account-state="REGISTERED"] { color: var(--gold-hi); }
+.identity-overlay { position: fixed; z-index: 20; inset: 0; display: grid; padding: 1rem; background: rgba(3,3,2,.78); place-items: center; }
+.identity-modal { position: relative; width: min(92vw, 390px); padding: clamp(1.25rem,4vw,2rem); border: 1px solid var(--gold-deep); background: var(--panel); box-shadow: 0 0 0 1px rgba(198,150,61,.15),0 1rem 4rem rgba(0,0,0,.7); }
+.identity-modal h2 { margin-bottom: .55rem; color: var(--brand-wordmark); font-size: 1.15rem; letter-spacing: .06em; }
+.identity-modal label { display: block; margin: 1.1rem 0 .35rem; color: var(--gold-soft); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+.identity-modal input { width: 100%; padding: .7rem .75rem; border: 1px solid var(--gold-deep); outline: none; background: var(--hud-black); color: var(--conversation); }
+.identity-modal input:focus { border-color: var(--gold); }
+.identity-close { position: absolute; top: .55rem; right: .7rem; color: var(--gold); font-size: 1.4rem; }
+.identity-note { color: var(--conversation-invitation); font-size: .85rem; line-height: 1.5; }
+.identity-status { margin-block: 1.2rem .4rem; color: var(--gold-hi); letter-spacing: .14em; text-transform: uppercase; }
+.identity-error { min-height: 1.4em; margin-top: .55rem; color: #d89a86; font-size: .8rem; }
+.identity-primary { width: 100%; margin-top: .6rem; padding: .68rem; border: 1px solid var(--gold); color: var(--gold-hi); letter-spacing: .1em; text-transform: uppercase; }
+.identity-secondary-row { display: flex; margin-top: .85rem; justify-content: space-between; gap: 1rem; color: var(--gold-soft); font-size: .78rem; }
 
 .hud-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; color: var(--gold); pointer-events: none; }
 .hud-surface, .hud-surface * { fill: var(--panel); stroke: none; }

@@ -1,5 +1,5 @@
 import "./styles.css";
-import { getSession, projectServerSession } from "./auth/AuthProvider";
+import { getSession, identityControlLabelV1, projectServerSession } from "./auth/AuthProvider";
 import { appConfig } from "./app/app.config";
 import { createCockpitPresentation, type CockpitTransportResponse } from "./cockpit.presentation";
 import {
@@ -41,7 +41,7 @@ async function bootstrap(){const root=document.querySelector<HTMLElement>("#app"
  </main></div></div>`;
  const composer=root.querySelector<HTMLFormElement>(".composer"),message=composer?.querySelector<HTMLInputElement>("#message"),action=composer?.querySelector<HTMLButtonElement>(".composer-action"),conversation=root.querySelector<HTMLElement>(".conversation"),invitation=conversation?.querySelector<HTMLElement>(".conversation-invitation");
  const client=new AnonymousConversationClientV1();
- const identityControl=root.querySelector<HTMLButtonElement>(".identity-control"),syncIdentity=(value=getSession())=>{if(identityControl){identityControl.dataset.accountState=value.status;identityControl.ariaLabel=`Identity (${value.status})`;identityControl.textContent=value.status==="REGISTERED"?"ID · REGISTERED":"ID";}},acceptSession=(value:ReturnType<typeof getSession>)=>{projectServerSession(value);syncIdentity();};identityControl?.addEventListener("click",()=>root.append(createIdentityModalV1(document,identity,getSession(),acceptSession)));syncIdentity();
+ const identityControl=root.querySelector<HTMLButtonElement>(".identity-control"),syncIdentity=(value=getSession())=>{if(identityControl){identityControl.dataset.accountState=value.status;identityControl.ariaLabel=`Identity (${value.status})`;identityControl.textContent=identityControlLabelV1(value);}},acceptSession=(value:ReturnType<typeof getSession>)=>{projectServerSession(value);syncIdentity();};identityControl?.addEventListener("click",()=>root.append(createIdentityModalV1(document,identity,getSession(),acceptSession)));syncIdentity();
  let generating=false;
  let transcript:HTMLElement|undefined,exchanges:ConversationExchangeV1[]=[];
  const syncComposer=()=>{if(!composer||!message||!action)return;const ready=message.value.trim().length>0;composer.dataset.chatState=generating?"generating":ready?"ready-to-send":"empty";action.hidden=!generating&&!ready;action.textContent=generating?"\u25a0":"\u2191";action.ariaLabel=generating?"Stop response":"Send message";action.title=action.ariaLabel;};

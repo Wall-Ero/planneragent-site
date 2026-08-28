@@ -118,6 +118,7 @@ h1, h2, p { margin: 0; }
 .identity-close { position: absolute; top: .55rem; right: .7rem; color: var(--gold); font-size: 1.4rem; }
 .identity-note { color: var(--conversation-invitation); font-size: .85rem; line-height: 1.5; }
 .identity-status { margin-block: 1.2rem .4rem; color: var(--gold-hi); letter-spacing: .14em; text-transform: uppercase; }
+.identity-account-email { margin-top: 1.2rem; overflow-wrap: anywhere; color: var(--conversation); }
 .identity-error { min-height: 1.4em; margin-top: .55rem; color: #d89a86; font-size: .8rem; }
 .identity-primary { width: 100%; margin-top: .6rem; padding: .68rem; border: 1px solid var(--gold); color: var(--gold-hi); letter-spacing: .1em; text-transform: uppercase; }
 .identity-secondary-row { display: flex; margin-top: .85rem; justify-content: space-between; gap: 1rem; color: var(--gold-soft); font-size: .78rem; }

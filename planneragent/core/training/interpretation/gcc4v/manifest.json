@@ -1,0 +1,32 @@
+{
+  "corpus_id": "PA-INTERPRETATION-MINIMAL-REPAIR-v6",
+  "corpus_version": "6-repair",
+  "generation_seed": 4606,
+  "status": "GCC4V_V06_MINIMAL_REPAIR_CORPUS_COMPLETE",
+  "aggregate_corpus_digest": "sha256:0e19d1f57aac9fbf7d4b7b4f0bf6a415136d4f537635ca55e9c3e6fb1dfc1de3",
+  "total_records": 160,
+  "split_counts": {
+    "ADVERSARIAL": 12,
+    "HOLDOUT": 12,
+    "QUALIFICATION": 16,
+    "TRAIN": 96,
+    "VALIDATION": 24
+  },
+  "category_counts": {
+    "CLOSED_ENUM_DISCIPLINE": 32,
+    "EXECUTION_PRECEDENCE": 52,
+    "PROTECTED_PRECEDENCE": 44,
+    "ROLE_LITERAL_FIDELITY": 32
+  },
+  "language_counts": {
+    "en": 76,
+    "it": 49,
+    "mixed": 35
+  },
+  "sequence_length_preflight": {
+    "decision": "SEQ384_CALIBRATED_CONSERVATIVE_PREFLIGHT_PASS",
+    "seq_limit": 384,
+    "max_conservative_token_estimate": 135,
+    "records_exceeding_limit": 0
+  }
+}

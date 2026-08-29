@@ -1,0 +1,160 @@
+{
+  "total_records": 160,
+  "split_counts": {
+    "ADVERSARIAL": 12,
+    "HOLDOUT": 12,
+    "QUALIFICATION": 16,
+    "TRAIN": 96,
+    "VALIDATION": 24
+  },
+  "category_counts": {
+    "CLOSED_ENUM_DISCIPLINE": 32,
+    "EXECUTION_PRECEDENCE": 52,
+    "PROTECTED_PRECEDENCE": 44,
+    "ROLE_LITERAL_FIDELITY": 32
+  },
+  "category_split_counts": {
+    "PROTECTED_PRECEDENCE/TRAIN": 26,
+    "PROTECTED_PRECEDENCE/VALIDATION": 7,
+    "PROTECTED_PRECEDENCE/QUALIFICATION": 4,
+    "PROTECTED_PRECEDENCE/HOLDOUT": 3,
+    "PROTECTED_PRECEDENCE/ADVERSARIAL": 4,
+    "EXECUTION_PRECEDENCE/TRAIN": 31,
+    "EXECUTION_PRECEDENCE/VALIDATION": 8,
+    "EXECUTION_PRECEDENCE/QUALIFICATION": 5,
+    "EXECUTION_PRECEDENCE/HOLDOUT": 4,
+    "EXECUTION_PRECEDENCE/ADVERSARIAL": 4,
+    "ROLE_LITERAL_FIDELITY/TRAIN": 20,
+    "ROLE_LITERAL_FIDELITY/VALIDATION": 4,
+    "ROLE_LITERAL_FIDELITY/QUALIFICATION": 4,
+    "ROLE_LITERAL_FIDELITY/HOLDOUT": 2,
+    "ROLE_LITERAL_FIDELITY/ADVERSARIAL": 2,
+    "CLOSED_ENUM_DISCIPLINE/TRAIN": 19,
+    "CLOSED_ENUM_DISCIPLINE/VALIDATION": 5,
+    "CLOSED_ENUM_DISCIPLINE/QUALIFICATION": 3,
+    "CLOSED_ENUM_DISCIPLINE/HOLDOUT": 3,
+    "CLOSED_ENUM_DISCIPLINE/ADVERSARIAL": 2
+  },
+  "language_counts": {
+    "en": 76,
+    "it": 49,
+    "mixed": 35
+  },
+  "category_split_language_counts": {
+    "PROTECTED_PRECEDENCE/TRAIN": {
+      "en": 13,
+      "it": 8,
+      "mixed": 5
+    },
+    "PROTECTED_PRECEDENCE/VALIDATION": {
+      "en": 3,
+      "it": 2,
+      "mixed": 2
+    },
+    "PROTECTED_PRECEDENCE/QUALIFICATION": {
+      "en": 2,
+      "it": 1,
+      "mixed": 1
+    },
+    "PROTECTED_PRECEDENCE/HOLDOUT": {
+      "en": 2,
+      "it": 1
+    },
+    "PROTECTED_PRECEDENCE/ADVERSARIAL": {
+      "en": 2,
+      "it": 1,
+      "mixed": 1
+    },
+    "EXECUTION_PRECEDENCE/TRAIN": {
+      "en": 14,
+      "it": 10,
+      "mixed": 7
+    },
+    "EXECUTION_PRECEDENCE/VALIDATION": {
+      "en": 4,
+      "it": 3,
+      "mixed": 1
+    },
+    "EXECUTION_PRECEDENCE/QUALIFICATION": {
+      "en": 2,
+      "it": 2,
+      "mixed": 1
+    },
+    "EXECUTION_PRECEDENCE/HOLDOUT": {
+      "en": 1,
+      "it": 2,
+      "mixed": 1
+    },
+    "EXECUTION_PRECEDENCE/ADVERSARIAL": {
+      "en": 2,
+      "it": 1,
+      "mixed": 1
+    },
+    "ROLE_LITERAL_FIDELITY/TRAIN": {
+      "en": 9,
+      "it": 7,
+      "mixed": 4
+    },
+    "ROLE_LITERAL_FIDELITY/VALIDATION": {
+      "en": 2,
+      "it": 1,
+      "mixed": 1
+    },
+    "ROLE_LITERAL_FIDELITY/QUALIFICATION": {
+      "en": 2,
+      "it": 1,
+      "mixed": 1
+    },
+    "ROLE_LITERAL_FIDELITY/HOLDOUT": {
+      "en": 1,
+      "it": 1
+    },
+    "ROLE_LITERAL_FIDELITY/ADVERSARIAL": {
+      "en": 1,
+      "mixed": 1
+    },
+    "CLOSED_ENUM_DISCIPLINE/TRAIN": {
+      "en": 10,
+      "it": 5,
+      "mixed": 4
+    },
+    "CLOSED_ENUM_DISCIPLINE/VALIDATION": {
+      "en": 2,
+      "it": 1,
+      "mixed": 2
+    },
+    "CLOSED_ENUM_DISCIPLINE/QUALIFICATION": {
+      "en": 1,
+      "it": 1,
+      "mixed": 1
+    },
+    "CLOSED_ENUM_DISCIPLINE/HOLDOUT": {
+      "en": 2,
+      "it": 1
+    },
+    "CLOSED_ENUM_DISCIPLINE/ADVERSARIAL": {
+      "en": 1,
+      "mixed": 1
+    }
+  },
+  "semantic_family_count": 160,
+  "renderer_family_count": 160,
+  "cross_split_semantic_family_collisions": 0,
+  "cross_split_renderer_overlap": 0,
+  "exact_duplicate_collisions": 0,
+  "normalized_duplicate_collisions": 0,
+  "visible_synthetic_marker_count": 0,
+  "parser_valid_targets": 160,
+  "malformed_target_count": 0,
+  "illegal_interaction_enum_count": 0,
+  "illegal_product_focus_enum_count": 0,
+  "authority_grant_violations": 0,
+  "execution_grant_violations": 0,
+  "requester_truth_violations": 0,
+  "role_surface_mutations": 0,
+  "protected_precedence_oracle_failures": 0,
+  "execution_precedence_oracle_failures": 0,
+  "historical_overlap_count": 0,
+  "ood_v1_overlap_count": 0,
+  "gcc4t_evaluation_overlap_count": 0
+}

@@ -1,0 +1,39 @@
+{
+  "composition_id": "PA-INTERPRETATION-v06-FUTURE-TRAIN",
+  "training_authorized": false,
+  "training_performed": false,
+  "base_model": "Qwen/Qwen3-0.6B-Base",
+  "base_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+  "max_sequence_length": 384,
+  "sources": [
+    {
+      "corpus_id": "PA-INTERPRETATION-CURRICULUM-v4",
+      "split": "TRAIN",
+      "records": 7712,
+      "file_sha256": "f00c2913aeb3f35191b11463196b51f3524714d8c23044a98acffb8e9db62a4b"
+    },
+    {
+      "corpus_id": "PA-INTERPRETATION-TARGETED-REPAIR-v5",
+      "split": "TRAIN",
+      "records": 480,
+      "file_sha256": "8aab2a037f3bc5c9742f5828eff6b153a83f32f0ffc3677d0c80eae9c6fae373"
+    },
+    {
+      "corpus_id": "PA-INTERPRETATION-MINIMAL-REPAIR-v6",
+      "split": "TRAIN",
+      "records": 96,
+      "aggregate_digest": "sha256:0e19d1f57aac9fbf7d4b7b4f0bf6a415136d4f537635ca55e9c3e6fb1dfc1de3"
+    }
+  ],
+  "total_training_records": 8288,
+  "non_train_records_included": 0,
+  "normalized_duplicate_collisions_across_sources": 0,
+  "hyperparameters_changed": false,
+  "sequence_length_preflight": {
+    "decision": "SEQ384_CALIBRATED_CONSERVATIVE_PREFLIGHT_PASS",
+    "seq_limit": 384,
+    "max_conservative_token_estimate": 135,
+    "records_exceeding_limit": 0
+  },
+  "status": "V06_TRAIN_PREFLIGHT_READY"
+}

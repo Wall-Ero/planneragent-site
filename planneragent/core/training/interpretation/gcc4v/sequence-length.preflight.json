@@ -1,0 +1,976 @@
+{
+  "decision": "SEQ384_CALIBRATED_CONSERVATIVE_PREFLIGHT_PASS",
+  "method": "Frozen Qwen3 tokenizer measurements for all 720 v5 records calibrate the maximum tokenizer-token/Unicode-lexical-unit ratio; v6 applies that worst ratio plus 15% margin.",
+  "physical_reference_model": "Qwen/Qwen3-0.6B-Base",
+  "physical_reference_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+  "physical_reference_measurement_digest": "sha256:b1bea4ee9a60acf4f16bd4b3b51cd4bbaa2bbb2f2bb8ca26d48207591fb92318",
+  "calibration_records": 720,
+  "worst_reference_ratio": 1.1473684210526316,
+  "safety_multiplier": 1.15,
+  "seq_limit": 384,
+  "measured_v6_records": 160,
+  "max_conservative_token_estimate": 135,
+  "records_exceeding_limit": 0,
+  "record_estimates": [
+    {
+      "record_id": "pa-int-repair-v6-record-0001",
+      "split": "TRAIN",
+      "lexical_units": 90,
+      "conservative_token_estimate": 119
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0002",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0003",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0004",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0005",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0006",
+      "split": "TRAIN",
+      "lexical_units": 90,
+      "conservative_token_estimate": 119
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0007",
+      "split": "TRAIN",
+      "lexical_units": 82,
+      "conservative_token_estimate": 109
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0008",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0009",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0010",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0011",
+      "split": "TRAIN",
+      "lexical_units": 90,
+      "conservative_token_estimate": 119
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0012",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0013",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0014",
+      "split": "TRAIN",
+      "lexical_units": 82,
+      "conservative_token_estimate": 109
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0015",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0016",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0017",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0018",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0019",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0020",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0021",
+      "split": "TRAIN",
+      "lexical_units": 80,
+      "conservative_token_estimate": 106
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0022",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0023",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0024",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0025",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0026",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0045",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0046",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0047",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0048",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0049",
+      "split": "TRAIN",
+      "lexical_units": 88,
+      "conservative_token_estimate": 117
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0050",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0051",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0052",
+      "split": "TRAIN",
+      "lexical_units": 81,
+      "conservative_token_estimate": 107
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0053",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0054",
+      "split": "TRAIN",
+      "lexical_units": 88,
+      "conservative_token_estimate": 117
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0055",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0056",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0057",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0058",
+      "split": "TRAIN",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0059",
+      "split": "TRAIN",
+      "lexical_units": 89,
+      "conservative_token_estimate": 118
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0060",
+      "split": "TRAIN",
+      "lexical_units": 80,
+      "conservative_token_estimate": 106
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0061",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0062",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0063",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0064",
+      "split": "TRAIN",
+      "lexical_units": 89,
+      "conservative_token_estimate": 118
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0065",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0066",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0067",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0068",
+      "split": "TRAIN",
+      "lexical_units": 81,
+      "conservative_token_estimate": 107
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0069",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0070",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0071",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0072",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0073",
+      "split": "TRAIN",
+      "lexical_units": 81,
+      "conservative_token_estimate": 107
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0074",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0075",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0097",
+      "split": "TRAIN",
+      "lexical_units": 99,
+      "conservative_token_estimate": 131
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0098",
+      "split": "TRAIN",
+      "lexical_units": 99,
+      "conservative_token_estimate": 131
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0099",
+      "split": "TRAIN",
+      "lexical_units": 101,
+      "conservative_token_estimate": 134
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0100",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0101",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0102",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0103",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0104",
+      "split": "TRAIN",
+      "lexical_units": 101,
+      "conservative_token_estimate": 134
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0105",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0106",
+      "split": "TRAIN",
+      "lexical_units": 98,
+      "conservative_token_estimate": 130
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0107",
+      "split": "TRAIN",
+      "lexical_units": 100,
+      "conservative_token_estimate": 132
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0108",
+      "split": "TRAIN",
+      "lexical_units": 98,
+      "conservative_token_estimate": 130
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0109",
+      "split": "TRAIN",
+      "lexical_units": 98,
+      "conservative_token_estimate": 130
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0110",
+      "split": "TRAIN",
+      "lexical_units": 102,
+      "conservative_token_estimate": 135
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0111",
+      "split": "TRAIN",
+      "lexical_units": 100,
+      "conservative_token_estimate": 132
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0112",
+      "split": "TRAIN",
+      "lexical_units": 100,
+      "conservative_token_estimate": 132
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0113",
+      "split": "TRAIN",
+      "lexical_units": 99,
+      "conservative_token_estimate": 131
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0114",
+      "split": "TRAIN",
+      "lexical_units": 101,
+      "conservative_token_estimate": 134
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0115",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0116",
+      "split": "TRAIN",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0129",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0130",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0131",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0132",
+      "split": "TRAIN",
+      "lexical_units": 79,
+      "conservative_token_estimate": 105
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0133",
+      "split": "TRAIN",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0134",
+      "split": "TRAIN",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0135",
+      "split": "TRAIN",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0136",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0137",
+      "split": "TRAIN",
+      "lexical_units": 79,
+      "conservative_token_estimate": 105
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0138",
+      "split": "TRAIN",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0139",
+      "split": "TRAIN",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0140",
+      "split": "TRAIN",
+      "lexical_units": 81,
+      "conservative_token_estimate": 107
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0141",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0142",
+      "split": "TRAIN",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0143",
+      "split": "TRAIN",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0144",
+      "split": "TRAIN",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0145",
+      "split": "TRAIN",
+      "lexical_units": 82,
+      "conservative_token_estimate": 109
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0146",
+      "split": "TRAIN",
+      "lexical_units": 81,
+      "conservative_token_estimate": 107
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0147",
+      "split": "TRAIN",
+      "lexical_units": 77,
+      "conservative_token_estimate": 102
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0027",
+      "split": "VALIDATION",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0028",
+      "split": "VALIDATION",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0029",
+      "split": "VALIDATION",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0030",
+      "split": "VALIDATION",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0031",
+      "split": "VALIDATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0032",
+      "split": "VALIDATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0033",
+      "split": "VALIDATION",
+      "lexical_units": 80,
+      "conservative_token_estimate": 106
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0076",
+      "split": "VALIDATION",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0077",
+      "split": "VALIDATION",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0078",
+      "split": "VALIDATION",
+      "lexical_units": 88,
+      "conservative_token_estimate": 117
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0079",
+      "split": "VALIDATION",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0080",
+      "split": "VALIDATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0081",
+      "split": "VALIDATION",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0082",
+      "split": "VALIDATION",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0083",
+      "split": "VALIDATION",
+      "lexical_units": 79,
+      "conservative_token_estimate": 105
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0117",
+      "split": "VALIDATION",
+      "lexical_units": 101,
+      "conservative_token_estimate": 134
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0118",
+      "split": "VALIDATION",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0119",
+      "split": "VALIDATION",
+      "lexical_units": 98,
+      "conservative_token_estimate": 130
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0120",
+      "split": "VALIDATION",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0148",
+      "split": "VALIDATION",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0149",
+      "split": "VALIDATION",
+      "lexical_units": 79,
+      "conservative_token_estimate": 105
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0150",
+      "split": "VALIDATION",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0151",
+      "split": "VALIDATION",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0152",
+      "split": "VALIDATION",
+      "lexical_units": 82,
+      "conservative_token_estimate": 109
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0034",
+      "split": "QUALIFICATION",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0035",
+      "split": "QUALIFICATION",
+      "lexical_units": 90,
+      "conservative_token_estimate": 119
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0036",
+      "split": "QUALIFICATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0037",
+      "split": "QUALIFICATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0084",
+      "split": "QUALIFICATION",
+      "lexical_units": 88,
+      "conservative_token_estimate": 117
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0085",
+      "split": "QUALIFICATION",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0086",
+      "split": "QUALIFICATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0087",
+      "split": "QUALIFICATION",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0088",
+      "split": "QUALIFICATION",
+      "lexical_units": 81,
+      "conservative_token_estimate": 107
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0121",
+      "split": "QUALIFICATION",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0122",
+      "split": "QUALIFICATION",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0123",
+      "split": "QUALIFICATION",
+      "lexical_units": 98,
+      "conservative_token_estimate": 130
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0124",
+      "split": "QUALIFICATION",
+      "lexical_units": 101,
+      "conservative_token_estimate": 134
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0153",
+      "split": "QUALIFICATION",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0154",
+      "split": "QUALIFICATION",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0155",
+      "split": "QUALIFICATION",
+      "lexical_units": 82,
+      "conservative_token_estimate": 109
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0038",
+      "split": "HOLDOUT",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0039",
+      "split": "HOLDOUT",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0040",
+      "split": "HOLDOUT",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0089",
+      "split": "HOLDOUT",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0090",
+      "split": "HOLDOUT",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0091",
+      "split": "HOLDOUT",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0092",
+      "split": "HOLDOUT",
+      "lexical_units": 85,
+      "conservative_token_estimate": 113
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0125",
+      "split": "HOLDOUT",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0126",
+      "split": "HOLDOUT",
+      "lexical_units": 102,
+      "conservative_token_estimate": 135
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0156",
+      "split": "HOLDOUT",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0157",
+      "split": "HOLDOUT",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0158",
+      "split": "HOLDOUT",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0041",
+      "split": "ADVERSARIAL",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0042",
+      "split": "ADVERSARIAL",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0043",
+      "split": "ADVERSARIAL",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0044",
+      "split": "ADVERSARIAL",
+      "lexical_units": 84,
+      "conservative_token_estimate": 111
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0093",
+      "split": "ADVERSARIAL",
+      "lexical_units": 87,
+      "conservative_token_estimate": 115
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0094",
+      "split": "ADVERSARIAL",
+      "lexical_units": 88,
+      "conservative_token_estimate": 117
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0095",
+      "split": "ADVERSARIAL",
+      "lexical_units": 86,
+      "conservative_token_estimate": 114
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0096",
+      "split": "ADVERSARIAL",
+      "lexical_units": 83,
+      "conservative_token_estimate": 110
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0127",
+      "split": "ADVERSARIAL",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0128",
+      "split": "ADVERSARIAL",
+      "lexical_units": 97,
+      "conservative_token_estimate": 128
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0159",
+      "split": "ADVERSARIAL",
+      "lexical_units": 79,
+      "conservative_token_estimate": 105
+    },
+    {
+      "record_id": "pa-int-repair-v6-record-0160",
+      "split": "ADVERSARIAL",
+      "lexical_units": 78,
+      "conservative_token_estimate": 103
+    }
+  ]
+}

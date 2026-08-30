@@ -1,5 +1,6 @@
 node_modules/
 *.tar.gz
+/core/training-artifacts/gcc4w/PA-INTERPRETATION-STUDENT-v0.6-GCC4W.zip
 dist/
 .vscode/
 

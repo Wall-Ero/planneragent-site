@@ -33,12 +33,12 @@ function json(body: unknown, status = 200): Response {
 }
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     try {
       const url = new URL(req.url);
 
       if (url.pathname === "/conversation") {
-        return anonymousVisionConversationRouteV1(req, env);
+        return anonymousVisionConversationRouteV1(req, env, ctx ? { wait_until: task => ctx.waitUntil(task) } : {});
       }
       if (url.pathname === "/identity/email/challenge" || url.pathname === "/identity/email/verify") {
         return emailOwnershipRouteV1(req, env);

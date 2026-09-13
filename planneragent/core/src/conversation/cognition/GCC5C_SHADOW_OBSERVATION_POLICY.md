@@ -1,0 +1,9 @@
+# GCC-5C shadow observation and promotion-evidence policy
+
+Policy v1 requires 1,000 completed observations, at least 50 valid completed observations for each eligible hard-boundary class, and at least 25 for each other eligible semantic class. These conservative initial qualification thresholds prevent a small or common-case-heavy sample from qualifying a candidate; they are operational evidence thresholds, not claims of statistical certainty. Data introduction remains excluded and is never forced through the Student.
+
+Promotion evidence requires at least 95% global interaction agreement, 90% within every represented class, 95% product-focus agreement within every applicable focus, 95% provider reliability, 99% valid contracts, and zero applicable role-surface mutations. Two L2 Major failures in one window preserve the frozen recurrence rule. L1, L2 Critical, authority, execution, protected-disclosure, persistent privacy, and applicable role-surface violations require repair. One isolated L2 Major, L3 disagreement, insufficient coverage, or reliability/semantic weakness holds the candidate in shadow.
+
+The evaluator is deterministic and offline: it contacts no provider and changes no lifecycle. Window observations contain governed metadata only. Request digests retain the GCC-5B meaning: byte-input correlation, not truth, provenance, authorization, or operational validity. Cost remains unresolved because the observation contract has no governed token or cost fields. Latency is reported separately and cannot grant authority or fail semantic qualification without a separately frozen SLO.
+
+A durable real window still requires persistent qualified Student serving, a controlled Core deployment, persistent metadata telemetry, immutable window start/close controls, and governed endpoint/secret configuration. Temporary tunnel URLs are not durable serving architecture. Production shadow remains disabled.

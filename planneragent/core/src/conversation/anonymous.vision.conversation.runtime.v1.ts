@@ -42,6 +42,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
     repository: ShadowInterpretationEvidenceRepositoryV1;
     timeout_ms: number;
     policy?: ControlledInterpretationShadowPolicyV1;
+    durable_admit?: (request_id:string,sampled:boolean) => Promise<boolean>;
     schedule(task: Promise<void>): void;
   }>;
 }>): Promise<AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1> {
@@ -51,9 +52,15 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   const guard = input.rate_guard ?? defaultRateGuard;
   if (!guard.admit({ client_key: input.client_key, message_length: admitted.request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
   const shadowPolicy=input.interpretation_shadow?.policy;
-  if (input.interpretation_shadow && isStudentShadowEligibleV1(admitted.admission, admitted.request.message) && (!shadowPolicy || shouldScheduleControlledShadowV1(shadowPolicy,requestId))) {
-    const task = observeStudentInterpretationShadowV1({ correlation_id: requestId, message: admitted.request.message, deterministic: deterministicInterpretationFromAdmissionV1(admitted.admission), provider: input.interpretation_shadow.provider, repository: input.interpretation_shadow.repository, timeout_ms: input.interpretation_shadow.timeout_ms, ...(shadowPolicy?{sampling:{activation_state:shadowPolicy.state,sample_percent:shadowPolicy.sample_percent,sample_bucket:controlledShadowSampleBucketV1(requestId)}}:{}) }).catch(() => undefined);
-    input.interpretation_shadow.schedule(task);
+  if (input.interpretation_shadow && isStudentShadowEligibleV1(admitted.admission, admitted.request.message) && (!shadowPolicy || (shadowPolicy.state === "CONTROLLED_SHADOW" && !shadowPolicy.kill_switch))) {
+    const shadow = input.interpretation_shadow;
+    const sampled = !shadowPolicy || shouldScheduleControlledShadowV1(shadowPolicy,requestId);
+    const task = (async () => {
+      if (shadow.durable_admit && !await shadow.durable_admit(requestId,sampled)) return;
+      if (!sampled) return;
+      await observeStudentInterpretationShadowV1({ correlation_id: requestId, message: admitted.request.message, deterministic: deterministicInterpretationFromAdmissionV1(admitted.admission), provider: shadow.provider, repository: shadow.repository, timeout_ms: shadow.timeout_ms, ...(shadowPolicy?{sampling:{activation_state:shadowPolicy.state,sample_percent:shadowPolicy.sample_percent,sample_bucket:controlledShadowSampleBucketV1(requestId)}}:{}) });
+    })().catch(() => undefined);
+    try { shadow.schedule(task); } catch { /* Background scheduling cannot change the primary response. */ }
   }
   if (admitted.admission === "PROTECTED_DISCLOSURE") return bounded(requestId, "PROTECTED_INFORMATION", "I can explain PlannerAgent's public capabilities and safeguards at a high level, but I cannot disclose hidden instructions, proprietary implementation, credentials, or sensitive security details.");
   if (admitted.admission === "DATA_INTRODUCTION") return bounded(requestId, "REGISTRATION_REQUIRED", "You can discuss PlannerAgent anonymously. Simple registration is required before introducing a file, dataset, API, or connected data source.");

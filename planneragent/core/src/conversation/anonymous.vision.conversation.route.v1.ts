@@ -4,7 +4,8 @@ import { runAnonymousVisionConversationV1 } from "./anonymous.vision.conversatio
 import { StudentConversationalInterpretationAdapterV1 } from "./cognition/student.conversational.interpretation.adapter.v1";
 import type { ConversationalInterpretationProviderV1 } from "./cognition/conversational.cognition.contracts.v1";
 import type { ShadowInterpretationEvidenceRepositoryV1 } from "./cognition/conversational.interpretation.shadow.runtime.v1";
-import { resolveControlledInterpretationShadowPolicyV1 } from "./cognition/controlled.interpretation.shadow.policy.v1";
+import { resolveDurableShadowConfigurationV1, type DurableShadowEnvV1 } from "./cognition/durable.interpretation.shadow.configuration.v1";
+import { D1InterpretationShadowInfrastructureV1 } from "./cognition/durable.interpretation.shadow.infrastructure.v1";
 
 type ConversationResult = AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1;
 type ConversationRunner = typeof runAnonymousVisionConversationV1;
@@ -13,7 +14,7 @@ const json = (body: ConversationResult, status: number) => new Response(JSON.str
 
 export async function anonymousVisionConversationRouteV1(
   request: Request,
-  env: Pick<Env, "OPENROUTER_API_KEY" | "INTERPRETATION_STUDENT_SHADOW_STATE" | "INTERPRETATION_STUDENT_SAMPLE_PERCENT" | "INTERPRETATION_STUDENT_KILL_SWITCH" | "INTERPRETATION_STUDENT_ENDPOINT" | "INTERPRETATION_STUDENT_AUTHORIZATION" | "INTERPRETATION_STUDENT_TIMEOUT_MS">,
+  env: Pick<Env, "OPENROUTER_API_KEY"> & DurableShadowEnvV1,
   dependencies: Readonly<{ run?: ConversationRunner; fetch?: typeof fetch; wait_until?: (task: Promise<void>) => void; shadow_provider?: ConversationalInterpretationProviderV1; shadow_repository?: ShadowInterpretationEvidenceRepositoryV1 }> = {},
 ): Promise<Response> {
   if (request.method !== "POST") return json({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" }, 405);
@@ -23,15 +24,16 @@ export async function anonymousVisionConversationRouteV1(
   let result: ConversationResult;
   try {
     const timeoutMs = Number(env.INTERPRETATION_STUDENT_TIMEOUT_MS ?? "1500");
-    const policy = resolveControlledInterpretationShadowPolicyV1({ state: env.INTERPRETATION_STUDENT_SHADOW_STATE, sample_percent: env.INTERPRETATION_STUDENT_SAMPLE_PERCENT, kill_switch: env.INTERPRETATION_STUDENT_KILL_SWITCH });
+    const policy = resolveDurableShadowConfigurationV1(env);
     const shadowEnabled = policy.state === "CONTROLLED_SHADOW" && !policy.kill_switch && !!dependencies.wait_until;
     let interpretationShadow: Parameters<ConversationRunner>[0]["interpretation_shadow"];
     if (shadowEnabled) try {
       const provider = dependencies.shadow_provider ?? (env.INTERPRETATION_STUDENT_ENDPOINT && env.INTERPRETATION_STUDENT_AUTHORIZATION
-        ? new StudentConversationalInterpretationAdapterV1({ endpoint: env.INTERPRETATION_STUDENT_ENDPOINT, authorization: env.INTERPRETATION_STUDENT_AUTHORIZATION, timeout_ms: timeoutMs, fetch: dependencies.fetch, verify_identity: true })
+        ? new StudentConversationalInterpretationAdapterV1({ endpoint: env.INTERPRETATION_STUDENT_ENDPOINT, authorization: env.INTERPRETATION_STUDENT_AUTHORIZATION, timeout_ms: timeoutMs, fetch: dependencies.fetch, verify_identity: true, protocol_version: "PA_STUDENT_HTTP_V1" })
         : undefined);
-      const repository = dependencies.shadow_repository ?? { append: async (evidence: unknown) => { console.log("CONVERSATIONAL_INTERPRETATION_SHADOW_V1", JSON.stringify(evidence)); } };
-      if (provider) interpretationShadow = { provider, repository, timeout_ms: timeoutMs, policy, schedule: dependencies.wait_until! };
+      const durable = new D1InterpretationShadowInfrastructureV1(env.POLICIES_DB!,env.INTERPRETATION_STUDENT_WINDOW_ID);
+      const repository = dependencies.shadow_repository ?? durable;
+      if (provider) interpretationShadow = { provider, repository, timeout_ms: timeoutMs, policy, schedule: dependencies.wait_until!, durable_admit: async (id,sampled) => await durable.reserve(id,sampled,policy.sample_percent) && await durable.canSchedule(env.INTERPRETATION_STUDENT_WINDOW_ID!,policy.sample_percent) };
     } catch { interpretationShadow = undefined; }
     result = await (dependencies.run ?? runAnonymousVisionConversationV1)({
       request: body,

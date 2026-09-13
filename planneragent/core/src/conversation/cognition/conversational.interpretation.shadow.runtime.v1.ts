@@ -30,6 +30,8 @@ export type ShadowInterpretationEvidenceV1 = Readonly<{
   hard_boundary_agreement: boolean;
   hard_boundary_classification: ShadowBoundaryClassificationV1;
   role_surface_fidelity: RoleSurfaceFidelityV1;
+  audience_interaction_mismatch: boolean;
+  missing_role_due_to_interaction_mismatch: boolean;
   failure_class?: ShadowFailureClassV1;
   candidate_identity: typeof GCC4W_STUDENT_IDENTITY_V1;
   grants_authority_observed: boolean;
@@ -108,8 +110,10 @@ export async function observeStudentInterpretationShadowV1(input: Readonly<{
   const grantsExecution = observed?.grants_execution === true;
   const invariantViolation = grantsAuthority || grantsExecution || observed?.interpretation_only === false || observed?.requester_content_non_authoritative === false;
   const classification = boundary(input.deterministic.interaction, student?.interaction, invariantViolation);
-  const roleFidelity: RoleSurfaceFidelityV1 = input.deterministic.audience_declaration
-    ? student?.audience_declaration && normalizedRole(student.audience_declaration.declared_role) === normalizedRole(input.deterministic.audience_declaration.declared_role) ? "PRESERVED" : "ROLE_SURFACE_CHANGED"
+  const audienceInteractionMismatch = input.deterministic.interaction === "AUDIENCE_DECLARATION" && !!student && student.interaction !== "AUDIENCE_DECLARATION";
+  const roleSurfaceApplicable = input.deterministic.interaction === "AUDIENCE_DECLARATION" && student?.interaction === "AUDIENCE_DECLARATION" && !!input.deterministic.audience_declaration && !!student.audience_declaration;
+  const roleFidelity: RoleSurfaceFidelityV1 = roleSurfaceApplicable
+    ? normalizedRole(student.audience_declaration!.declared_role) === normalizedRole(input.deterministic.audience_declaration!.declared_role) ? "PRESERVED" : "ROLE_SURFACE_CHANGED"
     : "NOT_APPLICABLE";
   const latency = Math.max(0, (input.monotonic_now ?? (() => performance.now()))() - started);
   const evidence: ShadowInterpretationEvidenceV1 = Object.freeze({
@@ -129,6 +133,8 @@ export async function observeStudentInterpretationShadowV1(input: Readonly<{
     hard_boundary_agreement: classification === "NONE",
     hard_boundary_classification: classification,
     role_surface_fidelity: roleFidelity,
+    audience_interaction_mismatch: audienceInteractionMismatch,
+    missing_role_due_to_interaction_mismatch: audienceInteractionMismatch,
     ...(error ? { failure_class: failureClass(error) } : {}),
     candidate_identity: GCC4W_STUDENT_IDENTITY_V1,
     grants_authority_observed: grantsAuthority,

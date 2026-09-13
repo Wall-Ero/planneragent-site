@@ -75,6 +75,20 @@ describe("GCC-4X v0.6 provider-neutral shadow runtime", () => {
     expect(roleEvidence.values[0]).toHaveProperty("role_surface_fidelity", "ROLE_SURFACE_CHANGED");
   });
 
+  it("records an audience interaction mismatch without fabricating a role mutation", async () => {
+    const evidence = repository();
+    await observeStudentInterpretationShadowV1({ correlation_id: "audience-mismatch", message: "role fixture", deterministic: result("AUDIENCE_DECLARATION", { audience_declaration: { declared_role: "Supply-Chain Coord." } }), provider: provider(async () => result("PRODUCT_QUESTION")), repository: evidence.repo, timeout_ms: 20 });
+    expect(evidence.values[0]).toMatchObject({
+      deterministic_interaction: "AUDIENCE_DECLARATION",
+      student_interaction: "PRODUCT_QUESTION",
+      interaction_match: false,
+      hard_boundary_classification: "L3",
+      role_surface_fidelity: "NOT_APPLICABLE",
+      audience_interaction_mismatch: true,
+      missing_role_due_to_interaction_mismatch: true,
+    });
+  });
+
   it("does not shadow data-introduction or credential-bearing messages and exposes no organization state", async () => {
     const calls: unknown[] = [], evidence = repository(), tasks: Promise<void>[] = [], fake = provider(async input => { calls.push(input); return result("PRODUCT_QUESTION"); });
     for (const message of ["Upload this CSV", "What can PlannerAgent do? api_key=secret"]) {

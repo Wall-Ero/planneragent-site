@@ -40,8 +40,8 @@ describe("GCC-4X v0.6 provider-neutral shadow runtime", () => {
     const run = vi.fn(async () => ({ version: 1, request_id: "request-1", posture: "PUBLIC_PRODUCT_ANSWER", text: "live" }) as const);
     const request = () => new Request("https://core.test/conversation", { method: "POST", body: JSON.stringify({ version: 1, request_id: "request-1", message: "hello" }) });
     for (const env of [
-      { INTERPRETATION_STUDENT_SHADOW_ENABLED: "false" },
-      { INTERPRETATION_STUDENT_SHADOW_ENABLED: "true", INTERPRETATION_STUDENT_ENDPOINT: "https://student.test", INTERPRETATION_STUDENT_AUTHORIZATION: "token", INTERPRETATION_STUDENT_TIMEOUT_MS: "invalid" },
+      { INTERPRETATION_STUDENT_SHADOW_STATE: "DISABLED" },
+      { INTERPRETATION_STUDENT_SHADOW_STATE: "CONTROLLED_SHADOW", INTERPRETATION_STUDENT_SAMPLE_PERCENT: "100", INTERPRETATION_STUDENT_ENDPOINT: "https://student.test", INTERPRETATION_STUDENT_AUTHORIZATION: "token", INTERPRETATION_STUDENT_TIMEOUT_MS: "invalid" },
     ]) {
       const response = await anonymousVisionConversationRouteV1(request(), env, { run: run as any, wait_until: vi.fn() });
       expect(response.status).toBe(200); expect(await response.json()).toHaveProperty("text", "live");

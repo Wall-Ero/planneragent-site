@@ -8,9 +8,10 @@ import {
 } from "./conversational.cognition.contracts.v1";
 import { GCC4W_STUDENT_IDENTITY_V1, StudentInterpretationProviderErrorV1 } from "./student.conversational.interpretation.adapter.v1";
 import type { AnonymousConversationAdmissionV1 } from "../anonymous.vision.conversation.policy.v1";
+import { shouldScheduleControlledShadowV1, type ControlledInterpretationShadowPolicyV1, type InterpretationShadowStateV1 } from "./controlled.interpretation.shadow.policy.v1";
 
 export type ShadowBoundaryClassificationV1 = "L1" | "L2_CRITICAL" | "L2_MAJOR" | "L3" | "NONE";
-export type ShadowFailureClassV1 = "TIMEOUT" | "PROVIDER_ERROR" | "JSON_INVALID" | "CONTRACT_INVALID";
+export type ShadowFailureClassV1 = "TIMEOUT" | "PROVIDER_ERROR" | "JSON_INVALID" | "CONTRACT_INVALID" | "IDENTITY_MISMATCH";
 export type RoleSurfaceFidelityV1 = "NOT_APPLICABLE" | "PRESERVED" | "ROLE_SURFACE_CHANGED";
 
 export type ShadowInterpretationEvidenceV1 = Readonly<{
@@ -39,6 +40,12 @@ export type ShadowInterpretationEvidenceV1 = Readonly<{
   protected_disclosure_violation: boolean;
   shadow_latency_ms: number;
   telemetry_is_operational_truth: false;
+  provider_outcome: "SUCCESS" | "FAILURE";
+  activation_state: InterpretationShadowStateV1;
+  sample_percent: number;
+  sample_bucket: number;
+  sampled: true;
+  student_lifecycle: "QUALIFIED_FOR_SHADOW";
 }>;
 
 export interface ShadowInterpretationEvidenceRepositoryV1 { append(evidence: ShadowInterpretationEvidenceV1): Promise<void>; }
@@ -75,7 +82,7 @@ const boundary = (deterministic: ConversationalInteractionV1, student: Conversat
 };
 
 const failureClass = (error: unknown): ShadowFailureClassV1 => error instanceof StudentInterpretationProviderErrorV1
-  ? error.code === "TIMEOUT" ? "TIMEOUT" : error.code === "JSON_PARSE_FAILURE" ? "JSON_INVALID" : error.code === "CONTRACT_VALIDATION_FAILURE" ? "CONTRACT_INVALID" : "PROVIDER_ERROR"
+  ? error.code === "TIMEOUT" ? "TIMEOUT" : error.code === "JSON_PARSE_FAILURE" ? "JSON_INVALID" : error.code === "CONTRACT_VALIDATION_FAILURE" ? "CONTRACT_INVALID" : error.code === "IDENTITY_MISMATCH" ? "IDENTITY_MISMATCH" : "PROVIDER_ERROR"
   : "PROVIDER_ERROR";
 
 export function isStudentShadowEligibleV1(admission: AnonymousConversationAdmissionV1, message: string): boolean {
@@ -90,6 +97,7 @@ export async function observeStudentInterpretationShadowV1(input: Readonly<{
   provider: ConversationalInterpretationProviderV1;
   repository: ShadowInterpretationEvidenceRepositoryV1;
   timeout_ms: number;
+  sampling?: Readonly<{ activation_state: InterpretationShadowStateV1; sample_percent: number; sample_bucket: number }>;
   now?: () => string;
   monotonic_now?: () => number;
 }>): Promise<void> {
@@ -112,9 +120,10 @@ export async function observeStudentInterpretationShadowV1(input: Readonly<{
   const classification = boundary(input.deterministic.interaction, student?.interaction, invariantViolation);
   const audienceInteractionMismatch = input.deterministic.interaction === "AUDIENCE_DECLARATION" && !!student && student.interaction !== "AUDIENCE_DECLARATION";
   const roleSurfaceApplicable = input.deterministic.interaction === "AUDIENCE_DECLARATION" && student?.interaction === "AUDIENCE_DECLARATION" && !!input.deterministic.audience_declaration && !!student.audience_declaration;
-  const roleFidelity: RoleSurfaceFidelityV1 = roleSurfaceApplicable
-    ? normalizedRole(student.audience_declaration!.declared_role) === normalizedRole(input.deterministic.audience_declaration!.declared_role) ? "PRESERVED" : "ROLE_SURFACE_CHANGED"
-    : "NOT_APPLICABLE";
+  let roleFidelity: RoleSurfaceFidelityV1 = "NOT_APPLICABLE";
+  if (roleSurfaceApplicable && student?.audience_declaration && input.deterministic.audience_declaration) {
+    roleFidelity = normalizedRole(student.audience_declaration.declared_role) === normalizedRole(input.deterministic.audience_declaration.declared_role) ? "PRESERVED" : "ROLE_SURFACE_CHANGED";
+  }
   const latency = Math.max(0, (input.monotonic_now ?? (() => performance.now()))() - started);
   const evidence: ShadowInterpretationEvidenceV1 = Object.freeze({
     version: 1,
@@ -142,16 +151,23 @@ export async function observeStudentInterpretationShadowV1(input: Readonly<{
     protected_disclosure_violation: input.deterministic.interaction === "PROTECTED_DISCLOSURE" && student?.interaction !== "PROTECTED_DISCLOSURE",
     shadow_latency_ms: latency,
     telemetry_is_operational_truth: false,
+    provider_outcome: error ? "FAILURE" : "SUCCESS",
+    activation_state: input.sampling?.activation_state ?? "CONTROLLED_SHADOW",
+    sample_percent: input.sampling?.sample_percent ?? 100,
+    sample_bucket: input.sampling?.sample_bucket ?? 0,
+    sampled: true,
+    student_lifecycle: GCC4W_STUDENT_IDENTITY_V1.lifecycle,
   });
   await input.repository.append(evidence);
 }
 
-export type ShadowInterpretationMetricsV1 = Readonly<Record<"requests_observed" | "eligible_shadow_requests" | "provider_successes" | "timeouts" | "parser_valid" | "closed_enum_valid" | "interaction_agreements" | "hard_boundary_agreements" | "l1" | "l2_critical" | "l2_major" | "role_mutations" | "authority_violations" | "execution_violations" | "protected_disclosure_violations" | "product_focus_agreements", number> & Record<"provider_success_rate" | "timeout_rate" | "parser_valid_rate" | "closed_enum_valid_rate" | "interaction_agreement_rate" | "hard_boundary_agreement_rate" | "product_focus_agreement_rate", number> & { shadow_latency_p50_ms: number; shadow_latency_p95_ms: number; shadow_latency_p99_ms: number }>;
-export function aggregateShadowInterpretationEvidenceV1(values: readonly ShadowInterpretationEvidenceV1[], requestsObserved = values.length): ShadowInterpretationMetricsV1 {
+export type ShadowInterpretationMetricsV1 = Readonly<Record<"requests_observed" | "eligible_shadow_requests" | "sampled_requests" | "student_calls" | "provider_successes" | "provider_failures" | "timeouts" | "malformed_or_contract_invalid" | "parser_valid" | "closed_enum_valid" | "interaction_agreements" | "hard_boundary_agreements" | "hard_boundary_failures" | "l1" | "l2_critical" | "l2_major" | "role_surface_applicable" | "role_mutations" | "authority_violations" | "execution_violations" | "protected_disclosure_violations" | "product_focus_applicable" | "product_focus_agreements", number> & Record<"provider_success_rate" | "timeout_rate" | "parser_valid_rate" | "closed_enum_valid_rate" | "interaction_agreement_rate" | "hard_boundary_agreement_rate" | "product_focus_agreement_rate", number> & { shadow_latency_count: number; shadow_latency_min_ms: number; shadow_latency_p50_ms: number; shadow_latency_p95_ms: number; shadow_latency_p99_ms: number; shadow_latency_max_ms: number; telemetry_is_operational_truth: false }>;
+export function aggregateShadowInterpretationEvidenceV1(values: readonly ShadowInterpretationEvidenceV1[], requestsObserved = values.length, eligibleRequests = values.length, sampledRequests = values.length): ShadowInterpretationMetricsV1 {
   const count = (predicate: (value: ShadowInterpretationEvidenceV1) => boolean) => values.filter(predicate).length;
   const rate = (amount: number, total = values.length) => total ? amount / total : 0;
   const latencies = values.map(value => value.shadow_latency_ms).sort((a, b) => a - b);
   const percentile = (p: number) => latencies.length ? latencies[Math.ceil(p * latencies.length) - 1] ?? 0 : 0;
   const successes=count(v=>!v.failure_class),timeouts=count(v=>v.failure_class==="TIMEOUT"),parser=count(v=>v.parser_valid),closed=count(v=>v.closed_enum_valid),interactions=count(v=>v.interaction_match),boundaries=count(v=>v.hard_boundary_agreement),focused=values.filter(v=>v.deterministic_product_focus!==undefined),focus=focused.filter(v=>v.product_focus_match).length;
-  return Object.freeze({ requests_observed: requestsObserved, eligible_shadow_requests: values.length, provider_successes: successes, provider_success_rate:rate(successes), timeouts, timeout_rate:rate(timeouts), parser_valid:parser,parser_valid_rate:rate(parser),closed_enum_valid:closed,closed_enum_valid_rate:rate(closed),interaction_agreements:interactions,interaction_agreement_rate:rate(interactions),hard_boundary_agreements:boundaries,hard_boundary_agreement_rate:rate(boundaries),l1:count(v=>v.hard_boundary_classification==="L1"),l2_critical:count(v=>v.hard_boundary_classification==="L2_CRITICAL"),l2_major:count(v=>v.hard_boundary_classification==="L2_MAJOR"),role_mutations:count(v=>v.role_surface_fidelity==="ROLE_SURFACE_CHANGED"),authority_violations:count(v=>v.grants_authority_observed),execution_violations:count(v=>v.grants_execution_observed),protected_disclosure_violations:count(v=>v.protected_disclosure_violation),product_focus_agreements:focus,product_focus_agreement_rate:rate(focus,focused.length),shadow_latency_p50_ms:percentile(.5),shadow_latency_p95_ms:percentile(.95),shadow_latency_p99_ms:percentile(.99) });
+  const providerFailures=values.length-successes, hardFailures=count(v=>v.hard_boundary_classification==="L1"||v.hard_boundary_classification==="L2_CRITICAL"||v.hard_boundary_classification==="L2_MAJOR"),roles=count(v=>v.role_surface_fidelity!=="NOT_APPLICABLE");
+  return Object.freeze({ requests_observed:requestsObserved,eligible_shadow_requests:eligibleRequests,sampled_requests:sampledRequests,student_calls:values.length,provider_successes:successes,provider_failures:providerFailures,provider_success_rate:rate(successes),timeouts,timeout_rate:rate(timeouts),malformed_or_contract_invalid:count(v=>v.failure_class==="JSON_INVALID"||v.failure_class==="CONTRACT_INVALID"),parser_valid:parser,parser_valid_rate:rate(parser),closed_enum_valid:closed,closed_enum_valid_rate:rate(closed),interaction_agreements:interactions,interaction_agreement_rate:rate(interactions),hard_boundary_agreements:boundaries,hard_boundary_failures:hardFailures,hard_boundary_agreement_rate:rate(boundaries),l1:count(v=>v.hard_boundary_classification==="L1"),l2_critical:count(v=>v.hard_boundary_classification==="L2_CRITICAL"),l2_major:count(v=>v.hard_boundary_classification==="L2_MAJOR"),role_surface_applicable:roles,role_mutations:count(v=>v.role_surface_fidelity==="ROLE_SURFACE_CHANGED"),authority_violations:count(v=>v.grants_authority_observed),execution_violations:count(v=>v.grants_execution_observed),protected_disclosure_violations:count(v=>v.protected_disclosure_violation),product_focus_applicable:focused.length,product_focus_agreements:focus,product_focus_agreement_rate:rate(focus,focused.length),shadow_latency_count:latencies.length,shadow_latency_min_ms:latencies[0]??0,shadow_latency_p50_ms:percentile(.5),shadow_latency_p95_ms:percentile(.95),shadow_latency_p99_ms:percentile(.99),shadow_latency_max_ms:latencies.at(-1)??0,telemetry_is_operational_truth:false });
 }

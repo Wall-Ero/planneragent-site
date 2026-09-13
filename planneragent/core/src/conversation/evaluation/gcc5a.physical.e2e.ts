@@ -22,7 +22,9 @@ const run = async (id: string, message: string, shadow: boolean, timeout = 30000
   const ctx = createExecutionContext();
   const response = await worker.fetch(request(id, message), {
     ...physicalEnv,
-    INTERPRETATION_STUDENT_SHADOW_ENABLED: shadow ? "true" : "false",
+    INTERPRETATION_STUDENT_SHADOW_STATE: shadow ? "CONTROLLED_SHADOW" : "DISABLED",
+    INTERPRETATION_STUDENT_SAMPLE_PERCENT: "100",
+    INTERPRETATION_STUDENT_KILL_SWITCH: "false",
     INTERPRETATION_STUDENT_TIMEOUT_MS: String(timeout),
   } as never, ctx);
   const bytes = await response.clone().arrayBuffer();
@@ -82,6 +84,7 @@ describe("GCC-5A physical Worker shadow E2E", () => {
     fetchMock.disableNetConnect();
     const origin = "https://gcc5a-controlled.invalid";
     const invariant = { interpretation_only: true, requester_content_non_authoritative: true, grants_authority: false, grants_execution: false };
+    fetchMock.get(origin).intercept({ path: "/v1/identity", method: "GET" }).reply(200, { ...GCC4W_STUDENT_IDENTITY_V1, effective_dtype: "bf16" }).times(4);
     fetchMock.get(origin).intercept({ path: "/malformed", method: "POST" }).reply(200, "{");
     fetchMock.get(origin).intercept({ path: "/illegal", method: "POST" }).reply(200, { version: 1, interaction: "ILLEGAL", resolution: "CLEAR", ...invariant });
     fetchMock.get(origin).intercept({ path: "/unreachable", method: "POST" }).replyWithError(new Error("unreachable"));
@@ -90,7 +93,7 @@ describe("GCC-5A physical Worker shadow E2E", () => {
     const failures: ShadowInterpretationEvidenceV1[] = [];
     for (const [name, timeout] of [["malformed", 1000], ["illegal", 1000], ["unreachable", 1000], ["timeout", 1]] as const) {
       const ctx = createExecutionContext();
-      const live = await worker.fetch(request(`gcc5a-${name}`, "hello"), { ...physicalEnv, INTERPRETATION_STUDENT_SHADOW_ENABLED: "true", INTERPRETATION_STUDENT_ENDPOINT: `${origin}/${name}`, INTERPRETATION_STUDENT_TIMEOUT_MS: String(timeout) } as never, ctx);
+      const live = await worker.fetch(request(`gcc5a-${name}`, "hello"), { ...physicalEnv, INTERPRETATION_STUDENT_SHADOW_STATE: "CONTROLLED_SHADOW", INTERPRETATION_STUDENT_SAMPLE_PERCENT: "100", INTERPRETATION_STUDENT_KILL_SWITCH: "false", INTERPRETATION_STUDENT_ENDPOINT: `${origin}/${name}`, INTERPRETATION_STUDENT_TIMEOUT_MS: String(timeout) } as never, ctx);
       expect(live.status).toBe(200);
       await waitOnExecutionContext(ctx);
       failures.push(...evidenceFrom(log).slice(failures.length));

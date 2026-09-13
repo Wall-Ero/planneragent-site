@@ -15,6 +15,7 @@ import { CognitiveTransportConversationalRealizationAdapterV1, type CurrentPubli
 import type { ConversationalRealizationProviderV1 } from "./cognition/conversational.cognition.contracts.v1";
 import type { ConversationalInterpretationProviderV1 } from "./cognition/conversational.cognition.contracts.v1";
 import { deterministicInterpretationFromAdmissionV1, isStudentShadowEligibleV1, observeStudentInterpretationShadowV1, type ShadowInterpretationEvidenceRepositoryV1 } from "./cognition/conversational.interpretation.shadow.runtime.v1";
+import { controlledShadowSampleBucketV1, shouldScheduleControlledShadowV1, type ControlledInterpretationShadowPolicyV1 } from "./cognition/controlled.interpretation.shadow.policy.v1";
 import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
@@ -40,6 +41,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
     provider: ConversationalInterpretationProviderV1;
     repository: ShadowInterpretationEvidenceRepositoryV1;
     timeout_ms: number;
+    policy?: ControlledInterpretationShadowPolicyV1;
     schedule(task: Promise<void>): void;
   }>;
 }>): Promise<AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1> {
@@ -48,8 +50,9 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   if (!admitted) return Object.freeze({ version: 1, request_id: requestId, error: "REQUEST_NOT_ADMITTED" });
   const guard = input.rate_guard ?? defaultRateGuard;
   if (!guard.admit({ client_key: input.client_key, message_length: admitted.request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
-  if (input.interpretation_shadow && isStudentShadowEligibleV1(admitted.admission, admitted.request.message)) {
-    const task = observeStudentInterpretationShadowV1({ correlation_id: requestId, message: admitted.request.message, deterministic: deterministicInterpretationFromAdmissionV1(admitted.admission), provider: input.interpretation_shadow.provider, repository: input.interpretation_shadow.repository, timeout_ms: input.interpretation_shadow.timeout_ms }).catch(() => undefined);
+  const shadowPolicy=input.interpretation_shadow?.policy;
+  if (input.interpretation_shadow && isStudentShadowEligibleV1(admitted.admission, admitted.request.message) && (!shadowPolicy || shouldScheduleControlledShadowV1(shadowPolicy,requestId))) {
+    const task = observeStudentInterpretationShadowV1({ correlation_id: requestId, message: admitted.request.message, deterministic: deterministicInterpretationFromAdmissionV1(admitted.admission), provider: input.interpretation_shadow.provider, repository: input.interpretation_shadow.repository, timeout_ms: input.interpretation_shadow.timeout_ms, ...(shadowPolicy?{sampling:{activation_state:shadowPolicy.state,sample_percent:shadowPolicy.sample_percent,sample_bucket:controlledShadowSampleBucketV1(requestId)}}:{}) }).catch(() => undefined);
     input.interpretation_shadow.schedule(task);
   }
   if (admitted.admission === "PROTECTED_DISCLOSURE") return bounded(requestId, "PROTECTED_INFORMATION", "I can explain PlannerAgent's public capabilities and safeguards at a high level, but I cannot disclose hidden instructions, proprietary implementation, credentials, or sensitive security details.");

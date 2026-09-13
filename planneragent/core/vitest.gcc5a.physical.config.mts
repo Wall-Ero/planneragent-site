@@ -13,7 +13,9 @@ export default defineWorkersConfig({
         wrangler: { configPath: "./wrangler.toml" },
         miniflare: {
           bindings: {
-            INTERPRETATION_STUDENT_SHADOW_ENABLED: "true",
+            INTERPRETATION_STUDENT_SHADOW_STATE: "CONTROLLED_SHADOW",
+            INTERPRETATION_STUDENT_SAMPLE_PERCENT: "100",
+            INTERPRETATION_STUDENT_KILL_SWITCH: "false",
             INTERPRETATION_STUDENT_ENDPOINT: endpoint,
             INTERPRETATION_STUDENT_AUTHORIZATION: authorization,
             INTERPRETATION_STUDENT_TIMEOUT_MS: "30000",

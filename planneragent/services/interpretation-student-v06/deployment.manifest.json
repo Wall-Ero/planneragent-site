@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "readiness": "DEPLOYABLE_PACKAGE_READY_PROVIDER_NOT_SELECTED",
+  "production_shadow": "DISABLED",
+  "observation_window": "NOT_STARTED",
+  "source": {
+    "service": "planneragent/services/interpretation-student-v06",
+    "qualified_service_commit": "4e8ee5c",
+    "handoff": "planneragent/core/training/interpretation/gcc4z/build_run2_handoff.ps1",
+    "entrypoint": "app.persistent:app"
+  },
+  "application_files": [
+    "app/__init__.py",
+    "app/auth.py",
+    "app/contracts.py",
+    "app/identity.py",
+    "app/main.py",
+    "app/model.py",
+    "app/persistent.py",
+    "app/probe.py"
+  ],
+  "build_files": [
+    "Dockerfile",
+    "requirements.lock"
+  ],
+  "deployment_files": [
+    "deployment.manifest.json",
+    "PERSISTENT_DEPLOYMENT.md"
+  ],
+  "runtime": {
+    "os": "Linux",
+    "python": "3.12",
+    "cuda_image": "nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04",
+    "dependencies": "requirements.lock",
+    "dependency_note": "Reuse existing pins; includes pytest/httpx. Transitive dependencies are not fully locked.",
+    "gpu_required": true,
+    "native_bf16_required": true,
+    "minimum_compute_capability": "8.0",
+    "expected_dtype": "bf16",
+    "workers": 1,
+    "max_concurrency": 1,
+    "port": 8080
+  },
+  "identity": {
+    "service_protocol_version": 1,
+    "candidate_id": "PA-INTERPRETATION-STUDENT-v0.6",
+    "candidate_version": "0.6",
+    "artifact_sha256": "f20989ac8397aa1788fcdd03c6027fb178e4489bc576a175f690029ac2eb9e1f",
+    "artifact_size": 22782731,
+    "adapter_digest": "sha256:6ce46299667e0ba8f9b24b3558cc8b3ae110ef5bbcfb5c20a5f32ea022400ad3",
+    "base_model": "Qwen/Qwen3-0.6B-Base",
+    "base_revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+    "qualification": "QUALIFIED_FOR_SHADOW",
+    "lifecycle": "QUALIFIED_FOR_SHADOW",
+    "effective_dtype": "bf16",
+    "protocol_version": "PA_STUDENT_HTTP_V1"
+  },
+  "artifact": {
+    "filename": "PA-INTERPRETATION-STUDENT-v0.6-GCC4W.zip",
+    "source_control": false,
+    "mount": "read-only",
+    "verification": "Every startup: exact size and SHA-256, candidate/adapter/base/revision/qualification metadata and adapter bytes; fresh extraction per process."
+  },
+  "startup_command": [
+    "python3.12",
+    "-m",
+    "uvicorn",
+    "app.persistent:app",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8080",
+    "--workers",
+    "1",
+    "--no-access-log"
+  ],
+  "working_directory": "/service",
+  "container_overrides_required": {
+    "command": "startup_command",
+    "healthcheck": [
+      "python3.12",
+      "-m",
+      "app.probe"
+    ],
+    "health_interval_seconds": 30,
+    "health_timeout_seconds": 3,
+    "health_start_period_seconds": 120,
+    "health_retries": 3
+  },
+  "required_environment": [
+    "STUDENT_ARTIFACT_PATH",
+    "STUDENT_CACHE_ROOT",
+    "HF_HOME",
+    "STUDENT_BEARER_TOKEN"
+  ],
+  "optional_environment": {
+    "STUDENT_DTYPE": "bf16",
+    "STUDENT_MAX_CONCURRENCY": "1",
+    "STUDENT_MAX_REQUEST_BYTES": "16384"
+  },
+  "secrets": {
+    "service": [
+      "STUDENT_BEARER_TOKEN"
+    ],
+    "future_core": [
+      "INTERPRETATION_STUDENT_ENDPOINT",
+      "INTERPRETATION_STUDENT_AUTHORIZATION"
+    ]
+  },
+  "paths": {
+    "health": {
+      "method": "GET",
+      "path": "/health",
+      "bearer_required": true
+    },
+    "identity": {
+      "method": "GET",
+      "path": "/v1/identity",
+      "bearer_required": true
+    },
+    "inference": {
+      "method": "POST",
+      "path": "/v1/interpret",
+      "bearer_required": true
+    }
+  },
+  "storage": {
+    "artifact": "Durable, read-only archive accessible without workstation.",
+    "adapter_cache": "Writable STUDENT_CACHE_ROOT; unique verified extraction each start; disposable.",
+    "base_cache": "Writable HF_HOME; provision exact base revision or permit download; durable cache recommended; optional HF_HUB_OFFLINE=1 only after provisioning."
+  },
+  "ingress": {
+    "https_required": true,
+    "stable_reference": "INTERPRETATION_STUDENT_ENDPOINT",
+    "public_port": 443,
+    "private_service_port": 8080,
+    "direct_public_service_port": false,
+    "tunnels_allowed": false
+  },
+  "capacity": {
+    "proven_development_gpu": "NVIDIA L4",
+    "l4_required": false,
+    "documented_unmeasured_floor": "Existing README suggests 4 GB VRAM and 8 GB host RAM; not an acceptance measurement.",
+    "cost": "No vendor, price, or minimum measured capacity selected; deployment sizing requires physical validation."
+  }
+}

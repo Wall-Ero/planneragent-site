@@ -48,14 +48,14 @@ export class StudentConversationalInterpretationAdapterV1 implements Conversatio
     try {
       if (this.configuration.verify_identity) {
         const identityUrl = new URL(this.configuration.endpoint); identityUrl.pathname = "/v1/identity"; identityUrl.search = "";
-        const identityResponse = await (this.configuration.fetch ?? ((...args) => globalThis.fetch(...args)))(identityUrl, { signal: controller.signal, redirect: "error", headers: { authorization: `Bearer ${this.configuration.authorization}` } });
+        const identityResponse = await (this.configuration.fetch ?? ((...args) => globalThis.fetch(...args)))(identityUrl, { signal: controller.signal, redirect: "manual", headers: { authorization: `Bearer ${this.configuration.authorization}` } });
         let identity: Record<string, unknown> | undefined;
         try { identity = identityResponse.ok ? await identityResponse.json() as Record<string, unknown> : undefined; } catch { identity = undefined; }
         if (!identity || Object.entries(GCC4W_STUDENT_IDENTITY_V1).some(([key,value]) => identity[key] !== value) || identity.effective_dtype !== "bf16" || (this.configuration.protocol_version && identity.protocol_version !== this.configuration.protocol_version)) throw new StudentInterpretationProviderErrorV1("IDENTITY_MISMATCH");
       }
       response = await (this.configuration.fetch ?? ((...args) => globalThis.fetch(...args)))(this.configuration.endpoint, {
         method: "POST",
-        redirect: "error",
+        redirect: "manual",
         headers: { authorization: `Bearer ${this.configuration.authorization}`, "content-type": "application/json" },
         body: JSON.stringify(input),
         signal: controller.signal,

@@ -44,7 +44,7 @@ describe("GCC-5D durable shadow foundation",()=>{
       const fetch=vi.fn(async(_url:RequestInfo|URL,_init?:RequestInit)=>Response.json({...GCC4W_STUDENT_IDENTITY_V1,effective_dtype:"bf16",protocol_version:"PA_STUDENT_HTTP_V1",[key]:"wrong"}));
       const adapter=new StudentConversationalInterpretationAdapterV1({endpoint:configuration().INTERPRETATION_STUDENT_ENDPOINT,authorization:"test-bearer-secret",timeout_ms:1000,verify_identity:true,protocol_version:"PA_STUDENT_HTTP_V1",fetch:fetch as never});
       await expect(adapter.interpret({} as never)).rejects.toMatchObject({code:"IDENTITY_MISMATCH"});expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch.mock.calls[0]?.[1]).toMatchObject({redirect:"error",headers:{authorization:"Bearer test-bearer-secret"}});
+      expect(fetch.mock.calls[0]?.[1]).toMatchObject({redirect:"manual",headers:{authorization:"Bearer test-bearer-secret"}});
     }
   });
   it("preserves existing tables when applying and reapplying migration 0035",async()=>{

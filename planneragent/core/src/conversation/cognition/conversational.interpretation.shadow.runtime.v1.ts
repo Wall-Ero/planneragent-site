@@ -8,6 +8,8 @@ import {
 } from "./conversational.cognition.contracts.v1";
 import { GCC4W_STUDENT_IDENTITY_V1, StudentInterpretationProviderErrorV1 } from "./student.conversational.interpretation.adapter.v1";
 import type { AnonymousConversationAdmissionV1 } from "../anonymous.vision.conversation.policy.v1";
+import { interpretAnonymousVisionIntentV1, extractAnonymousVisionIntentFeaturesV1 } from "../anonymous.vision.conversation.intent.v1";
+import { preserveDeclaredRoleSurfaceV1 } from "./declared.role.fidelity.policy.v1";
 import { shouldScheduleControlledShadowV1, type ControlledInterpretationShadowPolicyV1, type InterpretationShadowStateV1 } from "./controlled.interpretation.shadow.policy.v1";
 
 export type ShadowBoundaryClassificationV1 = "L1" | "L2_CRITICAL" | "L2_MAJOR" | "L3" | "NONE";
@@ -64,6 +66,30 @@ export function deterministicInterpretationFromAdmissionV1(admission: AnonymousC
 }
 
 const restrictive = new Set<ConversationalInteractionV1>(["DATA_INTRODUCTION", "EXECUTION_REQUEST", "PROTECTED_DISCLOSURE"]);
+
+// Comprehension only; never used for public admission or routing.
+export function deterministicShadowInterpretationV1(message: string): ConversationalInterpretationResultV1 {
+  const admission = interpretAnonymousVisionIntentV1(message);
+  const base = admission && deterministicInterpretationFromAdmissionV1(admission);
+  if (base && restrictive.has(base.interaction)) return base;
+  if (base?.interaction === "PRODUCT_QUESTION") {
+    const product_focus = /\b(?:getting started|get started|begin|first step|setup)\b/i.test(message) ? "GETTING_STARTED"
+      : /\b(?:limitations?|cannot|can't|limits)\b/i.test(message) ? "LIMITATION"
+      : /\b(?:tiers?|vision|vison|graduate|junior|senior|principal)\b/i.test(message) ? "TIER"
+      : /\b(?:domains?|work in|work with|support)\b/i.test(message) ? "DOMAIN" : "GENERAL_CAPABILITIES";
+    return Object.freeze({ ...base, product_focus });
+  }
+  if (base) return base;
+  const role = /^(?:I(?:'m| am)|I work as|My role is)\s+(?:(?:a|an|the)\s+)?([^.!?\r\n]+)[.!]?$/i.exec(message.trim())?.[1];
+  if (role && role.trim().length <= 128) {
+    return Object.freeze({ version: 1, interaction: "AUDIENCE_DECLARATION", resolution: "CLEAR", audience_declaration: Object.freeze({ declared_role: preserveDeclaredRoleSurfaceV1(role) }), ...CONVERSATIONAL_INTERPRETATION_INVARIANTS_V1 });
+  }
+  // No conversation target is available to resolve standalone references.
+  const unresolvedReference = /^(?:what about (?:that|this|it)|which (?:one|ones)|what do you mean(?: by (?:that|this|it))?|(?:explain|clarify|do|continue) (?:that|this|it)|(?:and|then) what)[.!?]*$/i.test(message.trim());
+  const underspecified = /^(?:(?:please|can you|could you)\s+)?(?:help(?: me)?|explain|clarify|continue|what|why|how|huh|more)(?:\s+please)?[.!?]*$/i.test(message.trim()) || !/[\p{L}\p{N}]/u.test(message);
+  const ambiguous = unresolvedReference || underspecified;
+  return Object.freeze({ version: 1, interaction: ambiguous ? "AMBIGUOUS" : "UNRELATED", resolution: ambiguous ? "AMBIGUOUS" : "UNSUPPORTED", ...CONVERSATIONAL_INTERPRETATION_INVARIANTS_V1 });
+}
 const normalizedRole = (value: string) => value.trim().replace(/\s+/g, " ");
 const stable = (value: unknown): string => Array.isArray(value) ? `[${value.map(stable).join(",")}]`
   : value && typeof value === "object" ? `{${Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)).map(([key, field]) => `${JSON.stringify(key)}:${stable(field)}`).join(",")}}`
@@ -85,9 +111,9 @@ const failureClass = (error: unknown): ShadowFailureClassV1 => error instanceof 
   ? error.code === "TIMEOUT" ? "TIMEOUT" : error.code === "JSON_PARSE_FAILURE" ? "JSON_INVALID" : error.code === "CONTRACT_VALIDATION_FAILURE" ? "CONTRACT_INVALID" : error.code === "IDENTITY_MISMATCH" ? "IDENTITY_MISMATCH" : "PROVIDER_ERROR"
   : "PROVIDER_ERROR";
 
-export function isStudentShadowEligibleV1(admission: AnonymousConversationAdmissionV1, message: string): boolean {
-  if (admission === "DATA_INTRODUCTION") return false;
-  return !/(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|authorization:\s*bearer|password|passwd|private[_ -]?key|client[_ -]?secret|BEGIN [A-Z ]*PRIVATE KEY)/i.test(message);
+export function isStudentShadowEligibleV1(admission: AnonymousConversationAdmissionV1 | undefined, message: string): boolean {
+  if (admission === "DATA_INTRODUCTION" || extractAnonymousVisionIntentFeaturesV1(message).data_introduction) return false;
+  return !/(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|authorization:\s*bearer|password|passwd|private[_ -]?key|client[_ -]?secret|secret[_ -]?key|credentials?\s*[:=]|BEGIN [A-Z ]*PRIVATE KEY)/i.test(message);
 }
 
 export async function observeStudentInterpretationShadowV1(input: Readonly<{

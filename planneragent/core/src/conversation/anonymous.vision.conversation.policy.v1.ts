@@ -16,14 +16,20 @@ export const PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1 = [
 
 export type AnonymousConversationAdmissionV1 = "PRODUCT_CONVERSATION" | "BOUNDED_CONVERSATION" | "DESCRIPTIVE_OPERATIONAL_CONTEXT" | "DATA_INTRODUCTION" | "PROTECTED_DISCLOSURE" | "EXECUTION_REQUEST";
 
-export function admitAnonymousVisionConversationV1(value: unknown): Readonly<{ request: AnonymousVisionConversationRequestV1; admission: AnonymousConversationAdmissionV1 }> | undefined {
+export function parseAnonymousVisionConversationRequestV1(value: unknown): AnonymousVisionConversationRequestV1 | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const input = value as Record<string, unknown>;
   if (Object.keys(input).sort().join(",") !== "message,request_id,version" || input.version !== 1) return undefined;
   if (typeof input.request_id !== "string" || input.request_id.trim().length === 0 || input.request_id.length > 256) return undefined;
   if (typeof input.message !== "string" || input.message.trim().length === 0 || input.message.length > ANONYMOUS_VISION_CONVERSATION_MESSAGE_MAX_LENGTH_V1) return undefined;
   const message = input.message.trim();
-  const admission = interpretAnonymousVisionIntentV1(message);
+  return Object.freeze({ version: 1, request_id: input.request_id, message });
+}
+
+export function admitAnonymousVisionConversationV1(value: unknown): Readonly<{ request: AnonymousVisionConversationRequestV1; admission: AnonymousConversationAdmissionV1 }> | undefined {
+  const request = parseAnonymousVisionConversationRequestV1(value);
+  if (!request) return undefined;
+  const admission = interpretAnonymousVisionIntentV1(request.message);
   if (!admission) return undefined;
-  return Object.freeze({ request: Object.freeze({ version: 1, request_id: input.request_id, message }), admission });
+  return Object.freeze({ request, admission });
 }

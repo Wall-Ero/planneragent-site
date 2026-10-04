@@ -6,6 +6,7 @@ import type { ConversationalInterpretationProviderV1 } from "./cognition/convers
 import type { ShadowInterpretationEvidenceRepositoryV1 } from "./cognition/conversational.interpretation.shadow.runtime.v1";
 import { resolveDurableShadowConfigurationV1, type DurableShadowEnvV1 } from "./cognition/durable.interpretation.shadow.configuration.v1";
 import { D1InterpretationShadowInfrastructureV1 } from "./cognition/durable.interpretation.shadow.infrastructure.v1";
+import { resolveSecondaryInterpretationV1, type SecondaryInterpretationEnvV1 } from "./cognition/secondary.interpretation.runtime.v1";
 
 type ConversationResult = AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1;
 type ConversationRunner = typeof runAnonymousVisionConversationV1;
@@ -14,7 +15,7 @@ const json = (body: ConversationResult, status: number) => new Response(JSON.str
 
 export async function anonymousVisionConversationRouteV1(
   request: Request,
-  env: Pick<Env, "OPENROUTER_API_KEY"> & DurableShadowEnvV1,
+  env: Pick<Env, "OPENROUTER_API_KEY"> & DurableShadowEnvV1 & SecondaryInterpretationEnvV1,
   dependencies: Readonly<{ run?: ConversationRunner; fetch?: typeof fetch; wait_until?: (task: Promise<void>) => void; shadow_provider?: ConversationalInterpretationProviderV1; shadow_repository?: ShadowInterpretationEvidenceRepositoryV1 }> = {},
 ): Promise<Response> {
   if (request.method !== "POST") return json({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" }, 405);
@@ -35,12 +36,14 @@ export async function anonymousVisionConversationRouteV1(
       const repository = dependencies.shadow_repository ?? durable;
       if (provider) interpretationShadow = { provider, repository, timeout_ms: timeoutMs, policy, schedule: dependencies.wait_until!, durable_admit: async (id,sampled) => await durable.reserve(id,sampled,policy.sample_percent) && await durable.canSchedule(env.INTERPRETATION_STUDENT_WINDOW_ID!,policy.sample_percent) };
     } catch { interpretationShadow = undefined; }
+    const secondary = resolveSecondaryInterpretationV1(env, dependencies.fetch ?? ((...args) => globalThis.fetch(...args)));
     result = await (dependencies.run ?? runAnonymousVisionConversationV1)({
       request: body,
       client_key: clientKey,
       api_key: env.OPENROUTER_API_KEY ?? "",
       fetch: dependencies.fetch ?? ((...args) => globalThis.fetch(...args)),
       ...(interpretationShadow ? { interpretation_shadow: interpretationShadow } : {}),
+      ...(secondary ? { interpretation_secondary: secondary } : {}),
     });
   } catch {
     return json({ version: 1, request_id: typeof (body as any)?.request_id === "string" ? (body as any).request_id : "unadmitted", error: "SERVICE_UNAVAILABLE" }, 503);

@@ -54,6 +54,7 @@ export class CognitiveTransportConversationalRealizationAdapterV1<TGovernedMeani
       [this.meaningKey]: input.governed_meaning,
       VOICE_PROFILE: input.voice_profile,
       USER_MESSAGE: input.current_user_message,
+      ...(input.semantic_interpretation ? { SEMANTIC_INTERPRETATION: input.semantic_interpretation } : {}),
     });
     const sealed = sealPublicCognitiveExposureV1({
       version: 1,

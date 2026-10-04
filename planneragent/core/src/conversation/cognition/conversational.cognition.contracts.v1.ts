@@ -111,6 +111,7 @@ export type SealedConversationalRealizationRequestV1<TGovernedMeaning> = Readonl
   version: 1;
   current_user_message: string;
   governed_meaning: TGovernedMeaning;
+  semantic_interpretation?: ConversationalInterpretationResultV1;
   voice_profile: PlannerAgentVoiceProfileV1;
   required_output_contract: "REALIZATION_ENVELOPE_V1";
 }>;

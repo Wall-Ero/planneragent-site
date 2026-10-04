@@ -17,6 +17,7 @@ import type { ConversationalInterpretationProviderV1 } from "./cognition/convers
 import { deterministicShadowInterpretationV1, isStudentShadowEligibleV1, observeStudentInterpretationShadowV1, type ShadowInterpretationEvidenceRepositoryV1 } from "./cognition/conversational.interpretation.shadow.runtime.v1";
 import { controlledShadowSampleBucketV1, shouldScheduleControlledShadowV1, type ControlledInterpretationShadowPolicyV1 } from "./cognition/controlled.interpretation.shadow.policy.v1";
 import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
+import type { SecondaryInterpretationV1 } from "./cognition/secondary.interpretation.runtime.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -37,6 +38,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   now?: () => string;
   rate_guard?: AnonymousVisionConversationRateGuardV1;
   resolve_providers?: typeof resolveLlmProviders;
+  interpretation_secondary?: SecondaryInterpretationV1;
   create_realization_provider?: (transport: PublicCognitiveRealizationTransportV1, route: CurrentPublicRealizationRouteV1) => ConversationalRealizationProviderV1<PlannerAgentPublicCapabilityProjectionV1>;
   interpretation_shadow?: Readonly<{
     provider: ConversationalInterpretationProviderV1;
@@ -107,7 +109,9 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   const route = Object.freeze({ request_id: requestId, consumption_id: `public-conversation:${requestId}`, provider, model, api_key: input.api_key, max_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, temperature: 0.2 });
   const realizationProvider = input.create_realization_provider?.(transport, route) ?? new CognitiveTransportConversationalRealizationAdapterV1(transport, route);
   try {
-    const rawRealization = await realizationProvider.realize(Object.freeze({ version: 1, current_user_message: admitted.request.message, governed_meaning: createPlannerAgentPublicCapabilityProjectionV1(), voice_profile: voiceProfile, required_output_contract: "REALIZATION_ENVELOPE_V1" }));
+    const interpretation = input.interpretation_secondary && isStudentShadowEligibleV1(admitted.admission, admitted.request.message)
+      ? await input.interpretation_secondary.interpret(admitted.request.message) : undefined;
+    const rawRealization = await realizationProvider.realize(Object.freeze({ version: 1, current_user_message: admitted.request.message, governed_meaning: createPlannerAgentPublicCapabilityProjectionV1(), voice_profile: voiceProfile, required_output_contract: "REALIZATION_ENVELOPE_V1", ...(interpretation ? { semantic_interpretation: interpretation } : {}) }));
     const realization = parseRealizationEnvelopeV1(rawRealization);
     if (!realization) throw new CognitiveTransportError("COGNITIVE_PROVIDER_RESPONSE_INVALID");
     return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", realization.answer);

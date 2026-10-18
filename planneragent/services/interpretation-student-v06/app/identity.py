@@ -1,7 +1,7 @@
 import hashlib, json, os, shutil, tempfile, zipfile
 from pathlib import Path
 
-IDENTITY={"service_protocol_version":1,"candidate_id":"PA-INTERPRETATION-STUDENT-v0.6","candidate_version":"0.6","artifact_sha256":"f20989ac8397aa1788fcdd03c6027fb178e4489bc576a175f690029ac2eb9e1f","artifact_size":22782731,"adapter_digest":"sha256:6ce46299667e0ba8f9b24b3558cc8b3ae110ef5bbcfb5c20a5f32ea022400ad3","base_model":"Qwen/Qwen3-0.6B-Base","base_revision":"da87bfb608c14b7cf20ba1ce41287e8de496c0cd","qualification":"QUALIFIED_FOR_SHADOW","lifecycle":"QUALIFIED_FOR_SHADOW"}
+IDENTITY={"service_protocol_version":1,"protocol_version":"PA_STUDENT_HTTP_V1","candidate_id":"PA-INTERPRETATION-STUDENT-v0.6","candidate_version":"0.6","artifact_sha256":"f20989ac8397aa1788fcdd03c6027fb178e4489bc576a175f690029ac2eb9e1f","artifact_size":22782731,"adapter_digest":"sha256:6ce46299667e0ba8f9b24b3558cc8b3ae110ef5bbcfb5c20a5f32ea022400ad3","base_model":"Qwen/Qwen3-0.6B-Base","base_revision":"da87bfb608c14b7cf20ba1ce41287e8de496c0cd","qualification":"QUALIFIED_FOR_SHADOW","lifecycle":"QUALIFIED_FOR_SHADOW"}
 ROOT="PA-INTERPRETATION-STUDENT-v0.6/"
 def runtime_identity(dtype): return {**IDENTITY,"effective_dtype":dtype}
 def verify_metadata(manifest,qualification):

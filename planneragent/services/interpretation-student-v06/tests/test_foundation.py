@@ -18,7 +18,7 @@ def test_request_and_training_serialization():
     assert validate_request(req)=="hello"; assert training_prompt("hello").endswith("USER:\nhello\n\nTARGET:\n")
 def test_privacy_logging_source():
     source=inspect.getsource(__import__("app.main",fromlist=["x"])); assert all("message" not in line for line in source.splitlines() if "log." in line)
-def test_identity_is_exact(): assert IDENTITY["qualification"]=="QUALIFIED_FOR_SHADOW" and IDENTITY["artifact_size"]==22782731
+def test_identity_is_exact(): assert IDENTITY["qualification"]=="QUALIFIED_FOR_SHADOW" and IDENTITY["artifact_size"]==22782731 and IDENTITY["protocol_version"]=="PA_STUDENT_HTTP_V1"
 def test_identity_exposes_effective_dtype(): assert runtime_identity("bf16")["effective_dtype"]=="bf16"
 def test_oversized_bytes_rejected():
     with pytest.raises(ValueError,match="REQUEST_TOO_LARGE"): enforce_byte_limit(b"12345",4)

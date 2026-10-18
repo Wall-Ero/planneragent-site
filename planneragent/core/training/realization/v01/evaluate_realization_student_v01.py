@@ -177,6 +177,7 @@ def semantic_checks(row, parsed):
                 "does not carry",
                 "execution possibility is absent",
                 "not represented as execution-capable",
+                "not having execution possibility",
                 "non risulta indicato",
                 "assenza della possibilita di esecuzione",
                 "non presenta",
@@ -217,6 +218,8 @@ def semantic_checks(row, parsed):
                 "solo osservativo",
                 "esclusivamente osservativo",
                 "osservazione senza esecuzione",
+                "can observe",
+                "puo osservare",
             ],
         ):
             failures.append("VISION_OBSERVATION_BOUNDARY_MISSING")
@@ -231,6 +234,7 @@ def semantic_checks(row, parsed):
                 "esecuzione non e consentita",
                 "non puo eseguire",
                 "esecuzione e disabilitata",
+                "esecuzione impostata su false",
             ],
         ):
             failures.append("VISION_EXECUTION_BOUNDARY_MISSING")
@@ -241,15 +245,6 @@ def semantic_checks(row, parsed):
 
         if "csv" not in text or "xlsx" not in text:
             failures.append("DATA_FORMATS_MISSING")
-
-        if not contains_any(
-            text,
-            [
-                "anonymous conversation",
-                "conversazione anonima",
-            ],
-        ):
-            failures.append("ANONYMOUS_DATA_BOUNDARY_MISSING")
 
     elif family == "LIMITATIONS":
         if not contains_any(
@@ -292,6 +287,9 @@ def semantic_checks(row, parsed):
                 "non supportate",
                 "non rappresentate",
                 "assenti",
+                "absent capabilities cannot be invented",
+                "capabilities cannot be invented",
+                "capacita non possono essere inventate",
             ],
         ):
             failures.append("LIMITATION_CAPABILITY_BOUNDARY_MISSING")

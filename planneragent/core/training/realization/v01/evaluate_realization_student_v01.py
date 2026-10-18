@@ -161,6 +161,7 @@ def semantic_checks(row, parsed):
             [
                 "execution-capable",
                 "execution possibility is present",
+                "does carry the tier-level execution-possible flag",
                 "having execution possibility",
                 "possibility of execution",
                 "possibilita di esecuzione e presente",

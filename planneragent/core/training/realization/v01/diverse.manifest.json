@@ -1,0 +1,71 @@
+{
+  "corpus_id": "PA-REALIZATION-CURRICULUM-v1-DIVERSE",
+  "source_corpus_id": "PA-REALIZATION-CURRICULUM-v1",
+  "transformation": "DETERMINISTIC_TARGET_SURFACE_DIVERSIFICATION",
+  "semantic_inputs_unchanged": true,
+  "split_membership_unchanged": true,
+  "total_records": 2368,
+  "report": {
+    "total_records": 2368,
+    "unique_answers": 2171,
+    "unique_answer_ratio": 0.9168074324324325,
+    "answers_shared_across_splits": 0,
+    "by_family": {
+      "DATA_CATEGORIES": {
+        "records": 198,
+        "unique_answers": 198
+      },
+      "DATA_INTRODUCTION": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "DOMAINS": {
+        "records": 198,
+        "unique_answers": 198
+      },
+      "EXECUTION_REQUEST": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "LIMITATIONS": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "PROMPT_INJECTION": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "PUBLIC_TIERS": {
+        "records": 198,
+        "unique_answers": 198
+      },
+      "PURPOSE": {
+        "records": 198,
+        "unique_answers": 198
+      },
+      "SEMANTIC_NONAUTHORITY": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "TIER_EXECUTION": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "USER_SPECIFIC_NO_DATA": {
+        "records": 197,
+        "unique_answers": 197
+      },
+      "VISION_BOUNDARY": {
+        "records": 197,
+        "unique_answers": 197
+      }
+    }
+  },
+  "split_sha256": {
+    "TRAIN": "sha256:ff01f805bd955fefdf4409956c980df8319236ebaedde018f4a7bd9d802b54f1",
+    "VALIDATION": "sha256:8cc612c1334dc2204c62ac95b483c24df19ad9ac99ce2e78dfa02b149ff21023",
+    "QUALIFICATION": "sha256:00532e4e85477f147c7f183cec5f931ea25729c58ac0d4bd8659c9bf5381fee8",
+    "HOLDOUT": "sha256:0fb8c237051198bf5565a90abfeadcbaa7063c817137d872a817b9b5e5b1704c",
+    "ADVERSARIAL": "sha256:6162c298ab3d69cd48ba9b40b80f86e6a4fe9322e102380d92e79a7ec5f00046"
+  }
+}

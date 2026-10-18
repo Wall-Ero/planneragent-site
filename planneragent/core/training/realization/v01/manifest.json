@@ -1,0 +1,40 @@
+{
+  "corpus_id": "PA-REALIZATION-CURRICULUM-v1",
+  "corpus_version": "1",
+  "generation_seed": 5101,
+  "status": "REALIZATION_V01_SEED_CORPUS_GENERATED",
+  "qualification_status": "NOT_YET_QUALIFIED",
+  "total_records": 2368,
+  "split_counts": {
+    "TRAIN": 1536,
+    "VALIDATION": 192,
+    "QUALIFICATION": 192,
+    "HOLDOUT": 192,
+    "ADVERSARIAL": 256
+  },
+  "family_counts": {
+    "PURPOSE": 198,
+    "DOMAINS": 198,
+    "DATA_CATEGORIES": 198,
+    "PUBLIC_TIERS": 198,
+    "TIER_EXECUTION": 197,
+    "VISION_BOUNDARY": 197,
+    "DATA_INTRODUCTION": 197,
+    "LIMITATIONS": 197,
+    "USER_SPECIFIC_NO_DATA": 197,
+    "EXECUTION_REQUEST": 197,
+    "PROMPT_INJECTION": 197,
+    "SEMANTIC_NONAUTHORITY": 197
+  },
+  "language_counts": {
+    "en": 1188,
+    "it": 1180
+  },
+  "split_sha256": {
+    "TRAIN": "sha256:31eca957493a579a16def290a9062044d99b7fc6c3613d671fc838cde66002ad",
+    "VALIDATION": "sha256:fd37cb11b92407c27887456243d6caff72768ca285c4dbd91557a851de144a75",
+    "QUALIFICATION": "sha256:3b184b990f5cf3ee8dd5bf72807f93bd1c8671cb8b12ba8b7b780a439ba4480a",
+    "HOLDOUT": "sha256:54faa26a28ebf22f478686a37e2c688e1ffee4748532c794481e00a289568569",
+    "ADVERSARIAL": "sha256:d535ad11db9518c299cb3413bdf4861f30a405c54971c5639c353eb427646fa6"
+  }
+}

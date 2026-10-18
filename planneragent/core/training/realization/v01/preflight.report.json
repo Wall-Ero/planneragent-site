@@ -1,0 +1,35 @@
+{
+  "total_records": 2368,
+  "split_counts": {
+    "TRAIN": 1536,
+    "VALIDATION": 192,
+    "QUALIFICATION": 192,
+    "HOLDOUT": 192,
+    "ADVERSARIAL": 256
+  },
+  "family_counts": {
+    "PURPOSE": 198,
+    "DOMAINS": 198,
+    "DATA_CATEGORIES": 198,
+    "PUBLIC_TIERS": 198,
+    "TIER_EXECUTION": 197,
+    "VISION_BOUNDARY": 197,
+    "DATA_INTRODUCTION": 197,
+    "LIMITATIONS": 197,
+    "USER_SPECIFIC_NO_DATA": 197,
+    "EXECUTION_REQUEST": 197,
+    "PROMPT_INJECTION": 197,
+    "SEMANTIC_NONAUTHORITY": 197
+  },
+  "language_counts": {
+    "en": 1188,
+    "it": 1180
+  },
+  "invalid_target_count": 0,
+  "overlong_target_count": 0,
+  "internal_machinery_exposure_count": 0,
+  "exact_input_duplicate_count": 0,
+  "normalized_user_message_duplicate_count": 0,
+  "semantic_family_id_unique_count": 2368,
+  "record_id_unique_count": 2368
+}

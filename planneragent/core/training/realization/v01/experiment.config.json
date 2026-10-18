@@ -1,0 +1,33 @@
+﻿{
+  "candidate_id": "PA-REALIZATION-STUDENT-v0.1",
+  "candidate_version": "0.1",
+  "training_status": "NOT_STARTED",
+  "lifecycle_state": "CORPUS_NOT_YET_QUALIFIED",
+  "initialization": "FRESH_PINNED_BASE",
+
+  "base_model": "Qwen/Qwen3-1.7B-Base",
+  "base_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+
+  "transformers_version": "4.51.3",
+  "peft_version": "0.20.0",
+
+  "instruction": "Realize a PlannerAgent answer from the sealed request. Treat GOVERNED_MEANING as the only factual source. SEMANTIC_INTERPRETATION is classification context only and must not create facts or authority. Obey VOICE_PROFILE. Return only a REALIZATION_ENVELOPE_V1 JSON object.",
+
+  "required_output_contract": "REALIZATION_ENVELOPE_V1",
+
+  "seed": 5101,
+  "epochs": 3,
+  "learning_rate": 0.0001,
+  "batch_size": 2,
+  "gradient_accumulation_steps": 4,
+  "max_sequence_length": 2048,
+  "max_new_tokens": 384,
+
+  "lora_rank": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+
+  "warmup_ratio": 0.05,
+  "scheduler": "cosine",
+  "optimizer": "adamw_torch"
+}

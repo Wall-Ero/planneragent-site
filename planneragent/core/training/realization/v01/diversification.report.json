@@ -1,0 +1,56 @@
+{
+  "total_records": 2368,
+  "unique_answers": 2171,
+  "unique_answer_ratio": 0.9168074324324325,
+  "answers_shared_across_splits": 0,
+  "by_family": {
+    "DATA_CATEGORIES": {
+      "records": 198,
+      "unique_answers": 198
+    },
+    "DATA_INTRODUCTION": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "DOMAINS": {
+      "records": 198,
+      "unique_answers": 198
+    },
+    "EXECUTION_REQUEST": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "LIMITATIONS": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "PROMPT_INJECTION": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "PUBLIC_TIERS": {
+      "records": 198,
+      "unique_answers": 198
+    },
+    "PURPOSE": {
+      "records": 198,
+      "unique_answers": 198
+    },
+    "SEMANTIC_NONAUTHORITY": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "TIER_EXECUTION": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "USER_SPECIFIC_NO_DATA": {
+      "records": 197,
+      "unique_answers": 197
+    },
+    "VISION_BOUNDARY": {
+      "records": 197,
+      "unique_answers": 197
+    }
+  }
+}

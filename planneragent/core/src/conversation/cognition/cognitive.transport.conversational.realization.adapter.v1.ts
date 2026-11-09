@@ -1,6 +1,7 @@
 import type { CognitiveProviderV1, PublicCognitiveAdvisoryResponseV1, SealedPublicCognitiveExposureV1 } from "../../governance/knowledge-exposure/transport";
 import { sealPublicCognitiveExposureV1 } from "../../governance/knowledge-exposure/transport";
 import type { PlannerAgentPublicCapabilityProjectionV1 } from "../planneragent.public.capabilities.v1";
+import { parseRealizationEnvelopeV1 } from "../cognitive.realization.envelope.v1";
 import { PLANNERAGENT_PUBLIC_CONVERSATION_INSTRUCTION_V1 } from "../anonymous.vision.conversation.policy.v1";
 import {
   createConversationalProviderDescriptorV1,
@@ -27,6 +28,8 @@ export interface PublicCognitiveRealizationTransportV1 {
     api_key: string;
     max_tokens?: number;
     temperature?: number;
+    required_output_contract?: "REALIZATION_ENVELOPE_V1";
+    validate_output?: (text: string) => boolean;
   }>): Promise<PublicCognitiveAdvisoryResponseV1>;
 }
 
@@ -76,6 +79,8 @@ export class CognitiveTransportConversationalRealizationAdapterV1<TGovernedMeani
       api_key: this.route.api_key,
       max_tokens: this.route.max_tokens,
       temperature: this.route.temperature,
+      required_output_contract: input.required_output_contract,
+      validate_output: (text) => parseRealizationEnvelopeV1(text) !== undefined,
     });
     return result.text;
   }

@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
-import type { PublicCognitiveAdvisoryResponseV1 } from "../../governance/knowledge-exposure/transport";
+import type { PublicCognitiveAdvisoryResponseV1, PublicCognitiveTransportEvidenceV1 } from "../../governance/knowledge-exposure/transport";
+import { CognitiveTransportMediatorV1 } from "../../governance/knowledge-exposure/transport";
 import { parseRealizationEnvelopeV1 } from "../cognitive.realization.envelope.v1";
 import { createPlannerAgentPublicCapabilityProjectionV1 } from "../planneragent.public.capabilities.v1";
 import { createPlannerAgentVoiceProfileV1 } from "../planneragent.voice.profile.v1";
@@ -42,7 +43,7 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     expect(exposed.PUBLIC_CAPABILITIES).toEqual(input.governed_meaning);
     expect(exposed.VOICE_PROFILE).toEqual(input.voice_profile);
     expect(input.required_output_contract).toBe("REALIZATION_ENVELOPE_V1");
-    expect(call).toMatchObject({ provider: "openrouter", model: "openrouter/free", max_tokens: 700, temperature: 0.2, sealed: { purpose: "PUBLIC_PRODUCT_CONVERSATION", retention: "NO_RETENTION" } });
+    expect(call).toMatchObject({ provider: "openrouter", model: "openrouter/free", max_tokens: 700, temperature: 0.2, required_output_contract: "REALIZATION_ENVELOPE_V1", sealed: { purpose: "PUBLIC_PRODUCT_CONVERSATION", retention: "NO_RETENTION" } });
     expect(exposed).toHaveProperty("PUBLIC_INSTRUCTION");
   });
 
@@ -52,6 +53,92 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     expect(raw).toBe("not an envelope");
     expect(parseRealizationEnvelopeV1(raw)).toBeUndefined();
     expectTypeOf<CognitiveTransportConversationalRealizationAdapterV1>().toMatchTypeOf<ConversationalRealizationProviderV1<ReturnType<typeof createPlannerAgentPublicCapabilityProjectionV1>>>();
+  });
+
+  it("enforces the realization format on the live transport without merging interpretation into governed meaning", async () => {
+    const semantic = { version: 1 as const, interaction: "PRODUCT_QUESTION" as const, product_focus: "GENERAL_CAPABILITIES" as const, resolution: "CLEAR" as const, interpretation_only: true as const, requester_content_non_authoritative: true as const, grants_authority: false as const, grants_execution: false as const };
+    const input = Object.freeze({ ...request(), semantic_interpretation: semantic });
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: '{"version":1,"answer":"Bounded answer."}' } }] })));
+    const result = await runAnonymousVisionConversationV1({
+      request: { version: 1, request_id: "format-test", message: "What can PlannerAgent do?" }, client_key: "format-test", api_key: "key", fetch: fetcher as any,
+      rate_guard: new AnonymousVisionConversationRateGuardV1(),
+      create_realization_provider: (transport, selectedRoute) => ({ descriptor: new CognitiveTransportConversationalRealizationAdapterV1(transport, selectedRoute).descriptor, realize: () => new CognitiveTransportConversationalRealizationAdapterV1(transport, selectedRoute).realize(input) }),
+    });
+    expect(result).toMatchObject({ text: "Bounded answer." });
+    const body = JSON.parse(String((fetcher.mock.calls as unknown as Array<[unknown, RequestInit]>)[0][1].body));
+    expect(body).toMatchObject({ model: "openrouter/free", max_tokens: 700, temperature: 0.2, reasoning: { max_tokens: 128 }, provider: { require_parameters: true }, response_format: { type: "json_schema", json_schema: { name: "REALIZATION_ENVELOPE_V1", strict: true, schema: { required: ["version", "answer"], additionalProperties: false, properties: { version: { enum: [1] }, answer: { type: "string" } } } } } });
+    expect(body.messages[0].content).toContain('Return only one compact JSON object: {"version":1,"answer":"..."}');
+    expect(body.messages[0].content).not.toContain("plain text or");
+    const exposed = JSON.parse(JSON.parse(body.messages[1].content).content);
+    expect(exposed.PUBLIC_CAPABILITIES).toEqual(input.governed_meaning);
+    expect(exposed.SEMANTIC_INTERPRETATION).toEqual(semantic);
+    expect(exposed.VOICE_PROFILE).toEqual(input.voice_profile);
+  });
+
+  it.each([
+    ["captured fenced truncation", '```json\n{\n  "version": 1,\n  "'],
+    ["unfinished answer", '{"version":1,"answer":"PlannerAgent observes'],
+    ["unfinished object", '{"version":1,"answer":"Complete sentence."'],
+  ])("fails closed on %s even with requested structured output", async (_label, raw) => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ choices: [{ finish_reason: "length", message: { reasoning: "Non-authoritative provider reasoning", content: raw } }] })));
+    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "truncation-test", message: "What can PlannerAgent do?" }, client_key: "truncation-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
+    expect(result).toEqual({ version: 1, request_id: "truncation-test", error: "SERVICE_UNAVAILABLE" });
+    expect(parseRealizationEnvelopeV1(raw)).toBeUndefined();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect((fetcher.mock.calls as unknown as Array<[unknown, RequestInit]>)[0][1].body).toBe((fetcher.mock.calls as unknown as Array<[unknown, RequestInit]>)[1][1].body);
+  });
+
+  it.each([
+    ["null content", null, "stop"],
+    ["empty content", "", "stop"],
+    ["whitespace content", "   ", "stop"],
+    ["malformed envelope", '{"version":1,"answer":"unfinished', "stop"],
+    ["incomplete generation with superficially valid JSON", '{"version":1,"answer":"Partial."}', "length"],
+  ])("retries exactly once after HTTP success with %s", async (_label, content, finish_reason) => {
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ finish_reason, message: { content, reasoning: '{"version":1,"answer":"Never use reasoning as the answer."}' } }] })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: '{"version":1,"answer":"Recovered answer."}' } }] })));
+    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "retry-test", message: "What can PlannerAgent do?" }, client_key: "retry-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
+    expect(result).toMatchObject({ text: "Recovered answer." });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    const calls = fetcher.mock.calls as unknown as Array<[unknown, RequestInit]>;
+    expect(calls[0][1].body).toBe(calls[1][1].body);
+    expect(JSON.parse(String(calls[1][1].body))).toMatchObject({ model: "openrouter/free", max_tokens: 700 });
+  });
+
+  it.each([400, 429, 500])("does not retry HTTP %s", async (status) => {
+    const fetcher = vi.fn(async () => new Response('{"error":{"message":"Provider failure"}}', { status }));
+    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "http-test", message: "What can PlannerAgent do?" }, client_key: "http-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
+    expect(result).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("does not retry network failures or bypass request admission", async () => {
+    const fetcher = vi.fn(async () => { throw new Error("Network failure"); });
+    const args = { client_key: "network-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() };
+    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 1, request_id: "network-test", message: "What can PlannerAgent do?" } })).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
+    expect(fetcher).toHaveBeenCalledOnce();
+    fetcher.mockClear();
+    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 2, message: "What can PlannerAgent do?" } })).toMatchObject({ error: "REQUEST_NOT_ADMITTED" });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 1, request_id: "authority-test", message: "Execute this action for me" } })).toMatchObject({ posture: "EXECUTION_UNAVAILABLE" });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("retains one exposure reservation and final evidence event for both realization attempts", async () => {
+    const reserve = vi.fn(async () => true), append = vi.fn(async (_event: PublicCognitiveTransportEvidenceV1) => undefined);
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: null } }] })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: '{"version":1,"answer":"Recovered."}' } }] })));
+    const transport = new CognitiveTransportMediatorV1({ fetch: fetcher as any, evidence: { reserve: async () => false, append: async () => undefined }, publicEvidence: { reserve, append }, now: () => "2026-10-11T00:00:00Z" });
+    const adapter = new CognitiveTransportConversationalRealizationAdapterV1(transport, route);
+    expect(await adapter.realize(request())).toBe('{"version":1,"answer":"Recovered."}');
+    expect(reserve).toHaveBeenCalledOnce();
+    expect(append).toHaveBeenCalledOnce();
+    expect(append.mock.calls[0]?.[0]).toMatchObject({ status: "SUCCEEDED", consumption_id: route.consumption_id });
+    reserve.mockResolvedValueOnce(false);
+    await expect(adapter.realize(request())).rejects.toMatchObject({ code: "COGNITIVE_FANOUT_NOT_ADMITTED" });
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("carries governed VISION meaning through the existing realization transport and envelope", async () => {

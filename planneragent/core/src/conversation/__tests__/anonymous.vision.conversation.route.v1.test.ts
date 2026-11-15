@@ -3,7 +3,8 @@ import type { AnonymousVisionConversationFailureV1, AnonymousVisionConversationR
 import { anonymousVisionConversationRouteV1 } from "../anonymous.vision.conversation.route.v1";
 
 const request = (body: unknown, headers: HeadersInit = {}) => new Request("https://core.test/conversation", { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
-const valid = { version: 1, request_id: "request-1", message: "What can PlannerAgent do?" };
+// Keep these hosted-adapter cases outside the deterministic GENERAL_CAPABILITIES grammar.
+const valid = { version: 1, request_id: "request-1", message: "What is VISION?" };
 
 describe("ANONYMOUS-VISION-CONVERSATION-ROUTE-V1", () => {
   it("invokes default fetch through globalThis for the free OpenRouter conversation", async () => {

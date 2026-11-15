@@ -267,7 +267,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
 
   it("dispatches only PUBLIC_SAFE grounding through the public mediator path", async () => {
     const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => response(envelope("  Grounded public answer  ")));
-    const result = await run("What can PlannerAgent do?", { fetch: fetcher });
+    const result = await run("What is VISION?", { fetch: fetcher });
     expect(result).toEqual({ version: 1, request_id: "request-1", posture: "PUBLIC_PRODUCT_ANSWER", text: "Grounded public answer" });
     const wire = JSON.stringify(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body)));
     expect(wire).toContain("PUBLIC_SAFE");
@@ -293,7 +293,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
 
   it("resolves anonymous inference as VISION x EFFICIENT x FREE", async () => {
     const fetcher = vi.fn(async (_url: unknown, _init?: RequestInit) => response());
-    await run("What can PlannerAgent do?", { fetch: fetcher });
+    await run("What is VISION?", { fetch: fetcher });
     const body = JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body));
     expect(body.model).toBe("openrouter/free");
     expect(body.model).not.toBe("openai/gpt-4o-mini");
@@ -309,7 +309,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
 
   it("fails closed before transport when no FREE candidate resolves", async () => {
     const fetcher = vi.fn();
-    const result = await run("What can PlannerAgent do?", { fetch: fetcher, resolve_providers: () => [] });
+    const result = await run("What is VISION?", { fetch: fetcher, resolve_providers: () => [] });
     expect(result).toEqual({ version: 1, request_id: "request-1", error: "SERVICE_UNAVAILABLE" });
     expect(fetcher).not.toHaveBeenCalled();
   });
@@ -317,7 +317,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
   it("does not cross from FREE resolution into a paid fallback", async () => {
     const fetcher = vi.fn();
     const paid = resolveLlmProviders("JUNIOR", Infinity).filter((candidate) => candidate.economicClass === "paid");
-    const result = await run("What can PlannerAgent do?", { fetch: fetcher, resolve_providers: () => paid });
+    const result = await run("What is VISION?", { fetch: fetcher, resolve_providers: () => paid });
     expect(result).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
     expect(fetcher).not.toHaveBeenCalled();
   });
@@ -333,7 +333,7 @@ describe("ANONYMOUS-VISION-CONVERSATION-V1", () => {
   });
 
   it("fails closed with a bounded error on provider failure", async () => {
-    const result = await run("What can PlannerAgent do?", { fetch: vi.fn(async () => new Response("provider secret", { status: 500 })) });
+    const result = await run("What is VISION?", { fetch: vi.fn(async () => new Response("provider secret", { status: 500 })) });
     expect(result).toEqual({ version: 1, request_id: "request-1", error: "SERVICE_UNAVAILABLE" });
     expect(JSON.stringify(result)).not.toMatch(/provider secret|credential|openrouter/i);
   });

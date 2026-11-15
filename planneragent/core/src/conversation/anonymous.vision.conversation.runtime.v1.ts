@@ -18,6 +18,7 @@ import { deterministicShadowInterpretationV1, isStudentShadowEligibleV1, observe
 import { controlledShadowSampleBucketV1, shouldScheduleControlledShadowV1, type ControlledInterpretationShadowPolicyV1 } from "./cognition/controlled.interpretation.shadow.policy.v1";
 import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 import type { SecondaryInterpretationV1 } from "./cognition/secondary.interpretation.runtime.v1";
+import { admitNaturalCapabilitiesV1, createNaturalCapabilitiesAnswerPlanV1, renderNaturalCapabilitiesV1 } from "./cognition/hybrid.natural.capabilities.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -56,6 +57,17 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   if (!request) return Object.freeze({ version: 1, request_id: requestId, error: "REQUEST_NOT_ADMITTED" });
   const guard = input.rate_guard ?? defaultRateGuard;
   if (admitted && !guard.admit({ client_key: input.client_key, message_length: admitted.request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
+  // Only the existing qualified grammar enters this source-bound local renderer.
+  // Stop before shadow, secondary interpretation, provider selection or transport.
+  if (admitted?.admission === "PRODUCT_CONVERSATION" && admitNaturalCapabilitiesV1(admitted.request.message).decision === "ADMIT") {
+    try {
+      const plan = createNaturalCapabilitiesAnswerPlanV1();
+      const rendered = renderNaturalCapabilitiesV1(plan);
+      return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", rendered.text);
+    } catch {
+      return Object.freeze({ version: 1, request_id: requestId, error: "SERVICE_UNAVAILABLE" });
+    }
+  }
   const shadowPolicy=input.interpretation_shadow?.policy;
   if (input.interpretation_shadow && isStudentShadowEligibleV1(admitted?.admission, request.message) && (!shadowPolicy || (shadowPolicy.state === "CONTROLLED_SHADOW" && !shadowPolicy.kill_switch))) {
     const shadow = input.interpretation_shadow;
@@ -97,6 +109,8 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
     if (!direct) return Object.freeze({ version: 1, request_id: requestId, error: "REQUEST_NOT_ADMITTED" });
     return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", direct.statements.map(({ text }) => text).join(" "));
   }
+  // An unconfigured host must stop before selecting or constructing a remote route.
+  if (!input.api_key) return Object.freeze({ version: 1, request_id: requestId, error: "SERVICE_UNAVAILABLE" });
   const sovereignty = resolveSovereigntyPolicyV1({ plan: "VISION", budgetRemainingEur: 0, intelligenceMode: "EFFICIENT", inferenceSource: "FREE" });
   const candidate = (input.resolve_providers ?? resolveLlmProviders)("VISION", 0, sovereignty)[0];
   if (!candidate || candidate.id !== "openrouter" || candidate.model !== "openrouter/free" || candidate.economicClass !== "free" || candidate.estimatedCostEur !== 0) {

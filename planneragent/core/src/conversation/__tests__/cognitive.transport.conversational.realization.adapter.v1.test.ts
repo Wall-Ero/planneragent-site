@@ -60,7 +60,7 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     const input = Object.freeze({ ...request(), semantic_interpretation: semantic });
     const fetcher = vi.fn(async () => new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: '{"version":1,"answer":"Bounded answer."}' } }] })));
     const result = await runAnonymousVisionConversationV1({
-      request: { version: 1, request_id: "format-test", message: "What can PlannerAgent do?" }, client_key: "format-test", api_key: "key", fetch: fetcher as any,
+      request: { version: 1, request_id: "format-test", message: "What is VISION?" }, client_key: "format-test", api_key: "key", fetch: fetcher as any,
       rate_guard: new AnonymousVisionConversationRateGuardV1(),
       create_realization_provider: (transport, selectedRoute) => ({ descriptor: new CognitiveTransportConversationalRealizationAdapterV1(transport, selectedRoute).descriptor, realize: () => new CognitiveTransportConversationalRealizationAdapterV1(transport, selectedRoute).realize(input) }),
     });
@@ -81,7 +81,7 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     ["unfinished object", '{"version":1,"answer":"Complete sentence."'],
   ])("fails closed on %s even with requested structured output", async (_label, raw) => {
     const fetcher = vi.fn(async () => new Response(JSON.stringify({ choices: [{ finish_reason: "length", message: { reasoning: "Non-authoritative provider reasoning", content: raw } }] })));
-    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "truncation-test", message: "What can PlannerAgent do?" }, client_key: "truncation-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
+    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "truncation-test", message: "What is VISION?" }, client_key: "truncation-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
     expect(result).toEqual({ version: 1, request_id: "truncation-test", error: "SERVICE_UNAVAILABLE" });
     expect(parseRealizationEnvelopeV1(raw)).toBeUndefined();
     expect(fetcher).toHaveBeenCalledTimes(2);
@@ -98,7 +98,7 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     const fetcher = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ finish_reason, message: { content, reasoning: '{"version":1,"answer":"Never use reasoning as the answer."}' } }] })))
       .mockResolvedValueOnce(new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: '{"version":1,"answer":"Recovered answer."}' } }] })));
-    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "retry-test", message: "What can PlannerAgent do?" }, client_key: "retry-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
+    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "retry-test", message: "What is VISION?" }, client_key: "retry-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
     expect(result).toMatchObject({ text: "Recovered answer." });
     expect(fetcher).toHaveBeenCalledTimes(2);
     const calls = fetcher.mock.calls as unknown as Array<[unknown, RequestInit]>;
@@ -108,7 +108,7 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
 
   it.each([400, 429, 500])("does not retry HTTP %s", async (status) => {
     const fetcher = vi.fn(async () => new Response('{"error":{"message":"Provider failure"}}', { status }));
-    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "http-test", message: "What can PlannerAgent do?" }, client_key: "http-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
+    const result = await runAnonymousVisionConversationV1({ request: { version: 1, request_id: "http-test", message: "What is VISION?" }, client_key: "http-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() });
     expect(result).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
     expect(fetcher).toHaveBeenCalledOnce();
   });
@@ -116,10 +116,10 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
   it("does not retry network failures or bypass request admission", async () => {
     const fetcher = vi.fn(async () => { throw new Error("Network failure"); });
     const args = { client_key: "network-test", api_key: "key", fetch: fetcher as any, rate_guard: new AnonymousVisionConversationRateGuardV1() };
-    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 1, request_id: "network-test", message: "What can PlannerAgent do?" } })).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
+    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 1, request_id: "network-test", message: "What is VISION?" } })).toMatchObject({ error: "SERVICE_UNAVAILABLE" });
     expect(fetcher).toHaveBeenCalledOnce();
     fetcher.mockClear();
-    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 2, message: "What can PlannerAgent do?" } })).toMatchObject({ error: "REQUEST_NOT_ADMITTED" });
+    expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 2, message: "What is VISION?" } })).toMatchObject({ error: "REQUEST_NOT_ADMITTED" });
     expect(fetcher).not.toHaveBeenCalled();
     expect(await runAnonymousVisionConversationV1({ ...args, request: { version: 1, request_id: "authority-test", message: "Execute this action for me" } })).toMatchObject({ posture: "EXECUTION_UNAVAILABLE" });
     expect(fetcher).not.toHaveBeenCalled();
@@ -174,7 +174,7 @@ describe("COGNITIVE-TRANSPORT-CONVERSATIONAL-REALIZATION-ADAPTER-V1", () => {
     for (const raw of ["not-json", '{"version":1,"answer":""}']) {
       provider.realize = async () => raw;
       await expect(runAnonymousVisionConversationV1({
-        request: { version: 1, request_id: `request-${raw.length}`, message: "What can PlannerAgent do?" }, client_key: `client-${raw.length}`, api_key: "key", fetch: vi.fn() as any,
+        request: { version: 1, request_id: `request-${raw.length}`, message: "What is VISION?" }, client_key: `client-${raw.length}`, api_key: "key", fetch: vi.fn() as any,
         rate_guard: new AnonymousVisionConversationRateGuardV1(), create_realization_provider: () => provider,
       })).resolves.toMatchObject({ error: "SERVICE_UNAVAILABLE" });
     }

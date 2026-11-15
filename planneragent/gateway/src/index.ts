@@ -2,6 +2,8 @@ export default {
   async fetch(request: Request, env: any): Promise<Response> {
     const url = new URL(request.url);
 
+    if (url.pathname === "/conversation") return env.CORE.fetch(request);
+
     // health
     if (url.pathname === "/health") {
       return new Response("GATEWAY OK");

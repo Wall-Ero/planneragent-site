@@ -1,9 +1,10 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { hybridCanonicalV1, hybridDigestV1, hybridSnapshotV1 } from "../../src/conversation/cognition/hybrid.conversational.contracts.v1";
 import { createInjectedExperimentManifestV1, createNativeExperimentManifestV1, FIXED_LIVE_STATE_DIRECTORY_V1, OneShotTransportErrorV1,
   type ExperimentManifestV1, type LiveAttemptReceiptV1 } from "./live.contracts";
 import { writeExclusiveSyncedV1 } from "./local-state";
+import { createPreparedExperimentManifestV1, PREPARED_STATE_DIRECTORY_V1, PREPARED_JOURNAL_NAMESPACE_V1 } from "./experiment.preparation";
 
 // Local one-shot gate only, not D1, quota accounting or a second operational ledger.
 export class LiveAttemptJournalV1 {
@@ -12,7 +13,22 @@ export class LiveAttemptJournalV1 {
   private nativeRequestClaimed = false;
   private manifestDigest = "";
   private reservationRecord = "";
-  private constructor(private readonly directory: string, readonly storage_mode: "FIXED_LIVE_LOCATION" | "ISOLATED_OFFLINE_FIXTURE") {}
+  private constructor(private readonly directory: string, readonly storage_mode: "FIXED_LIVE_LOCATION" | "ISOLATED_OFFLINE_FIXTURE",
+    private readonly preparationOnly = false) {}
+  static preparedOfflineLocation(): LiveAttemptJournalV1 {
+    return new LiveAttemptJournalV1(PREPARED_STATE_DIRECTORY_V1, "ISOLATED_OFFLINE_FIXTURE", true);
+  }
+  static preparedOfflineFixture(root: string): LiveAttemptJournalV1 {
+    for (const historical of [FIXED_LIVE_STATE_DIRECTORY_V1,
+      join(dirname(FIXED_LIVE_STATE_DIRECTORY_V1), "local-state"),
+      join(dirname(FIXED_LIVE_STATE_DIRECTORY_V1), "injected-demo-state")]) {
+      const rel = relative(historical, resolve(root));
+      if (rel === "" || (rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))) throw new OneShotTransportErrorV1("JOURNAL_FIXTURE_PATH_INVALID");
+    }
+    // Reuse fixture path validation, then place this experiment in its own child namespace.
+    const fixture = LiveAttemptJournalV1.isolatedOfflineFixture(root);
+    return new LiveAttemptJournalV1(join(fixture.directory, PREPARED_JOURNAL_NAMESPACE_V1), "ISOLATED_OFFLINE_FIXTURE", true);
+  }
   static fixedLocation(): LiveAttemptJournalV1 { return new LiveAttemptJournalV1(FIXED_LIVE_STATE_DIRECTORY_V1, "FIXED_LIVE_LOCATION"); }
   // Test/fixture virtualization cannot be used for real dispatch, which remains denied.
   static isolatedOfflineFixture(directory: string): LiveAttemptJournalV1 {
@@ -29,8 +45,9 @@ export class LiveAttemptJournalV1 {
     if (!existsSync(this.directory)) mkdirSync(this.directory, { mode: 0o700 });
     if (realpathSync(this.directory).toLowerCase() !== resolve(this.directory).toLowerCase()) throw new OneShotTransportErrorV1("JOURNAL_LOCATION_INVALID");
   }
-  reserve(manifest: ExperimentManifestV1): void {
-    if (hybridCanonicalV1(manifest) !== hybridCanonicalV1(manifest.mode === "NATIVE_HTTPS_ONESHOT" ? createNativeExperimentManifestV1() : createInjectedExperimentManifestV1())) throw new OneShotTransportErrorV1("MANIFEST_INVALID");
+  reserve(manifest: ExperimentManifestV1 | ReturnType<typeof createPreparedExperimentManifestV1>): void {
+    if (hybridCanonicalV1(manifest) !== hybridCanonicalV1(this.preparationOnly ? createPreparedExperimentManifestV1() :
+      manifest.mode === "NATIVE_HTTPS_ONESHOT" ? createNativeExperimentManifestV1() : createInjectedExperimentManifestV1())) throw new OneShotTransportErrorV1("MANIFEST_INVALID");
     if (this.reserved) throw new OneShotTransportErrorV1("ATTEMPT_ALREADY_RESERVED");
     try {
       this.assertLocation();
@@ -44,6 +61,7 @@ export class LiveAttemptJournalV1 {
     } catch { throw new OneShotTransportErrorV1("RESERVATION_DENIED_OR_STORAGE_UNAVAILABLE"); }
   }
   acquireDispatchPermission(): void {
+    if (this.preparationOnly) throw new OneShotTransportErrorV1("DISPATCH_PERMISSION_DENIED");
     if (!this.reserved || this.dispatched) throw new OneShotTransportErrorV1("DISPATCH_PERMISSION_DENIED");
     try {
       this.assertLocation();

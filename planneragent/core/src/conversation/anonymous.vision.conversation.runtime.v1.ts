@@ -1,5 +1,5 @@
 import { CognitiveTransportError, CognitiveTransportMediatorV1, type PublicCognitiveTransportEvidenceRepositoryV1, type PublicCognitiveTransportEvidenceV1 } from "../governance/knowledge-exposure/transport";
-import { ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, type AnonymousVisionConversationFailureV1, type AnonymousVisionConversationResponseV1 } from "./anonymous.vision.conversation.contracts.v1";
+import { ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1, type AnonymousVisionConversationFailureV1, type AnonymousVisionConversationResponseV1, type PublicConversationContinuityMetadataV1 } from "./anonymous.vision.conversation.contracts.v1";
 import { admitAnonymousVisionConversationV1, parseAnonymousVisionConversationRequestV1 } from "./anonymous.vision.conversation.policy.v1";
 import { createPlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 import { AnonymousVisionConversationRateGuardV1 } from "./anonymous.vision.conversation.rate.v1";
@@ -20,6 +20,7 @@ import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.pu
 import type { SecondaryInterpretationV1 } from "./cognition/secondary.interpretation.runtime.v1";
 import { admitNaturalCapabilitiesV1, createNaturalCapabilitiesAnswerPlanV1, renderNaturalCapabilitiesV1 } from "./cognition/hybrid.natural.capabilities.v1";
 import { admitAnonymousVisionClarificationV1, createAnonymousVisionClarificationPlanV1, renderAnonymousVisionClarificationV1 } from "./anonymous.vision.conversation.clarification.v1";
+import { admitsPublicDomainListQuestionV1, publicDomainOrdinalV1, defaultPublicDomainContinuityRepositoryV1, createPublicDomainReferencePlanV1, renderPublicDomainReferenceV1, type PublicDomainContinuityRepositoryV1, type PublicDomainContextRecordV1 } from "./anonymous.vision.conversation.continuity.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -39,6 +40,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   fetch: typeof fetch;
   now?: () => string;
   rate_guard?: AnonymousVisionConversationRateGuardV1;
+  continuity?: Readonly<{ request: PublicConversationContinuityMetadataV1; repository?: PublicDomainContinuityRepositoryV1; publish(ref: string): void }>;
   resolve_providers?: typeof resolveLlmProviders;
   interpretation_secondary?: SecondaryInterpretationV1;
   create_realization_provider?: (transport: PublicCognitiveRealizationTransportV1, route: CurrentPublicRealizationRouteV1) => ConversationalRealizationProviderV1<PlannerAgentPublicCapabilityProjectionV1>;
@@ -56,11 +58,27 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   const request = admitted?.request ?? parseAnonymousVisionConversationRequestV1(input.request);
   if (!request) return Object.freeze({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" });
   const clarification = !admitted ? admitAnonymousVisionClarificationV1(request.message) : undefined;
+  const ordinal = !admitted ? publicDomainOrdinalV1(request.message) : undefined;
   const requestId = admitted || clarification ? request.request_id : "unadmitted";
   const guard = input.rate_guard ?? defaultRateGuard;
   if ((admitted || clarification) && !guard.admit({ client_key: input.client_key, message_length: request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
+  // The current message has already been classified. Hard boundaries never read
+  // parent meaning; every intervening turn invalidates that conversation's parent.
+  const repository = input.continuity?.repository ?? defaultPublicDomainContinuityRepositoryV1;
+  let parent: PublicDomainContextRecordV1 | undefined;
+  if (input.continuity) {
+    try {
+      if (ordinal !== undefined && !input.continuity.request.invalid_context) parent = repository.take(input.continuity.request);
+      repository.invalidate(input.continuity.request.conversation_id);
+    } catch { parent = undefined; try { repository.invalidate(input.continuity.request.conversation_id); } catch { /* Unavailable volatile state cannot authorize a referent. */ } }
+  }
   if (clarification) {
     try {
+      if (parent && ordinal !== undefined && ordinal < parent.ordered_domains.length) {
+        const plan = createPublicDomainReferencePlanV1(parent, ordinal);
+        const rendered = renderPublicDomainReferenceV1(plan);
+        return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", rendered.text);
+      }
       const plan = createAnonymousVisionClarificationPlanV1(clarification);
       const rendered = renderAnonymousVisionClarificationV1(plan);
       return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", rendered.text);
@@ -70,10 +88,14 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   }
   // Only the existing qualified grammar enters this source-bound local renderer.
   // Stop before shadow, secondary interpretation, provider selection or transport.
-  if (admitted?.admission === "PRODUCT_CONVERSATION" && admitNaturalCapabilitiesV1(admitted.request.message).decision === "ADMIT") {
+  if (admitted?.admission === "PRODUCT_CONVERSATION" && (admitNaturalCapabilitiesV1(admitted.request.message).decision === "ADMIT" || admitsPublicDomainListQuestionV1(admitted.request.message))) {
     try {
       const plan = createNaturalCapabilitiesAnswerPlanV1();
       const rendered = renderNaturalCapabilitiesV1(plan);
+      if (input.continuity && !input.continuity.request.invalid_context) try {
+        const ref = repository.issue(input.continuity.request.conversation_id, requestId, plan, rendered);
+        if (ref) input.continuity.publish(ref);
+      } catch { /* Public output remains valid when optional volatile context is unavailable. */ }
       return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", rendered.text);
     } catch {
       return Object.freeze({ version: 1, request_id: requestId, error: "SERVICE_UNAVAILABLE" });

@@ -9,6 +9,8 @@ import { CognitiveTransportMediatorV1 } from "../../governance/knowledge-exposur
 import { LIVE_NETWORK_ENABLED_V1 } from "../../../qualification/teacher-one-shot/live.contracts";
 import * as clarification from "../anonymous.vision.conversation.clarification.v1";
 import { StudentConversationalInterpretationAdapterV1 } from "../cognition/student.conversational.interpretation.adapter.v1";
+import * as continuity from "../anonymous.vision.conversation.continuity.v1";
+import { PUBLIC_CONVERSATION_ID_HEADER_V1 as ID, PUBLIC_CONVERSATION_CONTEXT_HEADER_V1 as CONTEXT } from "../anonymous.vision.conversation.contracts.v1";
 const guard = createRequire(import.meta.url)("../../../qualification/teacher-one-shot/offline.network-deny.cjs");
 let plan: MockInstance<typeof natural.createNaturalCapabilitiesAnswerPlanV1>;
 let render: MockInstance<typeof natural.renderNaturalCapabilitiesV1>;
@@ -17,6 +19,8 @@ let hostedDispatch: MockInstance<CognitiveTransportMediatorV1["dispatchPublic"]>
 let clarificationPlan: MockInstance<typeof clarification.createAnonymousVisionClarificationPlanV1>;
 let clarificationRenderer: MockInstance<typeof clarification.renderAnonymousVisionClarificationV1>;
 let studentInterpretation: MockInstance<StudentConversationalInterpretationAdapterV1["interpret"]>;
+let referencePlan: MockInstance<typeof continuity.createPublicDomainReferencePlanV1>;
+let referenceRenderer: MockInstance<typeof continuity.renderPublicDomainReferenceV1>;
 beforeEach(() => {
   vi.resetModules();
   plan = vi.spyOn(natural, "createNaturalCapabilitiesAnswerPlanV1");
@@ -26,6 +30,116 @@ beforeEach(() => {
   clarificationPlan = vi.spyOn(clarification, "createAnonymousVisionClarificationPlanV1");
   clarificationRenderer = vi.spyOn(clarification, "renderAnonymousVisionClarificationV1");
   studentInterpretation = vi.spyOn(StudentConversationalInterpretationAdapterV1.prototype, "interpret");
+  referencePlan = vi.spyOn(continuity, "createPublicDomainReferencePlanV1");
+  referenceRenderer = vi.spyOn(continuity, "renderPublicDomainReferenceV1");
+  continuity.defaultPublicDomainContinuityRepositoryV1.reset();
+});
+
+describe("STEP13S verified public continuity through real UI, Gateway and Core", () => {
+  const question = "Which domains does PlannerAgent support?", followup = "Explain the third one.";
+  const fallback = "I don't have the earlier list. Which item do you mean? Please name it or include the list.";
+  const domainMeaning = "PlannerAgent's architecture identifies five planning domains: supply chain, production, logistics, finance and general planning. This list alone does not establish that every domain is implemented, qualified or publicly available.";
+  const boundary = "VISION is observation-only and cannot execute actions. In this anonymous conversation, you cannot introduce data, access organizations, monitor participants or execute actions.";
+  const answer = `The third item in the list I provided was logistics. ${domainMeaning} ${boundary}`;
+  const send = async (ui: Awaited<ReturnType<typeof mount>>, text: string, state = "complete") => {
+    ui.submit(text); await vi.waitFor(() => expect(ui.exchanges().at(-1)!.dataset.exchangeState).toBe(state));
+  };
+  const displayed = (ui: Awaited<ReturnType<typeof mount>>) => ui.exchanges().at(-1)!.querySelector<Element>(".conversation-turn-planneragent")?.querySelector<Element>("p")?.textContent;
+
+  it("carries issued headers over the actual service-binding path and renders the verified third item", async () => {
+    const ui = await mount(), gatewayBefore = ui.gatewayFetch.mock.calls.length, coreBefore = ui.realCore.mock.calls.length;
+    await send(ui, question);
+    const ref = ui.responseHeaders[0].get(CONTEXT)!, id = ui.clientHeaders[0].get(ID)!;
+    expect(ref).toMatch(/^[0-9a-f]{64}$/); expect(ui.clientResponseHeaders[0].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[0].get(ID)).toBe(id); expect(ui.replies[0].text).toContain(domainMeaning);
+    expect(plan).toHaveBeenCalledOnce(); expect(render).toHaveBeenCalledOnce();
+    await send(ui, followup);
+    expect(ui.clientHeaders[1].get(CONTEXT)).toBe(ref); expect(ui.coreHeaders[1].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[1].get(ID)).toBe(id); expect(ui.responseHeaders[1].has(CONTEXT)).toBe(false);
+    expect(ui.gatewayFetch).toHaveBeenCalledTimes(gatewayBefore + 2); expect(ui.realCore).toHaveBeenCalledTimes(coreBefore + 2);
+    expect(ui.statuses).toEqual([200, 200]); expect(ui.clientStatuses).toEqual([200, 200]);
+    expect(ui.replies[1]).toEqual({ version: 1, request_id: ui.requests[1].request_id, posture: "PUBLIC_PRODUCT_ANSWER", text: answer });
+    expect(displayed(ui)).toBe(answer);
+    expect(referencePlan).toHaveBeenCalledOnce(); expect(referenceRenderer).toHaveBeenCalledOnce();
+    const actualPlan = referencePlan.mock.results[0].value;
+    expect(referenceRenderer.mock.calls[0][0]).toBe(actualPlan);
+    expect(actualPlan).toMatchObject({ index: 2, domain: "logistics", grants_authority: false, grants_execution: false, operational_evidence: false,
+      parent: { originating_request_id: ui.requests[0].request_id, ordered_domains: ["supply_chain", "production", "logistics", "finance", "general"] } });
+    expect(referenceRenderer.mock.results[0].value.text).toBe(answer);
+    for (const body of ui.requests) expect(Object.keys(body).sort()).toEqual(["message", "request_id", "version"]);
+    expect(providerSelection).not.toHaveBeenCalled();
+  });
+
+  it.each(["absent", "request-stripped", "response-stripped", "forged", "wrong-session", "expired", "isolate-reset", "out-of-range"])("clarifies safely through the real path with %s context", async fault => {
+    let now = Date.now();
+    if (fault === "expired") vi.spyOn(Date, "now").mockImplementation(() => now);
+    const ui = await mount({ stripContinuity: fault === "request-stripped", stripContextResponse: fault === "response-stripped",
+      mutateContinuity: (headers, turn) => {
+        if (turn !== 2) return;
+        if (fault === "forged") headers.set(CONTEXT, "0".repeat(64));
+        if (fault === "wrong-session") headers.set(ID, crypto.randomUUID());
+      } });
+    if (fault !== "absent") await send(ui, question);
+    if (fault === "expired") now += 300000;
+    if (fault === "isolate-reset") continuity.defaultPublicDomainContinuityRepositoryV1.reset();
+    await send(ui, fault === "out-of-range" ? "Explain the sixth one." : followup);
+    expect(displayed(ui)).toBe(`${fallback} ${boundary}`);
+    expect(ui.replies.at(-1)).toEqual({ version: 1, request_id: ui.requests.at(-1)!.request_id, posture: "PUBLIC_PRODUCT_ANSWER", text: `${fallback} ${boundary}` });
+    expect(ui.statuses.at(-1)).toBe(200); expect(referencePlan).not.toHaveBeenCalled(); expect(referenceRenderer).not.toHaveBeenCalled();
+    expect(providerSelection).not.toHaveBeenCalled();
+  });
+
+  it("rejects an explicitly replayed reference through Gateway after its one permitted use", async () => {
+    let ref = "", id = "";
+    const ui = await mount({ mutateContinuity: (headers, turn) => { if (turn === 3) { headers.set(ID, id); headers.set(CONTEXT, ref); } } });
+    await send(ui, question); ref = ui.responseHeaders[0].get(CONTEXT)!; id = ui.clientHeaders[0].get(ID)!;
+    await send(ui, followup); expect(displayed(ui)).toBe(answer);
+    await send(ui, followup); expect(displayed(ui)).toBe(`${fallback} ${boundary}`);
+    expect(ui.coreHeaders[2].get(CONTEXT)).toBe(ref); expect(referenceRenderer).toHaveBeenCalledOnce();
+    expect(providerSelection).not.toHaveBeenCalled();
+  });
+
+  it.each(["Hello", "What is VISION?"])("does not resurrect context across intervening turn %s", async message => {
+    let ref = "", id = "";
+    const ui = await mount({ mutateContinuity: (headers, turn) => { if (turn === 3) { headers.set(ID, id); headers.set(CONTEXT, ref); } } });
+    await send(ui, question); ref = ui.responseHeaders[0].get(CONTEXT)!; id = ui.clientHeaders[0].get(ID)!;
+    await send(ui, message, message === "Hello" ? "complete" : "failed");
+    await send(ui, followup);
+    expect(ui.clientHeaders[2].has(CONTEXT)).toBe(false); expect(displayed(ui)).toBe(`${fallback} ${boundary}`);
+    expect(referencePlan).not.toHaveBeenCalled(); expect(providerSelection).not.toHaveBeenCalled();
+  });
+
+  it("keeps two mounted clients isolated behind the same edge/IP key", async () => {
+    const edgeClient = "step13s-shared-ip", a = await mount({ edgeClient });
+    await send(a, question); const ref = a.responseHeaders[0].get(CONTEXT)!, id = a.clientHeaders[0].get(ID)!;
+    vi.resetModules();
+    const b = await mount({ edgeClient, mutateContinuity: (headers, turn) => { if (turn === 1) headers.set(CONTEXT, ref); } });
+    await send(b, followup);
+    expect(b.coreHeaders[0].get(ID)).not.toBe(id); expect(displayed(b)).toBe(`${fallback} ${boundary}`);
+    await send(a, followup);
+    expect(displayed(a)).toBe(answer); expect(providerSelection).not.toHaveBeenCalled();
+  });
+
+  it("the actual Stop action discards an issued but delayed replacement reference", async () => {
+    const ui = await mount({ holdTurn: 2 }); await send(ui, question);
+    ui.submit(question); await vi.waitFor(() => expect(ui.signal()).toBeDefined());
+    expect(ui.responseHeaders[1].get(CONTEXT)).toMatch(/^[0-9a-f]{64}$/);
+    ui.root.querySelector<Element>(".composer-action")!.dispatchEvent(new Event("click"));
+    await vi.waitFor(() => expect(ui.exchanges().at(-1)!.dataset.exchangeState).toBe("failed"));
+    ui.release(); await Promise.resolve(); await Promise.resolve();
+    await send(ui, followup);
+    expect(ui.clientHeaders[2].has(CONTEXT)).toBe(false); expect(ui.clientHeaders[2].get(ID)).not.toBe(ui.clientHeaders[0].get(ID));
+    expect(displayed(ui)).toBe(`${fallback} ${boundary}`); expect(providerSelection).not.toHaveBeenCalled();
+  });
+
+  it.each(["plan", "renderer"])("fails closed if the continuity %s fails", async stage => {
+    const ui = await mount(); await send(ui, question);
+    (stage === "plan" ? referencePlan : referenceRenderer).mockImplementationOnce(() => { throw new Error("PRIVATE_REFERENCE_FAILURE"); });
+    await send(ui, followup, "failed");
+    expect(ui.statuses[1]).toBe(503); expect(ui.replies[1]).toEqual({ version: 1, request_id: ui.requests[1].request_id, error: "SERVICE_UNAVAILABLE" });
+    expect(displayed(ui)).toBeUndefined(); expect(ui.root.textContent).not.toContain("PRIVATE_REFERENCE_FAILURE");
+    expect(providerSelection).not.toHaveBeenCalled();
+  });
 });
 afterEach(() => {
   try {
@@ -94,7 +208,7 @@ describe("STEP13R-C real UI -> Gateway -> Core -> clarification plan -> renderer
 
   it.each([undefined, "What can PlannerAgent do?", "One supplier keeps moving confirmed delivery dates."])("does not invent a referent from visible prior exchange %s", async prefix => {
     const expected = `I don't have the earlier list. Which item do you mean? Please name it or include the list. ${boundary}`;
-    const ui = await mount();
+    const ui = await mount({ stripContinuity: true }); // Visible DOM alone supplies no verified Core context.
     if (prefix) { ui.submit(prefix); await vi.waitFor(() => expect(ui.state()).toBe("complete")); }
     ui.submit("And the third one?");
     await vi.waitFor(() => expect(ui.exchanges().at(-1)!.dataset.exchangeState).toBe("complete"));

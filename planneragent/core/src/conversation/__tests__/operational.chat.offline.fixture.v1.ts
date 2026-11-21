@@ -2,6 +2,7 @@ import { expect, vi } from "vitest";
 import { createRequire } from "node:module";
 import gateway from "../../../../gateway/src/index";
 import core from "../../worker";
+import { PUBLIC_CONVERSATION_ID_HEADER_V1, PUBLIC_CONVERSATION_CONTEXT_HEADER_V1 } from "../anonymous.vision.conversation.contracts.v1";
 
 // DOM boundary only: production main.ts creates the actual markup, listeners,
 // composer/client and transcript. No UI business logic or Core reply is mocked.
@@ -52,7 +53,8 @@ const offlineEnv = Object.freeze({ INTERPRETATION_STUDENT_SHADOW_STATE: "DISABLE
   INTERPRETATION_STUDENT_SECONDARY_KILL_SWITCH: "true" });
 let sequence = 0;
 
-export async function mount(options: { hold?: boolean; malformed?: boolean; noForwarding?: boolean; transportError?: boolean } = {}) {
+export async function mount(options: { hold?: boolean; holdTurn?: number; malformed?: boolean; noForwarding?: boolean; transportError?: boolean;
+  stripContinuity?: boolean; stripContextResponse?: boolean; edgeClient?: string; mutateContinuity?: (headers: Headers, turn: number) => void } = {}) {
   const root = new Element(); root.setAttribute("id", "app");
   const documentRoot = new Element(); documentRoot.append(root);
   const document = { querySelector: (selector: string) => documentRoot.querySelector(selector), createElement: (tag: string) => new Element(tag) };
@@ -62,28 +64,38 @@ export async function mount(options: { hold?: boolean; malformed?: boolean; noFo
   const requests: Record<string, unknown>[] = [], replies: Record<string, unknown>[] = [];
   const statuses: number[] = [];
   const clientRequests: Record<string, unknown>[] = [], clientStatuses: number[] = [];
+  const clientHeaders: Headers[] = [], coreHeaders: Headers[] = [], responseHeaders: Headers[] = [], clientResponseHeaders: Headers[] = [];
   const realCore = vi.fn(async (request: Request) => {
-    if (new URL(request.url).pathname === "/conversation") requests.push(await request.clone().json());
+    if (new URL(request.url).pathname === "/conversation") { requests.push(await request.clone().json()); coreHeaders.push(new Headers(request.headers)); }
     const response = await core.fetch(request, offlineEnv as never);
-    if (new URL(request.url).pathname === "/conversation") { replies.push(await response.clone().json()); statuses.push(response.status); }
+    if (new URL(request.url).pathname === "/conversation") { replies.push(await response.clone().json()); statuses.push(response.status); responseHeaders.push(new Headers(response.headers)); }
     return response;
   });
   const gatewayFetch = vi.spyOn(gateway, "fetch");
   let release: (() => void) | undefined;
   let signal: AbortSignal | undefined;
-  const edgeClient = `offline-ui-${++sequence}`;
+  const edgeClient = options.edgeClient ?? `offline-ui-${++sequence}`;
   vi.stubGlobal("fetch", async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input), "https://planneragent.test");
     if (url.origin !== "https://planneragent.test") return deniedFetch(input, init);
-    if (url.pathname === "/conversation") clientRequests.push(JSON.parse(String(init?.body)));
+    if (url.pathname === "/conversation") { clientRequests.push(JSON.parse(String(init?.body))); clientHeaders.push(new Headers(init?.headers)); }
     if (options.transportError && url.pathname === "/conversation") throw new TypeError("SYNTHETIC_TRANSPORT_FAILURE");
     const headers = new Headers(init?.headers); headers.set("cf-connecting-ip", edgeClient);
+    if (url.pathname === "/conversation") {
+      if (options.stripContinuity) { headers.delete(PUBLIC_CONVERSATION_ID_HEADER_V1); headers.delete(PUBLIC_CONVERSATION_CONTEXT_HEADER_V1); }
+      options.mutateContinuity?.(headers, clientRequests.length);
+    }
     let request = new Request(url, { ...init, headers });
     if (options.malformed && url.pathname === "/conversation") request = new Request(url, { method: "POST", headers, body: '{"version":2}' });
     if (options.noForwarding && url.pathname === "/conversation") { clientStatuses.push(404); return new Response("Not found", { status: 404 }); } // Deliberate negative control, not the positive E2E.
-    const response = await gateway.fetch(request, { CORE: { fetch: realCore } as never });
+    let response = await gateway.fetch(request, { CORE: { fetch: realCore } as never });
+    if (options.stripContextResponse && url.pathname === "/conversation") {
+      const filtered = new Headers(response.headers); filtered.delete(PUBLIC_CONVERSATION_CONTEXT_HEADER_V1);
+      response = new Response(response.body, { status: response.status, headers: filtered });
+    }
     if (url.pathname === "/conversation") clientStatuses.push(response.status);
-    if (options.hold && url.pathname === "/conversation") {
+    if (url.pathname === "/conversation") clientResponseHeaders.push(new Headers(response.headers));
+    if ((options.hold || options.holdTurn === clientRequests.length) && url.pathname === "/conversation") {
       signal = init?.signal ?? undefined;
       return new Promise<Response>((resolve, reject) => {
         release = () => resolve(response);
@@ -97,7 +109,7 @@ export async function mount(options: { hold?: boolean; malformed?: boolean; noFo
   await vi.waitFor(() => expect(root.querySelector(".composer-action")).not.toBeNull());
   const composer = root.querySelector<Element>(".composer")!, input = root.querySelector<Element>("#message")!;
   const submit = (message: string) => { input.value = message; input.dispatchEvent(new Event("input")); composer.dispatchEvent(new Event("submit", { cancelable: true })); };
-  return { root, requests, replies, statuses, clientRequests, clientStatuses, realCore, gatewayFetch, submit,
+  return { root, requests, replies, statuses, clientRequests, clientStatuses, clientHeaders, coreHeaders, responseHeaders, clientResponseHeaders, realCore, gatewayFetch, submit,
     exchanges: () => [...(root.querySelector<Element>(".conversation-transcript")?.children ?? [])], signal: () => signal, release: () => release?.(),
     answer: () => root.querySelector<Element>(".conversation-turn-planneragent"),
     state: () => root.querySelector<Element>(".conversation-exchange")?.dataset.exchangeState };

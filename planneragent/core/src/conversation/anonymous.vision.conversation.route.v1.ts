@@ -7,6 +7,8 @@ import type { ShadowInterpretationEvidenceRepositoryV1 } from "./cognition/conve
 import { resolveDurableShadowConfigurationV1, type DurableShadowEnvV1 } from "./cognition/durable.interpretation.shadow.configuration.v1";
 import { D1InterpretationShadowInfrastructureV1 } from "./cognition/durable.interpretation.shadow.infrastructure.v1";
 import { resolveSecondaryInterpretationV1, type SecondaryInterpretationEnvV1 } from "./cognition/secondary.interpretation.runtime.v1";
+import { PUBLIC_CONVERSATION_CONTEXT_HEADER_V1 } from "./anonymous.vision.conversation.contracts.v1";
+import { parsePublicContinuityHeadersV1, type PublicDomainContinuityRepositoryV1 } from "./anonymous.vision.conversation.continuity.v1";
 
 type ConversationResult = AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1;
 type ConversationRunner = typeof runAnonymousVisionConversationV1;
@@ -16,13 +18,15 @@ const json = (body: ConversationResult, status: number) => new Response(JSON.str
 export async function anonymousVisionConversationRouteV1(
   request: Request,
   env: Pick<Env, "OPENROUTER_API_KEY"> & DurableShadowEnvV1 & SecondaryInterpretationEnvV1,
-  dependencies: Readonly<{ run?: ConversationRunner; fetch?: typeof fetch; wait_until?: (task: Promise<void>) => void; shadow_provider?: ConversationalInterpretationProviderV1; shadow_repository?: ShadowInterpretationEvidenceRepositoryV1 }> = {},
+  dependencies: Readonly<{ run?: ConversationRunner; fetch?: typeof fetch; wait_until?: (task: Promise<void>) => void; shadow_provider?: ConversationalInterpretationProviderV1; shadow_repository?: ShadowInterpretationEvidenceRepositoryV1; continuity_repository?: PublicDomainContinuityRepositoryV1 }> = {},
 ): Promise<Response> {
   if (request.method !== "POST") return json({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" }, 405);
   let body: unknown;
   try { body = await request.json(); } catch { return json({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" }, 400); }
   const clientKey = request.headers.get("cf-connecting-ip")?.trim() || "edge-client-unavailable";
   let result: ConversationResult;
+  let contextRef: string | undefined;
+  const continuity = parsePublicContinuityHeadersV1(request.headers);
   try {
     const timeoutMs = Number(env.INTERPRETATION_STUDENT_TIMEOUT_MS ?? "1500");
     const policy = resolveDurableShadowConfigurationV1(env);
@@ -42,6 +46,7 @@ export async function anonymousVisionConversationRouteV1(
       client_key: clientKey,
       api_key: env.OPENROUTER_API_KEY ?? "",
       fetch: dependencies.fetch ?? ((...args) => globalThis.fetch(...args)),
+      ...(continuity ? { continuity: { request: continuity, repository: dependencies.continuity_repository, publish: (ref: string) => { contextRef = ref; } } } : {}),
       ...(interpretationShadow ? { interpretation_shadow: interpretationShadow } : {}),
       ...(secondary ? { interpretation_secondary: secondary } : {}),
     });
@@ -49,5 +54,11 @@ export async function anonymousVisionConversationRouteV1(
     return json({ version: 1, request_id: typeof (body as any)?.request_id === "string" ? (body as any).request_id : "unadmitted", error: "SERVICE_UNAVAILABLE" }, 503);
   }
   const status = "error" in result ? result.error === "RATE_LIMITED" ? 429 : result.error === "SERVICE_UNAVAILABLE" ? 503 : 400 : 200;
-  return json(result, status);
+  const response = json(result, status);
+  // The client uses same-origin /conversation through Gateway (also via the Vite
+  // same-origin proxy). No cross-origin CORS access or header exposure is granted.
+  // Never cache an anonymous context-bearing response in a shared intermediary.
+  response.headers.set("cache-control", "no-store");
+  if (status === 200 && contextRef) response.headers.set(PUBLIC_CONVERSATION_CONTEXT_HEADER_V1, contextRef);
+  return response;
 }

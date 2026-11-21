@@ -9,7 +9,7 @@ import { hybridCanonicalV1, hybridDigestV1, hybridSnapshotV1 } from "./cognition
 const grammar = [
   ["MISSING_SUBJECT", /^can it execute actions[.!?]?$/i],
   ["MISSING_DOMAINS", /^explain those domains[.!?]?$/i],
-  ["MISSING_LIST_ITEM", /^and the (?:first|second|third|fourth|fifth) one[.!?]?$/i],
+  ["MISSING_LIST_ITEM", /^(?:and|explain) the (?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) one[.!?]?$/i],
   ["MISSING_AVAILABILITY_REFERENT", /^which of those are publicly available[.!?]?$/i],
   ["MISSING_COMPARISON", /^what changed since my previous message[.!?]?$/i],
   ["MISSING_CAPABILITY_REFERENTS", /^can it do that[.!?]?$/i],

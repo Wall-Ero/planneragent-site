@@ -19,6 +19,7 @@ import { controlledShadowSampleBucketV1, shouldScheduleControlledShadowV1, type 
 import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.public.capabilities.v1";
 import type { SecondaryInterpretationV1 } from "./cognition/secondary.interpretation.runtime.v1";
 import { admitNaturalCapabilitiesV1, createNaturalCapabilitiesAnswerPlanV1, renderNaturalCapabilitiesV1 } from "./cognition/hybrid.natural.capabilities.v1";
+import { admitAnonymousVisionClarificationV1, createAnonymousVisionClarificationPlanV1, renderAnonymousVisionClarificationV1 } from "./anonymous.vision.conversation.clarification.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -52,11 +53,21 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   }>;
 }>): Promise<AnonymousVisionConversationResponseV1 | AnonymousVisionConversationFailureV1> {
   const admitted = admitAnonymousVisionConversationV1(input.request);
-  const requestId = admitted?.request.request_id ?? "unadmitted";
   const request = admitted?.request ?? parseAnonymousVisionConversationRequestV1(input.request);
-  if (!request) return Object.freeze({ version: 1, request_id: requestId, error: "REQUEST_NOT_ADMITTED" });
+  if (!request) return Object.freeze({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" });
+  const clarification = !admitted ? admitAnonymousVisionClarificationV1(request.message) : undefined;
+  const requestId = admitted || clarification ? request.request_id : "unadmitted";
   const guard = input.rate_guard ?? defaultRateGuard;
-  if (admitted && !guard.admit({ client_key: input.client_key, message_length: admitted.request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
+  if ((admitted || clarification) && !guard.admit({ client_key: input.client_key, message_length: request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
+  if (clarification) {
+    try {
+      const plan = createAnonymousVisionClarificationPlanV1(clarification);
+      const rendered = renderAnonymousVisionClarificationV1(plan);
+      return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", rendered.text);
+    } catch {
+      return Object.freeze({ version: 1, request_id: requestId, error: "SERVICE_UNAVAILABLE" });
+    }
+  }
   // Only the existing qualified grammar enters this source-bound local renderer.
   // Stop before shadow, secondary interpretation, provider selection or transport.
   if (admitted?.admission === "PRODUCT_CONVERSATION" && admitNaturalCapabilitiesV1(admitted.request.message).decision === "ADMIT") {

@@ -1,3 +1,4 @@
+import { types } from "node:util";
 import type {
   GovernedUploadOperationalContextV1,
 } from "../operational-identity/contracts/track-a.v1";
@@ -32,9 +33,11 @@ import {
 import {
   assembleCanonicalGovernedUploadProvenanceV1,
   createVerifiedGovernedInterpretationInputV1,
+  verifyAdmissionCoherenceV1,
   type CanonicalGovernedUploadProvenanceFailureCode,
   type GovernedInterpretationContentReaderV1,
   type GovernedInterpretationInputFailureCode,
+  type VerifiedAdmissionCoherenceInputV1,
 } from "./provenance";
 
 type Admitted = Extract<
@@ -138,6 +141,90 @@ function validInput(input: GovernedIndustrialRuntimeInput): boolean {
     !!input.adapter_configuration;
 }
 
+const csvIngestionProofs = new WeakMap<
+  AuthoritativeExternalData,
+  VerifiedAdmissionCoherenceInputV1
+>();
+
+function isFrozenData(value: unknown, ancestors = new Set<object>()): boolean {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value !== "object" || !Object.isFrozen(value) || ancestors.has(value)) return false;
+
+  const array = Array.isArray(value);
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== (array ? Array.prototype : Object.prototype)) return false;
+  ancestors.add(value);
+  const valid = Reflect.ownKeys(value).every(key => {
+    const field = Object.getOwnPropertyDescriptor(value, key);
+    return typeof key === "string" && !!field && Object.hasOwn(field, "value") &&
+      (field.enumerable || (array && key === "length")) &&
+      isFrozenData(field.value, ancestors);
+  });
+  ancestors.delete(value);
+  return valid;
+}
+
+function acceptsCsvArtifacts(admission: Admitted, verification: GovernedUploadVerificationResultV1): boolean {
+  const artifacts = Object.freeze({ admission, verification });
+  try {
+    if (!isFrozenData(artifacts)) return false;
+    // Check the entire input graph, keeping the original artifacts for coherence verification.
+    // Reflection can execute traps. These dependencies belong to the trusted Core boundary.
+    structuredClone(artifacts);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const typedArrayBuffer = Object.getOwnPropertyDescriptor(
+  Object.getPrototypeOf(Uint8Array.prototype), "buffer",
+)!.get!;
+
+function privateCsvReader(
+  reader: GovernedIndustrialRuntimeDependencies["content_reader"],
+): GovernedInterpretationContentReaderV1<VerifiedCsvContent> {
+  return {
+    async readVerifiedContent(request) {
+      const content = await reader.readVerifiedContent(request);
+      const source = content?.bytes;
+      if (!types.isUint8Array(source) || !types.isArrayBuffer(typedArrayBuffer.call(source))) {
+        return null;
+      }
+      // Copy the typed array's elements without using its iterator or species.
+      // The interpreter alone receives the resulting private buffer.
+      return Object.freeze({ bytes: new Uint8Array(source) });
+    },
+  };
+}
+
+/** Internal lookup scoped to the exact CSV object in this module instance. */
+export function lookupCsvIngestionProofV1(candidate: unknown) {
+  if (typeof candidate !== "object" || candidate === null) return undefined;
+  const data = candidate as AuthoritativeExternalData;
+  const evidence = csvIngestionProofs.get(data);
+  if (!evidence) return undefined;
+
+  try {
+    const coherence = verifyAdmissionCoherenceV1(evidence);
+    if (!coherence.coherent) return undefined;
+    const identity = evidence.provenance.chain_head.previous.previous.facts;
+    return Object.freeze({
+      tenant_id: identity.tenant_id,
+      company_id: identity.company_id,
+      admitted_object_id: coherence.admitted_object_id,
+      acquisition_id: coherence.acquisition_id,
+      source_identity: data.sourceIdentity,
+      interpretation_identity: data.interpretationIdentity,
+      dataset_identity: data.datasetIdentity,
+      chain_head_attestation_id: coherence.chain_head_attestation_id,
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 export async function runGovernedIndustrialRuntime(
   input: GovernedIndustrialRuntimeInput,
   dependencies: GovernedIndustrialRuntimeDependencies,
@@ -161,12 +248,13 @@ export async function runGovernedIndustrialRuntime(
       return denied("ACQUISITION", "GOVERNED_RUNTIME_FORMAT_UNSUPPORTED");
     }
 
+    const recordedIds = Object.freeze({
+      admitted_object_id: input.admitted_object_id,
+      acquisition_id: input.acquisition_id,
+    });
     try {
       await dependencies.admission_repository.recordAdmission(
-        Object.freeze({
-          admitted_object_id: input.admitted_object_id,
-          acquisition_id: input.acquisition_id,
-        }),
+        recordedIds,
         input.governed_context,
         admission,
         new Date(dependencies.now()).toISOString(),
@@ -181,7 +269,7 @@ export async function runGovernedIndustrialRuntime(
     let verification: GovernedUploadVerificationResultV1;
     try {
       verification = await dependencies.verifier.verify(
-        input.admitted_object_id,
+        recordedIds.admitted_object_id,
       );
     } catch (error) {
       return denied(
@@ -192,19 +280,32 @@ export async function runGovernedIndustrialRuntime(
       );
     }
 
+    const isCsv = input.expected_format === "CSV";
+    if (isCsv) {
+      if (!acceptsCsvArtifacts(admission, verification)) {
+        return denied("INTERPRETATION_INPUT", "INTERPRETATION_ADMISSION_INCOHERENT");
+      }
+      if (verification.admitted_object_id !== recordedIds.admitted_object_id ||
+        verification.acquisition_id !== recordedIds.acquisition_id) {
+        return denied("VERIFICATION", "ACQUISITION_LINEAGE_SUBSTITUTED");
+      }
+    }
     const assembled = assembleCanonicalGovernedUploadProvenanceV1(
       verification,
     );
     if (!assembled.assembled) {
       return denied("PROVENANCE", assembled.failure);
     }
-    if (input.expected_format === "CSV") {
+    if (isCsv) {
+      const reader = dependencies.content_reader;
       const created = createVerifiedGovernedInterpretationInputV1({
         version: 1,
         admission,
         verification,
         provenance: assembled.provenance,
-        content_reader: dependencies.content_reader,
+        content_reader: typeof reader?.readVerifiedContent === "function"
+          ? privateCsvReader(reader)
+          : reader,
         adapter_configuration: input.adapter_configuration,
       });
       if (!created.created) {
@@ -217,12 +318,19 @@ export async function runGovernedIndustrialRuntime(
       const constructed = constructAuthoritativeExternalData(
         interpreted.extraction,
       );
-      return constructed.constructed
-        ? Object.freeze({ completed: true, data: constructed.data })
-        : denied(
+      if (!constructed.constructed) {
+        return denied(
           "DATA_CONSTRUCTION",
           "GOVERNED_RUNTIME_DATA_CONSTRUCTION_FAILED",
         );
+      }
+      csvIngestionProofs.set(constructed.data, Object.freeze({
+        version: 1,
+        admission: created.input.admission,
+        verification: created.input.verification,
+        provenance: created.input.canonical_provenance,
+      }));
+      return Object.freeze({ completed: true, data: constructed.data });
     }
 
     const created = createVerifiedGovernedInterpretationInputV1({

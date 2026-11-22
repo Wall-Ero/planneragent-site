@@ -2,12 +2,16 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   GovernedUploadVerificationError,
+  GovernedUploadLineageVerifierV1,
+  type GovernedAdmissionRecord,
   type GovernedUploadVerificationResultV1,
 } from "../../operational-identity/verification";
 import type {
   SecureFileAcquisitionServices,
 } from "../acquisition/secure.file.acquisition";
+import * as runtimeExports from "../governed.industrial.runtime";
 import {
+  lookupCsvIngestionProofV1,
   runGovernedIndustrialRuntime,
   type GovernedIndustrialRuntimeDependencies,
   type GovernedIndustrialRuntimeInput,
@@ -347,4 +351,281 @@ describe("WU10B-7 governed industrial runtime integration", () => {
       failure: "CSV_BYTE_INTEGRITY_INVALID",
     });
   });
+});
+
+describe("local CSV ingestion proof", () => {
+  const csv = () => new TextEncoder().encode("code,amount\nA01,10");
+
+  it("resolves only the exact runtime output, with a frozen identity-only projection", async () => {
+    const bytes = csv(), events: string[] = [];
+    const run = await runGovernedIndustrialRuntime(input("CSV", bytes), dependencies("CSV", bytes, events));
+    if (!run.completed) throw new Error(run.failure);
+    const { data } = run;
+    expect(Object.keys(run).sort()).toEqual(["completed", "data"]);
+    const beforeLookup = [...events];
+    const proof = lookupCsvIngestionProofV1(data);
+    expect(proof).toEqual({
+      tenant_id: "tenant-001", company_id: "company-001",
+      admitted_object_id: "admitted-object-runtime-001", acquisition_id: data.acquisitionIdentity,
+      source_identity: data.sourceIdentity, interpretation_identity: data.interpretationIdentity,
+      dataset_identity: data.datasetIdentity, chain_head_attestation_id: data.provenance.chain_head.attestation_id,
+    });
+    expect(Object.isFrozen(proof)).toBe(true);
+    for (const other of [JSON.parse(JSON.stringify(data)), { ...data }, { ...data, rows: [] }, {}]) {
+      expect(lookupCsvIngestionProofV1(other)).toBeUndefined();
+    }
+    expect(Reflect.set(data.rows[0]!, "1", "99")).toBe(false);
+    expect(lookupCsvIngestionProofV1(data)).toEqual(proof);
+    expect(events).toEqual(beforeLookup);
+  });
+
+  it("leaves a successful TXT_DAT result outside the CSV proof registry", async () => {
+    const bytes = new TextEncoder().encode("A01|10");
+    const run = await runGovernedIndustrialRuntime(input("TXT_DAT", bytes), dependencies("TXT_DAT", bytes, []));
+    if (!run.completed) throw new Error(run.failure);
+    expect(lookupCsvIngestionProofV1(run.data)).toBeUndefined();
+  });
+
+  it.each([["incoherent"], ["mutable"]] as const)("rejects %s verification before the content read", async mode => {
+    const bytes = csv(), events: string[] = [];
+    const deps = dependencies("CSV", bytes, events);
+    let candidate: GovernedUploadVerificationResultV1 | undefined;
+    const result = await runGovernedIndustrialRuntime(input("CSV", bytes), {
+      ...deps, verifier: { async verify(id) {
+        const original = await deps.verifier.verify(id);
+        candidate = mode === "mutable" ? { ...original } : freeze({ ...original, company_id: "another-company" });
+        return candidate;
+      } },
+    });
+    expect(result).toEqual({ completed: false, stage: "INTERPRETATION_INPUT", failure: "INTERPRETATION_ADMISSION_INCOHERENT" });
+    expect(events).not.toContain("read");
+    Object.freeze(candidate);
+    expect(lookupCsvIngestionProofV1(candidate)).toBeUndefined();
+    expect(lookupCsvIngestionProofV1(result)).toBeUndefined();
+  });
+
+  it.each([["digest"], ["syntax"]] as const)("creates no dataset on CSV %s failure", async mode => {
+    const bytes = mode === "digest" ? csv() : new TextEncoder().encode('code,amount\n"A01,10');
+    const result = await runGovernedIndustrialRuntime(input("CSV", bytes),
+      dependencies("CSV", bytes, [], mode === "digest" ? { readBytes: new Uint8Array() } : {}));
+    expect(result).toMatchObject({ completed: false, stage: "INTERPRETATION" });
+    expect("data" in result).toBe(false);
+    expect(lookupCsvIngestionProofV1(result)).toBeUndefined();
+  });
+});
+
+describe("CSV ingestion proof binding", () => {
+  const csv = () => new TextEncoder().encode("code,amount\nA01,10");
+
+  it.each([["admitted_object_id"], ["acquisition_id"]] as const)(
+    "rejects a different %s before reading CSV content",
+    async field => {
+      const bytes = csv();
+      const events: string[] = [];
+      const deps = dependencies("CSV", bytes, events);
+      const result = await runGovernedIndustrialRuntime(input("CSV", bytes), {
+        ...deps,
+        verifier: {
+          async verify(id) {
+            return freeze({ ...await deps.verifier.verify(id), [field]: "different-id" });
+          },
+        },
+      });
+      expect(result).toEqual({
+        completed: false,
+        stage: "VERIFICATION",
+        failure: "ACQUISITION_LINEAGE_SUBSTITUTED",
+      });
+      expect(events).not.toContain("read");
+      expect(lookupCsvIngestionProofV1(result)).toBeUndefined();
+    },
+  );
+
+  it("binds the proof to both IDs passed to recordAdmission", async () => {
+    const bytes = csv();
+    const deps = dependencies("CSV", bytes, []);
+    const recorded: unknown[] = [];
+    const result = await runGovernedIndustrialRuntime(input("CSV", bytes), {
+      ...deps,
+      admission_repository: {
+        async recordAdmission(ids, ...rest) {
+          recorded.push(ids);
+          await deps.admission_repository.recordAdmission(ids, ...rest);
+        },
+      },
+    });
+    if (!result.completed) throw new Error(result.failure);
+    const ids = { admitted_object_id: "admitted-object-runtime-001", acquisition_id: "acquisition-runtime-001" };
+    expect(recorded).toEqual([ids]);
+    expect(lookupCsvIngestionProofV1(result.data)).toMatchObject(ids);
+    expect(Object.keys(result).sort()).toEqual(["completed", "data"]);
+  });
+
+  it("reads bytes once and interprets the same bytes used for the digest", async () => {
+    const bytes = csv();
+    const different = new TextEncoder().encode("code,amount\nA01,99");
+    let accesses = 0;
+    const result = await runGovernedIndustrialRuntime(input("CSV", bytes), {
+      ...dependencies("CSV", bytes, []),
+      content_reader: {
+        async readVerifiedContent() {
+          return { get bytes() { return ++accesses <= 3 ? bytes : different; } };
+        },
+      },
+    });
+    if (!result.completed) throw new Error(result.failure);
+    expect(result.data.rows).toEqual([["A01", "10"]]);
+    expect(accesses).toBe(1);
+    expect(lookupCsvIngestionProofV1(result.data)).toBeDefined();
+  });
+
+  it("fails closed for a reader backed by shared memory", async () => {
+    const bytes = csv();
+    const shared = new Uint8Array(new SharedArrayBuffer(bytes.length));
+    shared.set(bytes);
+    const result = await runGovernedIndustrialRuntime(input("CSV", bytes),
+      dependencies("CSV", bytes, [], { readBytes: shared }));
+    expect(result).toMatchObject({ completed: false, stage: "INTERPRETATION" });
+    expect("data" in result).toBe(false);
+    expect(lookupCsvIngestionProofV1(result)).toBeUndefined();
+  });
+
+  it.each([["accessor"], ["proxy"]] as const)(
+    "rejects frozen verification with an %s at the artifact boundary",
+    async kind => {
+      const bytes = csv();
+      const events: string[] = [];
+      const deps = dependencies("CSV", bytes, events);
+      let reads = 0;
+      const result = await runGovernedIndustrialRuntime(input("CSV", bytes), {
+        ...deps,
+        verifier: {
+          async verify(id) {
+            const original = await deps.verifier.verify(id);
+            if (kind === "proxy") return new Proxy(original, {});
+            return Object.freeze({
+              ...original,
+              get company_id() { reads++; return original.company_id; },
+            });
+          },
+        },
+      });
+      expect(result).toMatchObject({ completed: false, stage: "INTERPRETATION_INPUT" });
+      expect(events).not.toContain("read");
+      expect(reads).toBe(0);
+      expect(lookupCsvIngestionProofV1(result)).toBeUndefined();
+    },
+  );
+});
+
+describe("portable CSV artifact boundary", () => {
+  it("accepts the artifacts produced by the canonical CSV pipeline and lineage verifier", async () => {
+    const bytes = new TextEncoder().encode("code,amount\nA01,10");
+    const request = input("CSV", bytes);
+    const deps = dependencies("CSV", bytes, []);
+    let record: GovernedAdmissionRecord | null = null;
+    let canonicalAdmission: unknown;
+    let canonicalVerification: GovernedUploadVerificationResultV1 | undefined;
+    const verifier = new GovernedUploadLineageVerifierV1({
+      async resolve(id) {
+        return record?.admission.admitted_object_id === id ? record : null;
+      },
+    });
+    const result = await runGovernedIndustrialRuntime(request, {
+      ...deps,
+      admission_repository: {
+        async recordAdmission(ids, context, value, recordedAt) {
+          const ref = value.reference;
+          const consumptionReference = `governed-upload:${ref.uploadId}:consume`;
+          canonicalAdmission = value;
+          const admission = {
+            ...ids,
+            ...context,
+            consumption_reference: consumptionReference,
+            authorization_reference: ref.authorizationReference,
+            acquisition_profile: ref.acquisitionProfile,
+            interpretation_registry_version: ref.interpretationRegistryVersion,
+            quarantine_reference: ref.quarantineReference,
+            inspection_id: ref.inspectionId,
+            malware_scan_id: ref.malwareScanId,
+            detected_format: ref.detectedFormat,
+            byte_digest_algorithm: ref.byteDigestAlgorithm,
+            byte_digest: ref.byteDigest,
+            byte_length: ref.byteLength,
+            authorization_issued_at: context.issued_at,
+            authorization_expires_at: context.expires_at,
+            admitted_at: ref.admittedAt,
+            consumed_at: TIME,
+            recorded_at: recordedAt,
+            correlation_id: "correlation-canonical-001",
+            audit_lineage_json: JSON.stringify(context.audit_lineage),
+          };
+          record = {
+            admission,
+            decision: { ...context, decision: "ADMITTED" },
+            binding: { ...context },
+            consumption: { lifecycle_state: "CONSUMED", consumption_reference: consumptionReference },
+            ownership: { ...context },
+            counts: { admissions: 1, consumptions: 1 },
+            current: { principal: "ACTIVE", session: "ACTIVE", membership: "ACTIVE", company: "ACTIVE", tenant: "ACTIVE" },
+          };
+        },
+      },
+      verifier: {
+        async verify(id) {
+          const value = await verifier.verify(id);
+          canonicalVerification = value;
+          return value;
+        },
+      },
+    });
+    if (!result.completed) throw new Error(result.failure);
+    for (const artifact of [canonicalAdmission, canonicalVerification, result.data.provenance]) {
+      expect(artifact).toBeDefined();
+      expect(Object.isFrozen(artifact)).toBe(true);
+      expect(structuredClone(artifact)).toEqual(artifact);
+    }
+    expect(result.data.rows).toEqual([["A01", "10"]]);
+    expect(Object.keys(result).sort()).toEqual(["completed", "data"]);
+    expect(lookupCsvIngestionProofV1(result.data)).toMatchObject({
+      admitted_object_id: request.admitted_object_id,
+      acquisition_id: request.acquisition_id,
+    });
+    expect(lookupCsvIngestionProofV1(structuredClone(result.data))).toBeUndefined();
+    expect(Object.keys(runtimeExports).sort()).toEqual([
+      "lookupCsvIngestionProofV1", "runGovernedIndustrialRuntime",
+    ]);
+  });
+
+  it.each([["nested proxy"], ["hidden key"], ["symbol"], ["cycle"], ["inspection exception"]] as const)(
+    "rejects %s in verification before reading CSV content",
+    async kind => {
+      const bytes = new TextEncoder().encode("code,amount\nA01,10");
+      const events: string[] = [];
+      const deps = dependencies("CSV", bytes, events);
+      const result = await runGovernedIndustrialRuntime(input("CSV", bytes), {
+        ...deps,
+        verifier: {
+          async verify(id) {
+            const original = await deps.verifier.verify(id);
+            const value = { ...original };
+            if (kind === "nested proxy") value.current_state = new Proxy(original.current_state, {});
+            if (kind === "hidden key") Object.defineProperty(value, "hidden", { value: "unexpected" });
+            if (kind === "symbol") Object.defineProperty(value, Symbol("unexpected"), { value: true });
+            if (kind === "cycle") Object.defineProperty(value, "cycle", { value, enumerable: true });
+            Object.freeze(value);
+            if (kind === "inspection exception") {
+              return new Proxy(value, { ownKeys() { throw new Error("fixture inspection failure"); } });
+            }
+            return value;
+          },
+        },
+      });
+      expect(result).toEqual({
+        completed: false, stage: "INTERPRETATION_INPUT", failure: "INTERPRETATION_ADMISSION_INCOHERENT",
+      });
+      expect(events).not.toContain("read");
+      expect(lookupCsvIngestionProofV1(result)).toBeUndefined();
+    },
+  );
 });

@@ -424,6 +424,72 @@ describe("STEP13S one-hop public continuity", () => {
     },
   );
 
+  describe("CTX-002", () => {
+    const middle = "Explain those domains.", last = "And the third one?";
+    const missingDomains = "I don't have the earlier list of domains. Which domains would you like explained?";
+    const setup = async () => {
+      let now = 1000;
+      const repository = new continuity.PublicDomainContinuityRepositoryV1(() => now);
+      const id = crypto.randomUUID(), fetcher = vi.fn(), selection = vi.fn();
+      const send = async (message: string, ref?: string, conversationId = id) => {
+        const publish = vi.fn();
+        const reply = await invoke(message, repository, conversationId, ref, {
+          api_key: "unused", fetch: fetcher, resolve_providers: selection,
+          continuity: { request: { conversation_id: conversationId, ...(ref ? { context_ref: ref } : {}) }, repository, publish },
+        });
+        expect(fetcher).not.toHaveBeenCalled();
+        expect(selection).not.toHaveBeenCalled();
+        expect(publish.mock.calls.length).toBeLessThanOrEqual(1);
+        return { reply, ref: publish.mock.calls[0]?.[0] as string | undefined };
+      };
+      const first = await send(capabilityQuestion);
+      expect(first.ref).toMatch(/^[0-9a-f]{64}$/);
+      return { id, repository, send, first: first.ref!, setTime: (time: number) => { now = time; } };
+    };
+
+    it.each([middle, "EXPLAIN   THOSE DOMAINS", "Explain those domains?"])("continues from %s with a new single-use reference", async message => {
+      const { send, first } = await setup();
+      const second = await send(message, first);
+      expect(second.reply).toMatchObject({ text: `${qualifiedDomains} ${boundary}` });
+      expect(second.ref).toMatch(/^[0-9a-f]{64}$/);
+      expect(second.ref).not.toBe(first);
+      const third = await send(last, second.ref);
+      expect(third.reply).toMatchObject({ text: expectedThird });
+      expect(third.ref).toBeUndefined();
+    });
+
+    it.each([middle, last])("clarifies with invalid context at %s", async message => {
+      for (const fault of ["absent", "expired", "forged", "cross-conversation", "consumed"]) {
+        const { send, first, id, setTime } = await setup();
+        // Mint B well after A so that a reset TTL would be observable.
+        setTime(2000);
+        const second = message === last ? (await send(middle, first)).ref : undefined;
+        if (message === last) expect(second).toMatch(/^[0-9a-f]{64}$/);
+        const valid = second ?? first;
+        if (fault === "expired") setTime(1000 + continuity.PUBLIC_CONTINUITY_TTL_MS_V1);
+        if (fault === "consumed") {
+          const used = await send(message, valid);
+          expect(used.reply).toMatchObject({ text: message === last ? expectedThird : `${qualifiedDomains} ${boundary}` });
+        }
+        const ref = fault === "absent" ? undefined : fault === "forged" ? "0".repeat(64) : valid;
+        const result = await send(message, ref, fault === "cross-conversation" ? crypto.randomUUID() : id);
+        expect(result.reply, fault).toMatchObject({ text: `${message === last ? fallback : missingDomains} ${boundary}` });
+        expect(result.ref, fault).toBeUndefined();
+      }
+    });
+
+    it("rejects a list-to-list transition and an unverified intermediate answer", async () => {
+      const { repository, send, id, first } = await setup();
+      const altered = repository.continueDomainList({ conversation_id: id, context_ref: first }, "second", () => "Every domain is publicly available.");
+      expect(altered).toBeUndefined();
+      expect(repository.size).toBe(0);
+      const fresh = await send(capabilityQuestion);
+      const second = await send(middle, fresh.ref);
+      expect(second.ref).toMatch(/^[0-9a-f]{64}$/);
+      expect(await send(middle, second.ref)).toMatchObject({ reply: { text: `${missingDomains} ${boundary}` }, ref: undefined });
+    });
+  });
+
   it.each(["valid", "absent", "expired", "forged", "cross-conversation", "consumed", "different-parent"] as const)(
     "handles CTX-003 with %s context", async context => {
       let now = 1000;

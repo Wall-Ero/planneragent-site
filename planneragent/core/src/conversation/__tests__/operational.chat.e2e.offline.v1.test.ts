@@ -70,6 +70,42 @@ describe("STEP13S verified public continuity through real UI, Gateway and Core",
     expect(providerSelection).not.toHaveBeenCalled();
   });
 
+  it("resolves CTX-002 through UI, Gateway, Core and transcript", async () => {
+    const ui = await mount(), gatewayBefore = ui.gatewayFetch.mock.calls.length, coreBefore = ui.realCore.mock.calls.length;
+    const expected = [
+      `PlannerAgent provides operational planning support, helping people understand plans, operational reality and the boundaries for governed action. ${domainMeaning}\n\n${boundary}\n\nNo claim about your own operations is made until appropriate data has been admitted. Capabilities outside the public capability description used for this answer must not be claimed.`,
+      `${domainMeaning} ${boundary}`,
+      answer,
+    ];
+    const turns = ["What can PlannerAgent do?", "Explain those domains.", "And the third one?"];
+    for (let i = 0; i < turns.length; i++) {
+      await send(ui, turns[i]);
+      expect(ui.requests[i]).toEqual({ version: 1, request_id: ui.clientRequests[i].request_id, message: turns[i] });
+      expect(ui.replies[i]).toEqual({ version: 1, request_id: ui.requests[i].request_id, posture: "PUBLIC_PRODUCT_ANSWER", text: expected[i] });
+      expect(displayed(ui)).toBe(expected[i]);
+      expect(ui.coreHeaders[i].get(ID)).toBe(ui.clientHeaders[0].get(ID));
+    }
+    const first = ui.responseHeaders[0].get(CONTEXT), second = ui.responseHeaders[1].get(CONTEXT);
+    expect(first).toMatch(/^[0-9a-f]{64}$/);
+    expect(second).toMatch(/^[0-9a-f]{64}$/);
+    expect(second).not.toBe(first);
+    for (const [i, ref] of [first, second].entries()) {
+      expect(ui.clientResponseHeaders[i].get(CONTEXT)).toBe(ref);
+      expect(ui.clientHeaders[i + 1].get(CONTEXT)).toBe(ref);
+      expect(ui.coreHeaders[i + 1].get(CONTEXT)).toBe(ref);
+    }
+    expect(ui.responseHeaders[2].has(CONTEXT)).toBe(false);
+    expect(ui.gatewayFetch).toHaveBeenCalledTimes(gatewayBefore + 3);
+    expect(ui.realCore).toHaveBeenCalledTimes(coreBefore + 3);
+    expect(ui.statuses).toEqual([200, 200, 200]);
+    expect(referencePlan.mock.results[0].value).toMatchObject({
+      domain: "logistics", grants_authority: false, grants_execution: false, operational_evidence: false,
+      parent: { originating_request_id: ui.requests[1].request_id },
+    });
+    expect(clarificationRenderer).not.toHaveBeenCalled();
+    expect(providerSelection).not.toHaveBeenCalled();
+  });
+
   it("resolves CTX-001 through UI, Gateway and Core with a verified public reference", async () => {
     const ui = await mount(), gatewayBefore = ui.gatewayFetch.mock.calls.length, coreBefore = ui.realCore.mock.calls.length;
     await send(ui, "What can PlannerAgent do?");
@@ -231,10 +267,6 @@ describe("STEP13R-C real UI -> Gateway -> Core -> clarification plan -> renderer
   // New independent acceptance expectations, not a rescore of experience-v1.
   const boundary = "VISION is observation-only and cannot execute actions. In this anonymous conversation, you cannot introduce data, access organizations, monitor participants or execute actions.";
   const scenarios = [
-    { id: "CTX-002", prefix: "What can PlannerAgent do?", turns: [
-      ["Explain those domains.", "I don't have the earlier list of domains. Which domains would you like explained?"],
-      ["And the third one?", "I don't have the earlier list. Which item do you mean? Please name it or include the list."],
-    ] },
     { id: "CTX-004", prefix: "One supplier keeps moving confirmed delivery dates.", turns: [
       ["What changed since my previous message?", "I don't have your previous message to compare. Could you include the earlier and current descriptions?"],
     ] },

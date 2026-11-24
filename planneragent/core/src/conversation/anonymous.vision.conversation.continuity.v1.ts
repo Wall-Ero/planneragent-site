@@ -75,18 +75,42 @@ export class PublicDomainContinuityRepositoryV1 {
     if (!PUBLIC_CONVERSATION_ID_PATTERN_V1.test(conversation_id) || !request_id.trim() || request_id.length > 256 ||
         hybridCanonicalV1(plan) !== hybridCanonicalV1(expected) || rendered.plan_digest !== hybridDigestV1(plan) ||
         verifyNaturalCapabilitiesCandidateV1(prepareNaturalCapabilitiesRealizationV1(), { version: 1, answer: rendered.text }) !== "PASS") return undefined;
-    const context_ref = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
     const now = this.now_ms();
     if (!Number.isSafeInteger(now) || now < 0) return undefined;
-    const payload = { version: 1 as const, scope,
-      conversation_id, context_ref, originating_request_id: request_id, issued_at_ms: now, expires_at_ms: now + PUBLIC_CONTINUITY_TTL_MS_V1,
+    return this.store({ version: 1, scope,
+      conversation_id, originating_request_id: request_id, issued_at_ms: now, expires_at_ms: now + PUBLIC_CONTINUITY_TTL_MS_V1,
       source_digest: plan.provenance.source_digest, plan_digest: rendered.plan_digest, render_digest: hybridDigestV1(rendered.text),
-      ordered_domains: plan.allowed_facts.supported_planning_domains };
+      ordered_domains: plan.allowed_facts.supported_planning_domains });
+  }
+
+  continueDomainList(metadata: PublicConversationContinuityMetadataV1, request_id: string,
+    render: typeof renderPublicDomainAvailabilityV1): Readonly<{ text: string; ref: string }> | undefined {
+    const parent = this.take(metadata);
+    if (!parent || parent.scope !== "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1" ||
+        !request_id.trim() || request_id.length > 256) return undefined;
+    const text = render(parent);
+    if (text === undefined || text !== approvedDomainListText(approvedPlan())) return undefined;
+    const now = this.now_ms();
+    if (!Number.isSafeInteger(now) || now < parent.issued_at_ms || now >= parent.expires_at_ms) return undefined;
+    // Carry the original validity window across the single capabilities-to-list transition.
+    const ref = this.store({
+      version: 1, scope: "CORE_PUBLIC_DOMAIN_LIST_V1", conversation_id: parent.conversation_id,
+      originating_request_id: request_id, issued_at_ms: parent.issued_at_ms, expires_at_ms: parent.expires_at_ms,
+      source_digest: parent.source_digest, plan_digest: parent.plan_digest, render_digest: hybridDigestV1(text),
+      ordered_domains: parent.ordered_domains,
+    }, parent.context_ref);
+    return ref ? { text, ref } : undefined;
+  }
+
+  private store(fields: Omit<PublicDomainContextRecordV1, "context_ref" | "record_digest">, previous_ref?: string): string | undefined {
+    const context_ref = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
+    if (context_ref === previous_ref) return undefined;
+    const payload = { ...fields, context_ref };
     const record = hybridSnapshotV1({ ...payload, record_digest: hybridDigestV1(payload) });
     if (bytes(record) > PUBLIC_CONTINUITY_MAX_RECORD_BYTES_V1) return undefined;
-    this.records.delete(conversation_id);
+    this.records.delete(fields.conversation_id);
     while (this.records.size >= PUBLIC_CONTINUITY_MAX_RECORDS_V1) this.records.delete(this.records.keys().next().value!);
-    this.records.set(conversation_id, record);
+    this.records.set(fields.conversation_id, record);
     return context_ref;
   }
 
@@ -114,7 +138,10 @@ export function renderPublicVisionExecutionBoundaryV1(record: PublicDomainContex
 
 export function renderPublicDomainAvailabilityV1(record: PublicDomainContextRecordV1): string | undefined {
   if (record.scope !== "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1" || !compatibleRecord(record)) return undefined;
-  const plan = approvedPlan();
+  return approvedDomainListText(approvedPlan());
+}
+
+function approvedDomainListText(plan: NaturalCapabilitiesAnswerPlanV1): string {
   const qualification = plan.mandatory_elements.find(element => element.id === "DOMAINS")!;
   return `${qualification.approved_text} ${publicVisionBoundary(plan)}`;
 }

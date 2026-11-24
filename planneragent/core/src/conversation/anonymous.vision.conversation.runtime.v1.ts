@@ -70,6 +70,13 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   let parent: PublicDomainContextRecordV1 | undefined;
   if (input.continuity) {
     try {
+      if (clarification === "MISSING_DOMAINS" && !input.continuity.request.invalid_context) {
+        const continuation = repository.continueDomainList(input.continuity.request, requestId, renderPublicDomainAvailabilityV1);
+        if (continuation) {
+          input.continuity.publish(continuation.ref);
+          return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", continuation.text);
+        }
+      }
       if ((ordinal !== undefined || executionFollowup || availabilityFollowup) && !input.continuity.request.invalid_context) parent = repository.take(input.continuity.request);
       repository.invalidate(input.continuity.request.conversation_id);
     } catch { parent = undefined; try { repository.invalidate(input.continuity.request.conversation_id); } catch { /* Unavailable volatile state cannot authorize a referent. */ } }

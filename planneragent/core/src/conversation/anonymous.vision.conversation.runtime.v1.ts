@@ -20,7 +20,7 @@ import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.pu
 import type { SecondaryInterpretationV1 } from "./cognition/secondary.interpretation.runtime.v1";
 import { admitNaturalCapabilitiesV1, createNaturalCapabilitiesAnswerPlanV1, renderNaturalCapabilitiesV1 } from "./cognition/hybrid.natural.capabilities.v1";
 import { admitAnonymousVisionClarificationV1, createAnonymousVisionClarificationPlanV1, renderAnonymousVisionClarificationV1 } from "./anonymous.vision.conversation.clarification.v1";
-import { admitsPublicDomainListQuestionV1, publicDomainOrdinalV1, defaultPublicDomainContinuityRepositoryV1, createPublicDomainReferencePlanV1, renderPublicDomainReferenceV1, type PublicDomainContinuityRepositoryV1, type PublicDomainContextRecordV1 } from "./anonymous.vision.conversation.continuity.v1";
+import { admitsPublicDomainListQuestionV1, publicDomainOrdinalV1, defaultPublicDomainContinuityRepositoryV1, createPublicDomainReferencePlanV1, renderPublicDomainReferenceV1, renderPublicVisionExecutionBoundaryV1, type PublicDomainContinuityRepositoryV1, type PublicDomainContextRecordV1 } from "./anonymous.vision.conversation.continuity.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -59,6 +59,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   if (!request) return Object.freeze({ version: 1, request_id: "unadmitted", error: "REQUEST_NOT_ADMITTED" });
   const clarification = !admitted ? admitAnonymousVisionClarificationV1(request.message) : undefined;
   const ordinal = !admitted ? publicDomainOrdinalV1(request.message) : undefined;
+  const executionFollowup = clarification === "MISSING_SUBJECT" && request.message === "Can it execute actions?";
   const requestId = admitted || clarification ? request.request_id : "unadmitted";
   const guard = input.rate_guard ?? defaultRateGuard;
   if ((admitted || clarification) && !guard.admit({ client_key: input.client_key, message_length: request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
@@ -68,12 +69,16 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   let parent: PublicDomainContextRecordV1 | undefined;
   if (input.continuity) {
     try {
-      if (ordinal !== undefined && !input.continuity.request.invalid_context) parent = repository.take(input.continuity.request);
+      if ((ordinal !== undefined || executionFollowup) && !input.continuity.request.invalid_context) parent = repository.take(input.continuity.request);
       repository.invalidate(input.continuity.request.conversation_id);
     } catch { parent = undefined; try { repository.invalidate(input.continuity.request.conversation_id); } catch { /* Unavailable volatile state cannot authorize a referent. */ } }
   }
   if (clarification) {
     try {
+      if (parent && executionFollowup) {
+        const text = renderPublicVisionExecutionBoundaryV1(parent);
+        if (text) return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", text);
+      }
       if (parent && ordinal !== undefined && ordinal < parent.ordered_domains.length) {
         const plan = createPublicDomainReferencePlanV1(parent, ordinal);
         const rendered = renderPublicDomainReferenceV1(plan);
@@ -93,7 +98,8 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
       const plan = createNaturalCapabilitiesAnswerPlanV1();
       const rendered = renderNaturalCapabilitiesV1(plan);
       if (input.continuity && !input.continuity.request.invalid_context) try {
-        const ref = repository.issue(input.continuity.request.conversation_id, requestId, plan, rendered);
+        const scope = admitted.request.message === "What can PlannerAgent do?" ? "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1" : undefined;
+        const ref = repository.issue(input.continuity.request.conversation_id, requestId, plan, rendered, scope);
         if (ref) input.continuity.publish(ref);
       } catch { /* Public output remains valid when optional volatile context is unavailable. */ }
       return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", rendered.text);

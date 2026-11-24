@@ -70,6 +70,57 @@ describe("STEP13S verified public continuity through real UI, Gateway and Core",
     expect(providerSelection).not.toHaveBeenCalled();
   });
 
+  it("resolves CTX-001 through UI, Gateway and Core with a verified public reference", async () => {
+    const ui = await mount(), gatewayBefore = ui.gatewayFetch.mock.calls.length, coreBefore = ui.realCore.mock.calls.length;
+    await send(ui, "What can PlannerAgent do?");
+    const ref = ui.responseHeaders[0].get(CONTEXT), id = ui.clientHeaders[0].get(ID);
+    expect(ref).toMatch(/^[0-9a-f]{64}$/);
+    expect(id).toBeTruthy();
+    expect(ui.clientResponseHeaders[0].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[0].get(ID)).toBe(id);
+    expect(ui.replies[0].text).toContain(boundary);
+    expect(plan.mock.results[0].value).toMatchObject({ grants_authority: false, grants_execution: false });
+
+    const message = "Can it execute actions?";
+    await send(ui, message);
+    expect(ui.gatewayFetch).toHaveBeenCalledTimes(gatewayBefore + 2);
+    expect(ui.realCore).toHaveBeenCalledTimes(coreBefore + 2);
+    expect(ui.clientHeaders[1].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[1].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[1].get(ID)).toBe(id);
+    expect(ui.responseHeaders[1].has(CONTEXT)).toBe(false);
+    expect(ui.statuses).toEqual([200, 200]);
+    expect(ui.clientStatuses).toEqual([200, 200]);
+    expect(ui.requests[1]).toEqual({ version: 1, request_id: ui.clientRequests[1].request_id, message });
+    const expected = `In PlannerAgent, ${boundary}`;
+    expect(ui.replies[1]).toEqual({ version: 1, request_id: ui.requests[1].request_id, posture: "PUBLIC_PRODUCT_ANSWER", text: expected });
+    expect(displayed(ui)).toBe(expected);
+    expect(clarificationPlan).not.toHaveBeenCalled();
+    expect(clarificationRenderer).not.toHaveBeenCalled();
+    expect(providerSelection).not.toHaveBeenCalled();
+    expect(LIVE_NETWORK_ENABLED_V1).toBe(false);
+    expect(ui.root.querySelector<Element>(".identity-control")!.dataset.accountState).toBe("ANONYMOUS");
+  });
+
+  it.each(["absent", "expired", "forged"])("clarifies CTX-001 through the real path with %s context", async fault => {
+    let now = Date.now();
+    if (fault === "expired") vi.spyOn(Date, "now").mockImplementation(() => now);
+    const ui = await mount({ mutateContinuity: (headers, turn) => {
+      if (fault === "forged" && turn === 2) headers.set(CONTEXT, "0".repeat(64));
+    } });
+    if (fault !== "absent") {
+      await send(ui, "What can PlannerAgent do?");
+      expect(ui.clientResponseHeaders[0].get(CONTEXT)).toMatch(/^[0-9a-f]{64}$/);
+    }
+    if (fault === "expired") now += continuity.PUBLIC_CONTINUITY_TTL_MS_V1;
+    await send(ui, "Can it execute actions?");
+    const expected = `I don't have the earlier context needed to identify 'it'. Which product or system are you asking about? ${boundary}`;
+    expect(ui.replies.at(-1)).toEqual({ version: 1, request_id: ui.requests.at(-1)!.request_id, posture: "PUBLIC_PRODUCT_ANSWER", text: expected });
+    expect(displayed(ui)).toBe(expected);
+    expect(clarificationRenderer).toHaveBeenCalledOnce();
+    expect(providerSelection).not.toHaveBeenCalled();
+  });
+
   it.each(["absent", "request-stripped", "response-stripped", "forged", "wrong-session", "expired", "isolate-reset", "out-of-range"])("clarifies safely through the real path with %s context", async fault => {
     let now = Date.now();
     if (fault === "expired") vi.spyOn(Date, "now").mockImplementation(() => now);
@@ -153,9 +204,6 @@ describe("STEP13R-C real UI -> Gateway -> Core -> clarification plan -> renderer
   // New independent acceptance expectations, not a rescore of experience-v1.
   const boundary = "VISION is observation-only and cannot execute actions. In this anonymous conversation, you cannot introduce data, access organizations, monitor participants or execute actions.";
   const scenarios = [
-    { id: "CTX-001", prefix: "What can PlannerAgent do?", turns: [
-      ["Can it execute actions?", "I don't have the earlier context needed to identify 'it'. Which product or system are you asking about?"],
-    ] },
     { id: "CTX-002", prefix: "What can PlannerAgent do?", turns: [
       ["Explain those domains.", "I don't have the earlier list of domains. Which domains would you like explained?"],
       ["And the third one?", "I don't have the earlier list. Which item do you mean? Please name it or include the list."],

@@ -354,6 +354,9 @@ describe("STEP13S one-hop public continuity", () => {
   const qualifiedDomains = "PlannerAgent's architecture identifies five planning domains: supply chain, production, logistics, finance and general planning. This list alone does not establish that every domain is implemented, qualified or publicly available.";
   const boundary = "VISION is observation-only and cannot execute actions. In this anonymous conversation, you cannot introduce data, access organizations, monitor participants or execute actions.";
   const expectedThird = `The third item in the list I provided was logistics. ${qualifiedDomains} ${boundary}`;
+  const capabilityQuestion = "What can PlannerAgent do?";
+  const executionQuestion = "Can it execute actions?";
+  const executionClarification = `I don't have the earlier context needed to identify 'it'. Which product or system are you asking about? ${boundary}`;
   const mint = (repository: continuity.PublicDomainContinuityRepositoryV1, id = crypto.randomUUID(), requestId = "emitted-list") => {
     const plan = natural.createNaturalCapabilitiesAnswerPlanV1(), rendered = natural.renderNaturalCapabilitiesV1(plan);
     return { id, ref: repository.issue(id, requestId, plan, rendered)!, plan, rendered };
@@ -381,6 +384,45 @@ describe("STEP13S one-hop public continuity", () => {
     for (const fn of [fetcher, selection, secondary, shadow.provider.interpret, shadow.repository.append, shadow.schedule]) expect(fn).not.toHaveBeenCalled();
     expect(await invoke("Explain the third one.", repository, id, ref)).toMatchObject({ text: `${fallback} ${boundary}` });
   });
+
+  it("answers the VISION execution follow-up once with verified PlannerAgent context", async () => {
+    const repository = new continuity.PublicDomainContinuityRepositoryV1(), id = crypto.randomUUID(), publish = vi.fn(), nextPublish = vi.fn();
+    const fetcher = vi.fn(), selection = vi.fn();
+    const offline = { api_key: "unused", fetch: fetcher, resolve_providers: selection };
+    expect(await invoke(capabilityQuestion, repository, id, undefined, {
+      ...offline, continuity: { request: { conversation_id: id }, repository, publish },
+    })).toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER", text: expect.stringContaining(boundary) });
+    expect(publish).toHaveBeenCalledOnce();
+    const ref = publish.mock.calls[0][0];
+    expect(await invoke(executionQuestion, repository, id, ref, {
+      ...offline, request: { ...request(executionQuestion), request_id: "execution-followup" },
+      continuity: { request: { conversation_id: id, context_ref: ref }, repository, publish: nextPublish },
+    })).toEqual({
+      version: 1, request_id: "execution-followup", posture: "PUBLIC_PRODUCT_ANSWER",
+      text: `In PlannerAgent, ${boundary}`,
+    });
+    expect(nextPublish).not.toHaveBeenCalled();
+    expect(repository.size).toBe(0);
+    expect(await invoke(executionQuestion, repository, id, ref)).toMatchObject({ text: executionClarification });
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(selection).not.toHaveBeenCalled();
+  });
+
+  it.each(["absent", "forged", "wrong-session", "expired", "intervening-turn", "different-parent"])(
+    "clarifies the VISION execution follow-up with %s context", async fault => {
+      let now = 1000;
+      const repository = new continuity.PublicDomainContinuityRepositoryV1(() => now), id = crypto.randomUUID(), publish = vi.fn();
+      const first = fault === "different-parent" ? "Which domains does PlannerAgent support?" : capabilityQuestion;
+      await invoke(first, repository, id, undefined, { continuity: { request: { conversation_id: id }, repository, publish } });
+      expect(publish).toHaveBeenCalledOnce();
+      const ref = publish.mock.calls[0][0];
+      if (fault === "expired") now += continuity.PUBLIC_CONTINUITY_TTL_MS_V1;
+      if (fault === "intervening-turn") await invoke("Hello", repository, id, ref);
+      expect(await invoke(executionQuestion, repository, fault === "wrong-session" ? crypto.randomUUID() : id,
+        fault === "absent" ? undefined : fault === "forged" ? "0".repeat(64) : ref,
+      )).toMatchObject({ posture: "PUBLIC_PRODUCT_ANSWER", text: executionClarification });
+    },
+  );
 
   it.each(["absent", "forged", "wrong-session", "expired", "reset", "unavailable", "out-of-range"])("clarifies with %s context instead of inventing a referent", async fault => {
     let now = 1000;

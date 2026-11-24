@@ -35,7 +35,7 @@ function approvedPlan() {
 const bytes = (value: unknown) => new TextEncoder().encode(hybridCanonicalV1(value)).byteLength;
 
 export type PublicDomainContextRecordV1 = Readonly<{
-  version: 1; scope: "CORE_PUBLIC_DOMAIN_LIST_V1";
+  version: 1; scope: "CORE_PUBLIC_DOMAIN_LIST_V1" | "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1";
   conversation_id: string; context_ref: string; originating_request_id: string;
   issued_at_ms: number; expires_at_ms: number;
   source_digest: string; plan_digest: string; render_digest: string;
@@ -47,7 +47,7 @@ function compatibleRecord(record: PublicDomainContextRecordV1): boolean {
     const { record_digest, ...payload } = record;
     const plan = approvedPlan();
     return record_digest === hybridDigestV1(payload) && bytes(record) <= PUBLIC_CONTINUITY_MAX_RECORD_BYTES_V1 &&
-      record.version === 1 && record.scope === "CORE_PUBLIC_DOMAIN_LIST_V1" &&
+      record.version === 1 && (record.scope === "CORE_PUBLIC_DOMAIN_LIST_V1" || record.scope === "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1") &&
       PUBLIC_CONVERSATION_ID_PATTERN_V1.test(record.conversation_id) && PUBLIC_CONVERSATION_CONTEXT_PATTERN_V1.test(record.context_ref) &&
       record.expires_at_ms - record.issued_at_ms === PUBLIC_CONTINUITY_TTL_MS_V1 &&
       record.source_digest === plan.provenance.source_digest && record.plan_digest === hybridDigestV1(plan) &&
@@ -69,7 +69,7 @@ export class PublicDomainContinuityRepositoryV1 {
   reset(): void { this.records.clear(); }
   invalidate(conversation_id: string): void { this.records.delete(conversation_id); }
 
-  issue(conversation_id: string, request_id: string, plan: NaturalCapabilitiesAnswerPlanV1, rendered: ReturnType<typeof renderNaturalCapabilitiesV1>): string | undefined {
+  issue(conversation_id: string, request_id: string, plan: NaturalCapabilitiesAnswerPlanV1, rendered: ReturnType<typeof renderNaturalCapabilitiesV1>, scope: PublicDomainContextRecordV1["scope"] = "CORE_PUBLIC_DOMAIN_LIST_V1"): string | undefined {
     this.purge();
     const expected = approvedPlan();
     if (!PUBLIC_CONVERSATION_ID_PATTERN_V1.test(conversation_id) || !request_id.trim() || request_id.length > 256 ||
@@ -78,7 +78,7 @@ export class PublicDomainContinuityRepositoryV1 {
     const context_ref = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
     const now = this.now_ms();
     if (!Number.isSafeInteger(now) || now < 0) return undefined;
-    const payload = { version: 1 as const, scope: "CORE_PUBLIC_DOMAIN_LIST_V1" as const,
+    const payload = { version: 1 as const, scope,
       conversation_id, context_ref, originating_request_id: request_id, issued_at_ms: now, expires_at_ms: now + PUBLIC_CONTINUITY_TTL_MS_V1,
       source_digest: plan.provenance.source_digest, plan_digest: rendered.plan_digest, render_digest: hybridDigestV1(rendered.text),
       ordered_domains: plan.allowed_facts.supported_planning_domains };
@@ -103,12 +103,21 @@ export class PublicDomainContinuityRepositoryV1 {
 }
 export const defaultPublicDomainContinuityRepositoryV1 = new PublicDomainContinuityRepositoryV1();
 
+function publicVisionBoundary(plan: NaturalCapabilitiesAnswerPlanV1): string {
+  return plan.mandatory_elements.filter(element => element.id === "VISION" || element.id === "ANONYMOUS_BOUNDARY").map(element => element.approved_text).join(" ");
+}
+
+export function renderPublicVisionExecutionBoundaryV1(record: PublicDomainContextRecordV1): string | undefined {
+  if (record.scope !== "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1" || !compatibleRecord(record)) return undefined;
+  return `In PlannerAgent, ${publicVisionBoundary(approvedPlan())}`;
+}
+
 export function createPublicDomainReferencePlanV1(record: PublicDomainContextRecordV1, index: number) {
   if (!compatibleRecord(record) || !Number.isInteger(index) || index < 0 || index >= record.ordered_domains.length) throw new Error("CONTINUITY_REFERENCE_NOT_VERIFIED");
   const sourcePlan = approvedPlan();
   const domain = record.ordered_domains[index];
   const qualification = sourcePlan.mandatory_elements.find(element => element.id === "DOMAINS")!;
-  const boundary = sourcePlan.mandatory_elements.filter(element => element.id === "VISION" || element.id === "ANONYMOUS_BOUNDARY").map(element => element.approved_text).join(" ");
+  const boundary = publicVisionBoundary(sourcePlan);
   return hybridSnapshotV1({ version: 1, scope: "PUBLIC_DOMAIN_REFERENCE_V1", parent: record, index, domain,
     text: `The ${ordinals[index]} item in the list I provided was ${domain.replaceAll("_", " ")}. ${qualification.approved_text} ${boundary}`,
     grants_authority: false, grants_execution: false, operational_evidence: false });

@@ -20,7 +20,7 @@ import type { PlannerAgentPublicCapabilityProjectionV1 } from "./planneragent.pu
 import type { SecondaryInterpretationV1 } from "./cognition/secondary.interpretation.runtime.v1";
 import { admitNaturalCapabilitiesV1, createNaturalCapabilitiesAnswerPlanV1, renderNaturalCapabilitiesV1 } from "./cognition/hybrid.natural.capabilities.v1";
 import { admitAnonymousVisionClarificationV1, createAnonymousVisionClarificationPlanV1, renderAnonymousVisionClarificationV1 } from "./anonymous.vision.conversation.clarification.v1";
-import { admitsPublicDomainListQuestionV1, publicDomainOrdinalV1, defaultPublicDomainContinuityRepositoryV1, createPublicDomainReferencePlanV1, renderPublicDomainReferenceV1, renderPublicVisionExecutionBoundaryV1, type PublicDomainContinuityRepositoryV1, type PublicDomainContextRecordV1 } from "./anonymous.vision.conversation.continuity.v1";
+import { admitsPublicDomainListQuestionV1, publicDomainOrdinalV1, defaultPublicDomainContinuityRepositoryV1, createPublicDomainReferencePlanV1, renderPublicDomainReferenceV1, renderPublicVisionExecutionBoundaryV1, renderPublicDomainAvailabilityV1, type PublicDomainContinuityRepositoryV1, type PublicDomainContextRecordV1 } from "./anonymous.vision.conversation.continuity.v1";
 
 class RequestLocalPublicEvidenceV1 implements PublicCognitiveTransportEvidenceRepositoryV1 {
   private used = false;
@@ -60,6 +60,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   const clarification = !admitted ? admitAnonymousVisionClarificationV1(request.message) : undefined;
   const ordinal = !admitted ? publicDomainOrdinalV1(request.message) : undefined;
   const executionFollowup = clarification === "MISSING_SUBJECT" && request.message === "Can it execute actions?";
+  const availabilityFollowup = clarification === "MISSING_AVAILABILITY_REFERENT" && request.message === "Which of those are publicly available?";
   const requestId = admitted || clarification ? request.request_id : "unadmitted";
   const guard = input.rate_guard ?? defaultRateGuard;
   if ((admitted || clarification) && !guard.admit({ client_key: input.client_key, message_length: request.message.length, max_output_tokens: ANONYMOUS_VISION_CONVERSATION_MAX_OUTPUT_TOKENS_V1 })) return Object.freeze({ version: 1, request_id: requestId, error: "RATE_LIMITED" });
@@ -69,7 +70,7 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
   let parent: PublicDomainContextRecordV1 | undefined;
   if (input.continuity) {
     try {
-      if ((ordinal !== undefined || executionFollowup) && !input.continuity.request.invalid_context) parent = repository.take(input.continuity.request);
+      if ((ordinal !== undefined || executionFollowup || availabilityFollowup) && !input.continuity.request.invalid_context) parent = repository.take(input.continuity.request);
       repository.invalidate(input.continuity.request.conversation_id);
     } catch { parent = undefined; try { repository.invalidate(input.continuity.request.conversation_id); } catch { /* Unavailable volatile state cannot authorize a referent. */ } }
   }
@@ -77,6 +78,10 @@ export async function runAnonymousVisionConversationV1(input: Readonly<{
     try {
       if (parent && executionFollowup) {
         const text = renderPublicVisionExecutionBoundaryV1(parent);
+        if (text) return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", text);
+      }
+      if (parent && availabilityFollowup) {
+        const text = renderPublicDomainAvailabilityV1(parent);
         if (text) return bounded(requestId, "PUBLIC_PRODUCT_ANSWER", text);
       }
       if (parent && ordinal !== undefined && ordinal < parent.ordered_domains.length) {

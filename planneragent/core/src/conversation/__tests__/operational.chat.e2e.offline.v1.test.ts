@@ -121,6 +121,33 @@ describe("STEP13S verified public continuity through real UI, Gateway and Core",
     expect(providerSelection).not.toHaveBeenCalled();
   });
 
+  it("resolves CTX-003 through UI, Gateway and Core with a verified public reference", async () => {
+    const ui = await mount(), gatewayBefore = ui.gatewayFetch.mock.calls.length, coreBefore = ui.realCore.mock.calls.length;
+    await send(ui, "What can PlannerAgent do?");
+    const ref = ui.responseHeaders[0].get(CONTEXT);
+    expect(ref).toMatch(/^[0-9a-f]{64}$/);
+    expect(ui.clientResponseHeaders[0].get(CONTEXT)).toBe(ref);
+    expect(ui.replies[0].text).toContain(domainMeaning);
+
+    const message = "Which of those are publicly available?";
+    await send(ui, message);
+    expect(ui.gatewayFetch).toHaveBeenCalledTimes(gatewayBefore + 2);
+    expect(ui.realCore).toHaveBeenCalledTimes(coreBefore + 2);
+    expect(ui.clientHeaders[1].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[1].get(CONTEXT)).toBe(ref);
+    expect(ui.coreHeaders[1].get(ID)).toBe(ui.coreHeaders[0].get(ID));
+    expect(ui.responseHeaders[1].has(CONTEXT)).toBe(false);
+    expect(ui.statuses).toEqual([200, 200]);
+    expect(ui.requests[1]).toEqual({ version: 1, request_id: ui.clientRequests[1].request_id, message });
+    const expected = `${domainMeaning} ${boundary}`;
+    expect(ui.replies[1]).toEqual({ version: 1, request_id: ui.requests[1].request_id, posture: "PUBLIC_PRODUCT_ANSWER", text: expected });
+    expect(displayed(ui)).toBe(expected);
+    expect(clarificationPlan).not.toHaveBeenCalled();
+    expect(clarificationRenderer).not.toHaveBeenCalled();
+    expect(providerSelection).not.toHaveBeenCalled();
+    expect(plan.mock.results[0].value).toMatchObject({ grants_authority: false, grants_execution: false });
+  });
+
   it.each(["absent", "request-stripped", "response-stripped", "forged", "wrong-session", "expired", "isolate-reset", "out-of-range"])("clarifies safely through the real path with %s context", async fault => {
     let now = Date.now();
     if (fault === "expired") vi.spyOn(Date, "now").mockImplementation(() => now);
@@ -207,9 +234,6 @@ describe("STEP13R-C real UI -> Gateway -> Core -> clarification plan -> renderer
     { id: "CTX-002", prefix: "What can PlannerAgent do?", turns: [
       ["Explain those domains.", "I don't have the earlier list of domains. Which domains would you like explained?"],
       ["And the third one?", "I don't have the earlier list. Which item do you mean? Please name it or include the list."],
-    ] },
-    { id: "CTX-003", prefix: "What can PlannerAgent do?", turns: [
-      ["Which of those are publicly available?", "I don't have the earlier list. Which items are you asking about for public availability?"],
     ] },
     { id: "CTX-004", prefix: "One supplier keeps moving confirmed delivery dates.", turns: [
       ["What changed since my previous message?", "I don't have your previous message to compare. Could you include the earlier and current descriptions?"],

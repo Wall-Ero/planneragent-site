@@ -112,6 +112,13 @@ export function renderPublicVisionExecutionBoundaryV1(record: PublicDomainContex
   return `In PlannerAgent, ${publicVisionBoundary(approvedPlan())}`;
 }
 
+export function renderPublicDomainAvailabilityV1(record: PublicDomainContextRecordV1): string | undefined {
+  if (record.scope !== "CORE_PUBLIC_PLANNERAGENT_CAPABILITIES_V1" || !compatibleRecord(record)) return undefined;
+  const plan = approvedPlan();
+  const qualification = plan.mandatory_elements.find(element => element.id === "DOMAINS")!;
+  return `${qualification.approved_text} ${publicVisionBoundary(plan)}`;
+}
+
 export function createPublicDomainReferencePlanV1(record: PublicDomainContextRecordV1, index: number) {
   if (!compatibleRecord(record) || !Number.isInteger(index) || index < 0 || index >= record.ordered_domains.length) throw new Error("CONTINUITY_REFERENCE_NOT_VERIFIED");
   const sourcePlan = approvedPlan();

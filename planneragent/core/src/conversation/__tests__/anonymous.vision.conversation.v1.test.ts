@@ -424,6 +424,39 @@ describe("STEP13S one-hop public continuity", () => {
     },
   );
 
+  it.each(["valid", "absent", "expired", "forged", "cross-conversation", "consumed", "different-parent"] as const)(
+    "handles CTX-003 with %s context", async context => {
+      let now = 1000;
+      const repository = new continuity.PublicDomainContinuityRepositoryV1(() => now);
+      const id = crypto.randomUUID(), publish = vi.fn(), nextPublish = vi.fn();
+      const fetcher = vi.fn(), selection = vi.fn();
+      const offline = { api_key: "unused", fetch: fetcher, resolve_providers: selection };
+      const first = context === "different-parent" ? "Which domains does PlannerAgent support?" : capabilityQuestion;
+      await invoke(first, repository, id, undefined, {
+        ...offline, continuity: { request: { conversation_id: id }, repository, publish },
+      });
+      expect(publish).toHaveBeenCalledOnce();
+      const issued = publish.mock.calls[0][0];
+      const message = "Which of those are publicly available?";
+      if (context === "expired") now += continuity.PUBLIC_CONTINUITY_TTL_MS_V1;
+      if (context === "consumed") {
+        expect(await invoke(message, repository, id, issued, offline)).toMatchObject({ text: `${qualifiedDomains} ${boundary}` });
+      }
+      const ref = context === "absent" ? undefined : context === "forged" ? "0".repeat(64) : issued;
+      const conversationId = context === "cross-conversation" ? crypto.randomUUID() : id;
+      const expected = context === "valid" ? qualifiedDomains : "I don't have the earlier list. Which items are you asking about for public availability?";
+      expect(await invoke(message, repository, conversationId, ref, {
+        ...offline, continuity: {
+          request: { conversation_id: conversationId, ...(ref ? { context_ref: ref } : {}) },
+          repository, publish: nextPublish,
+        },
+      })).toEqual({ version: 1, request_id: "request-1", posture: "PUBLIC_PRODUCT_ANSWER", text: `${expected} ${boundary}` });
+      expect(nextPublish).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
+      expect(selection).not.toHaveBeenCalled();
+    },
+  );
+
   it.each(["absent", "forged", "wrong-session", "expired", "reset", "unavailable", "out-of-range"])("clarifies with %s context instead of inventing a referent", async fault => {
     let now = 1000;
     const repository = new continuity.PublicDomainContinuityRepositoryV1(() => now), issued = mint(repository);
